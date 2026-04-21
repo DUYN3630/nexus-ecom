@@ -1,0 +1,60 @@
+@keyframes shimmer {
+  0% { background-position: -1000px 0; }
+  100% { background-position: 1000px 0; }
+}
+
+.skeleton-shimmer {
+  background: linear-gradient(to right, #f6f7f8 8%, #edeef1 18%, #f6f7f8 33%);
+  background-size: 2000px 100%;
+  animation: shimmer 2s infinite linear;
+}
+
+.product-image-morph {
+  transition: opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1), transform 1.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.pedestal-shadow {
+  box-shadow: 
+    0 10px 30px -10px rgba(0,0,0,0.1),
+    0 40px 60px -20px rgba(0,0,0,0.05);
+}
+
+.group:hover .pedestal-shadow {
+  box-shadow: 
+    0 20px 40px -15px rgba(0,0,0,0.15),
+    0 60px 100px -30px rgba(0,0,0,0.1);
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Hiệu ứng ánh sáng chạy dọc viền */
+.glow-border {
+  position: relative;
+  overflow: hidden;
+}
+.glow-border::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: conic-gradient(from 0deg, transparent, rgba(255,255,255,0.3), transparent 40%);
+  animation: rotate 4s linear infinite;
+  opacity: 0;
+  transition: opacity 0.5s;
+}
+.group:hover .glow-border::after {
+  opacity: 1;
+}
+
+@keyframes rotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}

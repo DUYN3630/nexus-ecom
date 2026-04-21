@@ -1,0 +1,114 @@
+{
+  "id": "TPL_IPHONE_17_PREMIUM",
+  "name": "iPhone 17 Premium Experience",
+  "version": 1,
+  "sections": [
+    {
+      "id": "hero_section_1",
+      "type": "Hero",
+      "enabled": true,
+      "config": {
+        "animation": {
+          "type": "parallax",
+          "intensity": 0.15
+        },
+        "title": "iPhone 17",
+        "subtitle": "Thiết kế cho tương lai.",
+        "cta": {
+          "text": "Khám phá ngay",
+          "link": "/shop/iphone-17"
+        },
+        "visual": {
+          "type": "device_mockup",
+          "style": "subtle_shine",
+          "gradient": ["#E3E3E5", "#C7C7C9"]
+        }
+      }
+    },
+    {
+      "id": "lineup_section_1",
+      "type": "ProductLineup",
+      "enabled": true,
+      "config": {
+        "animation": {
+          "type": "reveal_on_scroll",
+          "delay": 100
+        },
+        "dataSource": "/api/products/iphone-17-lineup",
+        "cardComponent": "LegacyProductCardA",
+        "products": [
+          { "id": "17", "name": "iPhone 17", "colorClass": "bg-[#F5F5F7]", "detailsUrl": "/iphone-17", "buyUrl": "/buy/iphone-17" },
+          { "id": "17-plus", "name": "iPhone 17 Plus", "colorClass": "bg-[#E3E3E5]", "detailsUrl": "/iphone-17-plus", "buyUrl": "/buy/iphone-17-plus" },
+          { "id": "17-pro", "name": "iPhone 17 Pro", "colorClass": "bg-[#424345]", "detailsUrl": "/iphone-17-pro", "buyUrl": "/buy/iphone-17-pro" },
+          { "id": "17-pro-max", "name": "iPhone 17 Pro Max", "colorClass": "bg-[#1D1D1F]", "detailsUrl": "/iphone-17-pro-max", "buyUrl": "/buy/iphone-17-pro-max" }
+        ]
+      }
+    },
+    {
+      "id": "filter_section_1",
+      "type": "SmartFilter",
+      "enabled": true,
+      "config": {
+        "title": "Tìm chiếc iPhone dành cho bạn",
+        "subtitle": "Lọc theo nhu cầu thực tế của cuộc sống.",
+        "filters": ["All", "Camera", "Performance", "Battery", "Compact", "Pro"],
+        "dataSource": "/api/products/iphone-17-lineup",
+        "productData": [
+          { "id": "17", "name": "iPhone 17", "category": ["Battery", "Compact"], "bgTheme": "#FFFFFF" },
+          { "id": "17-plus", "name": "iPhone 17 Plus", "category": ["Battery"], "bgTheme": "#FBFBFE" },
+          { "id": "17-pro", "name": "iPhone 17 Pro", "category": ["Camera", "Performance", "Pro"], "bgTheme": "#F5F5F7" },
+          { "id": "17-pro-max", "name": "iPhone 17 Pro Max", "category": ["Camera", "Performance", "Battery", "Pro"], "bgTheme": "#F2F2F2" }
+        ]
+      }
+    },
+    {
+      "id": "compare_section_1",
+      "type": "Comparison",
+      "enabled": true,
+      "config": {
+        "title": "So sánh các mẫu máy",
+        "isInitiallyOpen": false,
+        "comparisonData": [
+          { "feature": "Camera", "pro": "Pro 48MP (3 thấu kính)", "standard": "Advanced 48MP (2 thấu kính)" },
+          { "feature": "Vi xử lý", "pro": "A19 Pro (3nm)", "standard": "A19 Bionic" },
+          { "feature": "Pin", "pro": "30 giờ xem phim", "standard": "24 giờ xem phim" },
+          { "feature": "Màn hình", "pro": "ProMotion 120Hz", "standard": "OLED Super Retina" }
+        ],
+        "columnHeaders": {
+          "feature": "Thông số",
+          "pro": "iPhone 17 Pro",
+          "standard": "iPhone 17"
+        }
+      }
+    },
+    {
+      "id": "accessories_section_1",
+      "type": "Accessories",
+      "enabled": true,
+      "config": {
+        "title": "Phụ kiện cho iPhone 17",
+        "dataSource": "/api/products/iphone-accessories",
+        "cardComponent": "LegacyAccessoryCardB",
+        "items": [
+            { "name": "Silicone Case with MagSafe", "type": "Mới", "price": "1.290.000đ" },
+            { "name": "Ví da MagSafe", "type": "Hỗ trợ Find My", "price": "1.590.000đ" },
+            { "name": "AirPods (Thế hệ 4)", "type": "Âm thanh không gian", "price": "3.490.000đ" }
+        ]
+      }
+    },
+    {
+        "id": "ecosystem_section_1",
+        "type": "Ecosystem",
+        "enabled": true,
+        "config": {
+            "backgroundColor": "#F5F5F7",
+            "items": [
+                { "title": "iOS 19", "desc": "Cá nhân hóa tối đa.", "icon": "Sparkles" },
+                { "title": "Bảo mật", "desc": "Quyền riêng tư là ưu tiên.", "icon": "Lock" },
+                { "title": "Thu cũ", "desc": "Trợ giá lên đời iPhone.", "icon": "RefreshCw" },
+                { "title": "AppleCare+", "desc": "Bảo vệ toàn diện 24/7.", "icon": "Heart" }
+            ]
+        }
+    }
+  ]
+}

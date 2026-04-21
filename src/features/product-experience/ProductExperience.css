@@ -1,0 +1,40 @@
+/* ---
+SHARED ANIMATIONS AND STYLES FOR PRODUCT EXPERIENCE
+--- */
+
+@keyframes shine-slow {
+    0% { transform: translateX(-100%) rotate(20deg); }
+    20% { transform: translateX(100%) rotate(20deg); }
+    100% { transform: translateX(100%) rotate(20deg); }
+  }
+  
+.animate-shine-slow {
+    animation: shine-slow 8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+/* For Intersection Observer animations */
+.animate-in {
+    animation-duration: 1.2s;
+    animation-fill-mode: both;
+    animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes slideInFromBottom { from { transform: translateY(60px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+@keyframes zoomIn { from { transform: scale(0.92); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+.fade-in { animation-name: fadeIn; }
+.slide-in-from-bottom-8 { animation-name: slideInFromBottom; }
+.zoom-in-95 { animation-name: zoomIn; }
+
+/* Global body styles */
+body {
+    scrollbar-color: #D2D2D7 transparent;
+    scrollbar-width: thin;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+.perspective-2000 { 
+    perspective: 2000px; 
+}

@@ -1,0 +1,22 @@
+.detail-parallax {
+  transition: transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.blueprint-grid {
+  background-image: radial-gradient(circle, #e5e7eb 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+
+.editorial-title {
+  line-height: 0.9;
+  letter-spacing: -0.04em;
+}
+
+@keyframes float-up {
+  from { transform: translateY(100%); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.animate-float-up {
+  animation: float-up 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}

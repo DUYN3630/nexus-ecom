@@ -1,0 +1,79 @@
+{
+  "id": "TPL_MACBOOK_PRO_PREMIUM",
+  "name": "MacBook Pro Premium Experience",
+  "version": 1,
+  "sections": [
+    {
+      "id": "hero_section_mac",
+      "type": "Hero",
+      "enabled": true,
+      "config": {
+        "animation": {
+          "type": "parallax",
+          "intensity": 0.1
+        },
+        "title": "MacBook Pro",
+        "subtitle": "Sức mạnh trong từng pixel.",
+        "cta": {
+          "text": "Khám phá dòng Pro",
+          "link": "/shop/macbook-pro"
+        },
+        "visual": {
+          "type": "device_mockup",
+          "style": "subtle_shine",
+          "gradient": ["#333333", "#111111"]
+        }
+      }
+    },
+    {
+      "id": "lineup_section_mac",
+      "type": "ProductLineup",
+      "enabled": true,
+      "config": {
+        "animation": {
+          "type": "reveal_on_scroll",
+          "delay": 150
+        },
+        "dataSource": "/api/products/macbook-pro-lineup",
+        "cardComponent": "LegacyProductCardB",
+        "products": [
+          { "model": "MacBook Pro 14”", "chip": "M4 Pro", "imageUrl": "/mac-14.jpg", "price": "49.990.000đ" },
+          { "model": "MacBook Pro 16”", "chip": "M4 Max", "imageUrl": "/mac-16.jpg", "price": "69.990.000đ" }
+        ]
+      }
+    },
+    {
+      "id": "compare_section_mac",
+      "type": "Comparison",
+      "enabled": false,
+      "config": {
+        "title": "So sánh các mẫu MacBook Pro",
+        "isInitiallyOpen": true,
+        "comparisonData": [
+          { "feature": "Màn hình", "pro": "14.2-inch Liquid Retina XDR", "standard": "16.2-inch Liquid Retina XDR" },
+          { "feature": "Vi xử lý", "pro": "M4 Pro, 12-core CPU", "standard": "M4 Max, 16-core CPU" },
+          { "feature": "Thời lượng pin", "pro": "18 giờ", "standard": "22 giờ" }
+        ],
+        "columnHeaders": {
+            "feature": "Thông số",
+            "pro": "MacBook Pro 14”",
+            "standard": "MacBook Pro 16”"
+        }
+      }
+    },
+    {
+        "id": "ecosystem_section_mac",
+        "type": "Ecosystem",
+        "enabled": true,
+        "config": {
+            "backgroundColor": "#FAFAFA",
+            "items": [
+                { "title": "macOS Sequoia", "desc": "Năng suất vượt trội.", "icon": "Sparkles" },
+                { "title": "Bảo mật", "desc": "An toàn từ phần cứng.", "icon": "Lock" },
+                { "title": "Final Cut Pro", "desc": "Dựng phim chuyên nghiệp.", "icon": "RefreshCw" },
+                { "title": "AppleCare+", "desc": "Bảo vệ toàn diện.", "icon": "Heart" }
+            ]
+        }
+    }
+  ]
+}

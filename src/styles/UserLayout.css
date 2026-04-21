@@ -1,0 +1,6 @@
+.user-layout ::-webkit-scrollbar { width: 3px; }
+.user-layout ::-webkit-scrollbar-thumb { background: #000; }
+.user-layout input::placeholder { color: #cbd5e1; font-weight: 700; letter-spacing: 0.1em; }
+
+@keyframes fadeIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+.animate-in { animation: fadeIn 0.8s ease-out forwards; }

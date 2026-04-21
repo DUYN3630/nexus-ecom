@@ -1,0 +1,102 @@
+[
+  {
+    "name": "MacBook Air M3 13 inch 8GB 256GB",
+    "slug": "macbook-air-m3-13-inch-256gb",
+    "sku": "MBA-M3-13-GR-256",
+    "categorySlug": "mac",
+    "price": 27990000,
+    "discountPrice": 27490000,
+    "stock": 50,
+    "description": "Chip Apple M3 với CPU 8 lõi, GPU 8 lõi, Neural Engine 16 lõi. RAM thống nhất 8GB. Ổ cứng SSD 256GB. Màn hình Liquid Retina 13.6 inch với True Tone. Hai cổng Thunderbolt / USB 4.",
+    "images": [
+      "/products/chipm3.jpg"
+    ],
+    "specifications": {
+      "Chip": "Apple M3",
+      "RAM": "8GB",
+      "Ổ cứng": "256GB SSD",
+      "Màn hình": "13.6 inch Liquid Retina"
+    },
+    "status": "active",
+    "isFeatured": true
+  },
+  {
+    "name": "iPhone 15 Pro 128GB (Titan Tự Nhiên)",
+    "slug": "iphone-15-pro-128gb-natural-titanium",
+    "sku": "IP15-P-128-NT",
+    "categorySlug": "iphone",
+    "price": 28990000,
+    "discountPrice": 28290000,
+    "stock": 100,
+    "description": "Màn hình Super Retina XDR 6.1 inch. Chip A17 Pro. Hệ thống camera Pro với camera Chính 48MP. Nút Tác Vụ mới. Kết nối USB-C.",
+    "images": [
+      "/products/product-archive-1.jpg"
+    ],
+    "specifications": {
+      "Chip": "A17 Pro",
+      "Dung lượng": "128GB",
+      "Màn hình": "6.1 inch Super Retina XDR"
+    },
+    "status": "active",
+    "isFeatured": true
+  },
+  {
+    "name": "iPad Pro 12.9-inch (M2) 128GB Wi-Fi",
+    "slug": "ipad-pro-12-9-inch-m2-128gb",
+    "sku": "IPAD-M2-129-128",
+    "categorySlug": "ipad",
+    "price": 31990000,
+    "discountPrice": 30990000,
+    "stock": 40,
+    "description": "Màn hình Liquid Retina XDR 12.9 inch. Chip M2 cực mạnh. ProRes, Smart HDR 4, quay video 4K.",
+    "images": [
+      "/products/manhinholedipad.jpg"
+    ],
+    "specifications": {
+      "Chip": "Apple M2",
+      "Dung lượng": "128GB",
+      "Màn hình": "12.9 inch Liquid Retina XDR"
+    },
+    "status": "active",
+    "isFeatured": true
+  },
+  {
+    "name": "AirPods Pro (Gen 2 – USB-C)",
+    "slug": "airpods-pro-gen-2-usb-c",
+    "sku": "AP-PRO-2-USBC",
+    "categorySlug": "phu-kien",
+    "price": 6190000,
+    "discountPrice": 5990000,
+    "stock": 200,
+    "description": "Chống ồn chủ động gấp 2 lần. Âm thanh thích ứng. Thời lượng pin lên đến 6 giờ nghe.",
+    "images": [
+      "/products/amthanhbaoquanhban.jpg"
+    ],
+    "specifications": {
+      "Chip": "Apple H2",
+      "Kết nối": "USB-C"
+    },
+    "status": "active",
+    "isFeatured": true
+  },
+  {
+    "name": "Tv Apple Pro 4K (Thế hệ 3) 128GB",
+    "slug": "tv-apple-pro-4k-128gb",
+    "sku": "ATV-4K-128",
+    "categorySlug": "tv-giai-tri",
+    "price": 4490000,
+    "discountPrice": 4290000,
+    "stock": 30,
+    "description": "Trải nghiệm rạp chiếu phim tại gia đỉnh cao với hình ảnh 4K Dolby Vision và HDR10+.",
+    "images": [
+      "/products/4k-hdr.jpg"
+    ],
+    "specifications": {
+      "Chip": "A15 Bionic",
+      "Dung lượng": "128GB",
+      "Cổng": "Ethernet, HDMI 2.1"
+    },
+    "status": "active",
+    "isFeatured": true
+  }
+]
