@@ -77,7 +77,6 @@ CategorySchema.virtual('isDeleted').get(function() {
 
 /* Index for performance */
 CategorySchema.index({ parentId: 1, order: 1 }); // Reverted back to parentId
-CategorySchema.index({ slug: 1 });
 CategorySchema.index({ status: 1 });
 
 module.exports = mongoose.model("Category", CategorySchema);
