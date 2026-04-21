@@ -60,6 +60,11 @@ app.use('/api/ai-settings', aiSettingRoutes);
 app.use('/api/payment', paymentRoutes);
 app.use('/api/tracking', trackingRoutes);
 
+// Test Route cho Render Health Check
+app.get('/', (req, res) => {
+    res.send('🚀 Nexus E-commerce Backend is Live and Running!');
+});
+
 // Endpoint Chat chính thức
 app.post('/api/ai/chat', async (req, res) => {
     try {
@@ -148,6 +153,6 @@ app.use((err, req, res, next) => {
 });
 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-    console.log(`🚀 Server đang chạy tại: http://127.0.0.1:${PORT}`);
+app.listen(PORT, '0.0.0.0', () => {
+    console.log(`🚀 Server đang chạy tại cổng: ${PORT}`);
 });
