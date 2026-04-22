@@ -40,7 +40,7 @@ const marketingController = {
   // GET /api/marketing/banners (Admin List)
   getBanners: async (req, res) => {
     try {
-      const { search, type, position } = req.query;
+      const { search, type, position, page = 1, limit = 10 } = req.query;
       const query = {};
 
       if (search) {
@@ -53,12 +53,30 @@ const marketingController = {
         query.position = position;
       }
 
-      const banners = await Marketing.find(query)
-        .sort({ priority: -1, createdAt: -1 })
-        .populate('linkTarget.productId', 'name slug')
-        .populate('linkTarget.categoryId', 'name slug');
+      const pageNum = parseInt(page);
+      const limitNum = parseInt(limit);
+      const skip = (pageNum - 1) * limitNum;
+
+      const [banners, total] = await Promise.all([
+        Marketing.find(query)
+          .sort({ priority: -1, createdAt: -1 })
+          .populate('linkTarget.productId', 'name slug')
+          .populate('linkTarget.categoryId', 'name slug')
+          .skip(skip)
+          .limit(limitNum),
+        Marketing.countDocuments(query)
+      ]);
         
-      res.json({ success: true, data: banners });
+      res.json({ 
+        success: true, 
+        data: banners,
+        pagination: {
+          total,
+          page: pageNum,
+          limit: limitNum,
+          totalPages: Math.ceil(total / limitNum)
+        }
+      });
     } catch (error) {
       res.status(500).json({ success: false, message: error.message });
     }

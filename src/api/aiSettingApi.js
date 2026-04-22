@@ -1,21 +1,15 @@
 import axiosClient from './axiosClient';
 
 const aiSettingApi = {
-  // Cấu hình kỹ thuật
-  getSettings: () => {
-    return axiosClient.get('/ai-settings/settings');
-  },
-  updateSettings: (data) => {
-    return axiosClient.post('/ai-settings/settings', data);
-  },
-
-  // Phân tích dữ liệu vận hành (Dành cho AI Hub)
-  getAnalytics: () => {
-    return axiosClient.get('/ai-settings/analytics');
-  },
-  getExpertPerformance: () => {
-    return axiosClient.get('/ai-settings/experts');
-  }
+  // Tab: Cấu hình hệ thống
+  getSettings: () => axiosClient.get('/ai-settings'),
+  updateSettings: (data) => axiosClient.post('/ai-settings/update', data),
+  
+  // Tab: Phân tích thông minh
+  getAnalytics: () => axiosClient.get('/ai-settings/analytics'),
+  
+  // Tab: Giám sát chuyên gia
+  getExpertPerformance: () => axiosClient.get('/ai-settings/experts-performance'),
 };
 
 export default aiSettingApi;

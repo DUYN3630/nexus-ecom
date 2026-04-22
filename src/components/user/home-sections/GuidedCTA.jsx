@@ -9,7 +9,7 @@ const GuidedCTA = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
           
           {/* Card 1: Consulting */}
-          <Link to="/support" className="group relative bg-[#FBFBFB] p-16 rounded-[4rem] border border-slate-100 overflow-hidden hover:shadow-2xl hover:shadow-indigo-100/40 transition-all duration-700 cursor-pointer block">
+          <Link to="/support" className="group relative bg-[#FBFBFB] p-16 rounded-3xl border border-slate-100 overflow-hidden hover:shadow-2xl hover:shadow-indigo-100/40 transition-all duration-700 cursor-pointer block">
             <div className="relative z-10 space-y-10 h-full flex flex-col justify-between">
               <div className="space-y-6">
                 <div className="w-16 h-16 bg-white rounded-3xl flex items-center justify-center text-indigo-600 shadow-sm transition-all duration-500 group-hover:scale-110 group-hover:rotate-6 border border-slate-50">
@@ -33,7 +33,7 @@ const GuidedCTA = () => {
           </Link>
 
           {/* Card 2: Comparison */}
-          <div className="group relative bg-slate-900 p-16 rounded-[4rem] overflow-hidden hover:shadow-2xl hover:shadow-slate-900/20 transition-all duration-700 cursor-pointer">
+          <Link to="/compare" className="group relative bg-slate-900 p-16 rounded-3xl overflow-hidden hover:shadow-2xl hover:shadow-slate-900/20 transition-all duration-700 cursor-pointer block">
             <div className="relative z-10 space-y-10 h-full flex flex-col justify-between text-white">
               <div className="space-y-6">
                 <div className="w-16 h-16 bg-white/10 backdrop-blur-md rounded-3xl flex items-center justify-center text-white border border-white/10 shadow-sm transition-all duration-500 group-hover:scale-110 group-hover:-rotate-6">
@@ -55,7 +55,7 @@ const GuidedCTA = () => {
             {/* Background Decor */}
             <div className="absolute bottom-[-20%] left-[-10%] w-[50%] h-[50%] bg-indigo-500/10 rounded-full blur-[100px]"></div>
             <Sparkles size={120} className="absolute bottom-[-20px] right-[-20px] text-white/5 rotate-12" />
-          </div>
+          </Link>
 
         </div>
       </div>

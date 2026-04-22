@@ -107,7 +107,7 @@ const ProductDetailPage = () => {
       {/* HEADER SECTION (EDITORIAL) */}
       <section className="pt-32 pb-20 px-6 md:px-12 lg:px-24 max-w-[1920px] mx-auto">
         <nav className="flex items-center gap-4 text-[10px] uppercase tracking-[0.3em] font-bold text-stone-400 mb-12">
-          <button onClick={() => navigate('/')}>Home</button>
+          <button onClick={() => navigate('/')}>Trang chủ</button>
           <div className="w-1 h-1 rounded-full bg-stone-300" />
           <span>{product.category?.name}</span>
         </nav>
@@ -143,7 +143,7 @@ const ProductDetailPage = () => {
                 rating: product.rating || 5.0,
                 reviewCount: product.reviewCount || 0,
                 specs: [],
-                badge: product.stock > 0 ? 'Available' : 'Limited',
+                badge: product.stock > 0 ? 'Sẵn hàng' : 'Số lượng có hạn',
                 options: product.options || []
               }}
               currentPrice={currentPrice}
@@ -159,27 +159,27 @@ const ProductDetailPage = () => {
 
           <div className="blueprint-grid border border-stone-200 rounded-[40px] p-12 space-y-12 relative overflow-hidden">
             <div className="absolute top-0 right-0 p-6 text-[8px] font-mono text-stone-300 uppercase rotate-90 origin-top-right">Ref: NX-2024-IP</div>
-            <h4 className="text-[10px] uppercase tracking-[0.4em] font-black text-stone-400">The Blueprint</h4>
+            <h4 className="text-[10px] uppercase tracking-[0.4em] font-black text-stone-400">Thông số kỹ thuật</h4>
             <div className="grid grid-cols-2 gap-12">
               <div className="space-y-4">
                 <Cpu size={24} strokeWidth={1} />
-                <p className="text-xs font-bold uppercase tracking-widest">A18 Pro Chip</p>
-                <p className="text-[10px] text-stone-500 leading-relaxed uppercase">6-core CPU | 6-core GPU | 16-core Neural Engine</p>
+                <p className="text-xs font-bold uppercase tracking-widest">Chip A18 Pro</p>
+                <p className="text-[10px] text-stone-500 leading-relaxed uppercase">6 nhân CPU | 6 nhân GPU | 16 nhân Neural Engine</p>
               </div>
               <div className="space-y-4">
                 <Camera size={24} strokeWidth={1} />
-                <p className="text-xs font-bold uppercase tracking-widest">Pro Camera</p>
+                <p className="text-xs font-bold uppercase tracking-widest">Hệ thống Camera Pro</p>
                 <p className="text-[10px] text-stone-500 leading-relaxed uppercase">48MP Main | 5x Telephoto | Ultra Wide</p>
               </div>
               <div className="space-y-4">
                 <Battery size={24} strokeWidth={1} />
-                <p className="text-xs font-bold uppercase tracking-widest">All-day Power</p>
-                <p className="text-[10px] text-stone-500 leading-relaxed uppercase">Up to 29 hours video playback</p>
+                <p className="text-xs font-bold uppercase tracking-widest">Thời lượng Pin</p>
+                <p className="text-[10px] text-stone-500 leading-relaxed uppercase">Lên đến 29 giờ xem video liên tục</p>
               </div>
               <div className="space-y-4">
                 <Smartphone size={24} strokeWidth={1} />
-                <p className="text-xs font-bold uppercase tracking-widest">Pro Display</p>
-                <p className="text-[10px] text-stone-500 leading-relaxed uppercase">Super Retina XDR | ProMotion technology</p>
+                <p className="text-xs font-bold uppercase tracking-widest">Màn hình Pro</p>
+                <p className="text-[10px] text-stone-500 leading-relaxed uppercase">Super Retina XDR | Công nghệ ProMotion</p>
               </div>
             </div>
           </div>
@@ -198,8 +198,8 @@ const ProductDetailPage = () => {
           }}
         />
         <div className="relative z-10 max-w-4xl mx-auto px-6 text-center space-y-12">
-          <span className="text-xs tracking-[0.5em] uppercase text-stone-500 font-bold">Material Focus</span>
-          <h2 className="text-5xl md:text-8xl font-serif italic leading-none">The Titanium <br /> Standard.</h2>
+          <span className="text-xs tracking-[0.5em] uppercase text-stone-500 font-bold">Chế tác cao cấp</span>
+          <h2 className="text-5xl md:text-8xl font-serif italic leading-none">Titanium <br /> Đẳng cấp mới.</h2>
           <p className="text-stone-400 text-lg font-light leading-relaxed max-w-2xl mx-auto">
             Mạnh mẽ hơn, nhẹ hơn và cực kỳ bền bỉ. Nexus nâng tầm tiêu chuẩn chế tác với lớp hoàn thiện Titanium cấp độ 5.
           </p>
@@ -219,7 +219,7 @@ const ProductDetailPage = () => {
         {/* REVIEW SECTION */}
         <ReviewSection productId={product._id} />
 
-        <Suspense fallback={<div className="h-96 flex items-center justify-center text-[10px] uppercase tracking-widest text-stone-400">Loading related collection...</div>}>
+        <Suspense fallback={<div className="h-96 flex items-center justify-center text-[10px] uppercase tracking-widest text-stone-400">Đang tải bộ sưu tập liên quan...</div>}>
           <RelatedProductsSection currentProductId={product._id} />
         </Suspense>
       </div>
@@ -228,11 +228,11 @@ const ProductDetailPage = () => {
       <div className="fixed bottom-8 left-0 right-0 z-[100] px-6 animate-float-up">
         <div className="max-w-3xl mx-auto bg-stone-900/90 backdrop-blur-2xl border border-white/10 rounded-[32px] p-4 flex items-center justify-between shadow-2xl">
           <div className="px-6 hidden md:block border-r border-white/10 mr-6">
-            <p className="text-[8px] uppercase tracking-[0.3em] text-stone-500 font-black mb-1">In focus</p>
+            <p className="text-[8px] uppercase tracking-[0.3em] text-stone-500 font-black mb-1">Sản phẩm</p>
             <p className="text-xs font-bold text-white truncate max-w-[150px]">{product.name}</p>
           </div>
           <div className="flex-1">
-            <p className="text-[8px] uppercase tracking-[0.3em] text-stone-500 font-black mb-1">Investment</p>
+            <p className="text-[8px] uppercase tracking-[0.3em] text-stone-500 font-black mb-1">Giá trị đầu tư</p>
             <p className="text-xl font-serif italic text-white">{formatCurrency(currentPrice)}</p>
           </div>
           <div className="flex items-center gap-4">
@@ -247,7 +247,7 @@ const ProductDetailPage = () => {
               disabled={isAdding}
               className="bg-white text-stone-900 px-10 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-stone-200 transition-all flex items-center gap-3"
             >
-              {isAdding ? <><Check size={16} /> Added</> : <><ShoppingBag size={16} /> Add to Bag</>}
+              {isAdding ? <><Check size={16} /> Đã thêm</> : <><ShoppingBag size={16} /> Thêm vào túi</>}
             </button>
           </div>
         </div>

@@ -52,7 +52,7 @@ export const AccountManagementPage = () => {
         role: roleFilter, 
         status: statusFilter,
         page,
-        limit: 10
+        limit: 5
       };
       const response = await axiosClient.get('/users', { params });
       if (response.success) {
@@ -328,8 +328,47 @@ export const AccountManagementPage = () => {
               ))}
             </tbody>
           </table>
-        </div>
-        
+
+          {/* --- PAGINATION NAVIGATION --- */}
+          {pagination.pages > 1 && (
+            <div className="px-8 py-6 bg-slate-50/50 border-t border-slate-100 flex items-center justify-between">
+              <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">
+                Trang {pagination.page} / {pagination.pages}
+              </p>
+              <div className="flex items-center gap-2">
+                <button 
+                  onClick={() => setPage(prev => Math.max(1, prev - 1))}
+                  disabled={page === 1}
+                  className={`p-2 rounded-xl border transition-all ${page === 1 ? 'text-slate-200 border-slate-50 cursor-not-allowed' : 'text-slate-500 border-slate-200 hover:bg-white hover:text-indigo-600 shadow-sm'}`}
+                >
+                  <ChevronLeft size={18} />
+                </button>
+
+                {[...Array(pagination.pages)].map((_, i) => (
+                  <button
+                    key={i + 1}
+                    onClick={() => setPage(i + 1)}
+                    className={`w-10 h-10 rounded-xl text-[11px] font-black transition-all ${
+                      page === i + 1 
+                        ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200' 
+                        : 'text-slate-400 hover:bg-white hover:text-slate-900'
+                    }`}
+                  >
+                    {i + 1}
+                  </button>
+                ))}
+
+                <button 
+                  onClick={() => setPage(prev => Math.min(pagination.pages, prev + 1))}
+                  disabled={page === pagination.pages}
+                  className={`p-2 rounded-xl border transition-all ${page === pagination.pages ? 'text-slate-200 border-slate-50 cursor-not-allowed' : 'text-slate-500 border-slate-200 hover:bg-white hover:text-indigo-600 shadow-sm'}`}
+                >
+                  <ChevronRight size={18} />
+                </button>
+              </div>
+            </div>
+          )}
+          </div>        
         {/* Pagination */}
         {!loading && pagination.pages > 1 && (
           <div className="px-6 py-4 bg-slate-50 flex items-center justify-between">

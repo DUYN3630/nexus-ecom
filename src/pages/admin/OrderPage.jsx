@@ -20,7 +20,7 @@ export const OrderPage = () => {
   
   // --- 2. STATE PHÂN TRANG (PAGINATION) ---
   const [currentPage, setCurrentPage] = useState(1);
-  const [ordersPerPage] = useState(10); 
+  const [ordersPerPage] = useState(5); 
 
   // --- 3. STATE BỘ LỌC NÂNG CAO ---
   const [filters, setFilters] = useState({ 
@@ -322,8 +322,31 @@ export const OrderPage = () => {
                 ))}
               </tbody>
             </table>
-          </div>
 
+            {/* --- PAGINATION NAVIGATION --- */}
+            <div className="px-8 py-6 bg-slate-50/50 border-t border-slate-100 flex items-center justify-between">
+               <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">
+                  Trang {currentPage} / {Math.ceil(orders.length / ordersPerPage) || 1}
+               </p>
+               <div className="flex items-center gap-2">
+                  <button 
+                    onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                    disabled={currentPage === 1}
+                    className={`p-2 rounded-xl border transition-all ${currentPage === 1 ? 'text-slate-200 border-slate-50 cursor-not-allowed' : 'text-slate-500 border-slate-200 hover:bg-white hover:text-indigo-600 shadow-sm'}`}
+                  >
+                    <ChevronLeft size={18} />
+                  </button>
+
+                  <button 
+                    onClick={() => setCurrentPage(prev => prev + 1)}
+                    disabled={currentPage >= Math.ceil(orders.length / ordersPerPage)}
+                    className={`p-2 rounded-xl border transition-all ${currentPage >= Math.ceil(orders.length / ordersPerPage) ? 'text-slate-200 border-slate-50 cursor-not-allowed' : 'text-slate-500 border-slate-200 hover:bg-white hover:text-indigo-600 shadow-sm'}`}
+                  >
+                    <ChevronRight size={18} />
+                  </button>
+               </div>
+            </div>
+            </div>
           {/* PAGINATION */}
           <div className="p-5 bg-slate-50/50 border-t border-slate-100 flex justify-between items-center text-left">
             <div className="text-[10px] text-slate-400 font-black uppercase tracking-widest">

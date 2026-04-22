@@ -34,7 +34,7 @@ const QuickNav = () => {
               onClick={() => navigate(item.route)} 
               className="group cursor-pointer flex flex-col items-center text-center gap-4 flex-1 min-w-[120px] transition-all duration-300"
             >
-              <div className="relative w-16 h-16 rounded-3xl bg-slate-50 flex items-center justify-center transition-all duration-500 group-hover:bg-white group-hover:shadow-[0_20px_40px_-10px_rgba(0,0,0,0.1)] group-hover:-translate-y-2 group-active:scale-90 overflow-hidden">
+              <div className="relative w-16 h-16 rounded-2xl bg-slate-50 flex items-center justify-center transition-all duration-500 group-hover:bg-white group-hover:shadow-[0_20px_40px_-10px_rgba(0,0,0,0.1)] group-hover:-translate-y-2 group-active:scale-90 overflow-hidden">
                 {/* Decorative background circle on hover */}
                 <div className="absolute inset-0 bg-gradient-to-br from-slate-50 to-white opacity-0 group-hover:opacity-100 transition-opacity"></div>
                 <IconRenderer iconName={item.icon} className={`relative z-10 text-slate-400 group-hover:${item.color} transition-colors duration-300`} />

@@ -228,33 +228,33 @@ const AIHubPage = () => {
                   </div>
                   <div className="overflow-x-auto">
                     <table className="w-full text-left">
-                      <thead className="bg-slate-50 text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                      <thead className="bg-slate-50 text-[10px] font-black text-slate-400 uppercase tracking-widest text-left">
                         <tr>
-                          <th className="px-6 py-4">Khách hàng / Chủ đề</th>
-                          <th className="px-6 py-4">Tóm tắt từ AI</th>
+                          <th className="px-6 py-4">Mã số / Thiết bị</th>
+                          <th className="px-6 py-4">Mô tả của khách</th>
                           <th className="px-6 py-4">Trạng thái</th>
-                          <th className="px-6 py-4">Chi tiết</th>
+                          <th className="px-6 py-4">Hành động</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-50">
                         {analytics?.recentTickets?.map((ticket) => (
                           <tr key={ticket._id} className="hover:bg-slate-50/50 transition-colors">
                             <td className="px-6 py-4">
-                              <p className="text-sm font-bold text-slate-800">{ticket.subject}</p>
-                              <p className="text-[10px] text-slate-400 mt-0.5">Mã số: {ticket._id.substring(0,8)}</p>
+                              <p className="text-sm font-bold text-slate-800">{ticket.deviceType}</p>
+                              <p className="text-[10px] text-slate-400 mt-0.5">Mã: {ticket.ticketNumber}</p>
                             </td>
                             <td className="px-6 py-4">
-                              <p className="text-xs text-slate-600 line-clamp-2 max-w-xs">{ticket.aiSummary || 'Đang phân tích...'}</p>
+                              <p className="text-xs text-slate-600 line-clamp-1 max-w-xs italic">"{ticket.description}"</p>
                             </td>
                             <td className="px-6 py-4">
                               <span className={`px-2 py-1 rounded text-[9px] font-black uppercase tracking-widest ${
-                                ticket.status === 'resolved' ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600'
+                                ticket.status === 'Completed' ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600'
                               }`}>
-                                {ticket.status === 'resolved' ? 'Đã xong' : 'Đang xử lý'}
+                                {ticket.status}
                               </span>
                             </td>
                             <td className="px-6 py-4">
-                              <button className="p-2 hover:bg-white rounded-lg border border-transparent hover:border-slate-200 transition-all">
+                              <button onClick={() => setActiveTab('experts')} className="p-2 hover:bg-white rounded-lg border border-transparent hover:border-slate-200 transition-all">
                                 <ArrowRight size={16} className="text-slate-400 hover:text-slate-900" />
                               </button>
                             </td>
@@ -441,7 +441,7 @@ const AIHubPage = () => {
         {/* --- TAB 4: THỬ NGHIỆM --- */}
         {activeTab === 'playground' && (
           <motion.div key="playground" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="h-[700px] bg-white rounded-3xl border border-slate-200 overflow-hidden shadow-sm">
-             <AIChatBox />
+             <AIChatBox currentSettings={settings} />
           </motion.div>
         )}
       </AnimatePresence>

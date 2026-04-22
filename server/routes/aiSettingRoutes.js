@@ -1,14 +1,16 @@
 const express = require('express');
 const router = express.Router();
-const aiSettingController = require('../controllers/aiSettingController');
 const aiHubController = require('../controllers/aiHubController');
 const { protect, admin } = require('../middleware/auth');
 
-// Đảm bảo các route này khớp chính xác với frontend gọi
-router.get('/settings', protect, admin, aiSettingController.getAISettings);
-router.post('/settings', protect, admin, aiSettingController.updateAISettings);
+// 1. Cấu hình (Tab Config)
+router.get('/', protect, admin, aiHubController.getAISettings);
+router.post('/update', protect, admin, aiHubController.updateAISettings);
 
-router.get('/analytics', protect, admin, aiHubController.getSupportAnalytics);
-router.get('/experts', protect, admin, aiHubController.getExpertPerformance);
+// 2. Phân tích (Tab Intelligence)
+router.get('/analytics', protect, admin, aiHubController.getAIAnalytics);
+
+// 3. Hiệu suất nhân sự (Tab Experts)
+router.get('/experts-performance', protect, admin, aiHubController.getExpertPerformance);
 
 module.exports = router;

@@ -37,7 +37,7 @@ const RecentlyViewed = () => {
             <div 
               key={p._id} 
               onClick={() => navigate(`/product/${p.slug}`)}
-              className="group cursor-pointer bg-white rounded-[2rem] p-4 border border-slate-100 hover:border-indigo-100 hover:shadow-2xl hover:shadow-indigo-100/20 transition-all duration-500"
+              className="group cursor-pointer bg-white rounded-xl p-4 border border-slate-100 hover:border-indigo-100 hover:shadow-2xl hover:shadow-indigo-100/20 transition-all duration-500"
             >
               <div className="aspect-square w-full bg-[#FBFBFB] rounded-2xl overflow-hidden mb-4 p-4">
                 <img

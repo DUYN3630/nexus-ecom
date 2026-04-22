@@ -1,28 +1,29 @@
 import axiosClient from './axiosClient';
 
-// Named export for compatibility with AiChatbox.jsx
+// 1. Named export cho các Component cũ (như AiChatbox.jsx ở trang chủ)
 export const runChat = async (prompt) => {
   try {
     const response = await axiosClient.post('/ai/chat', { prompt });
-    return response.text; // Return directly the text string
+    return response.text;
   } catch (error) {
     console.error("Gemini Error:", error);
     throw error;
   }
 };
 
+// 2. Default export với đầy đủ tính năng cho AI Hub/Expert Page
 const geminiApi = {
   runChat,
-  // New method with system instruction support
-  chatWithAi: async (prompt, systemInstruction = null) => {
+  chatWithAi: async (prompt, systemInstruction = null, options = {}) => {
     try {
       const response = await axiosClient.post('/ai/chat', { 
         prompt, 
-        systemInstruction 
+        systemInstruction,
+        ...options 
       });
-      return response; // Returns the whole data { text: '...' }
+      return response; 
     } catch (error) {
-      console.error("Gemini Error:", error);
+      console.error("Gemini Advanced Error:", error);
       throw error;
     }
   }

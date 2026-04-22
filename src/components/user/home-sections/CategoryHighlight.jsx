@@ -42,7 +42,7 @@ const CategoryHighlight = () => {
                 <div className="h-10 w-64 bg-slate-100 animate-pulse rounded-lg mb-16"></div>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {[1, 2, 3].map(i => (
-                        <div key={i} className="h-[400px] bg-slate-50 rounded-[2.5rem] animate-pulse"></div>
+                        <div key={i} className="h-[400px] bg-slate-50 rounded-3xl animate-pulse"></div>
                     ))}
                 </div>
             </div>
@@ -82,7 +82,7 @@ const CategoryHighlight = () => {
                   else if (cat.slug === 'phu-kien') navigate('/accessories');
                   else navigate(`/store?category=${cat.slug}`);
                 }}
-                className={`group relative h-[400px] ${theme.color} rounded-[2.5rem] overflow-hidden cursor-pointer transition-all duration-700 hover:shadow-2xl hover:shadow-indigo-100`}
+                className={`group relative h-[400px] ${theme.color} rounded-3xl overflow-hidden cursor-pointer transition-all duration-700 hover:shadow-2xl hover:shadow-indigo-100`}
               >
                 {/* Image background */}
                 <div className="absolute inset-0 w-full h-full transition-transform duration-1000 group-hover:scale-110">

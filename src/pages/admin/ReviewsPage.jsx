@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { 
-  MessageSquare, Star, AlertTriangle, CheckCircle, Search, Filter, MoreVertical 
+  MessageSquare, Star, AlertTriangle, CheckCircle, Search, Filter, MoreVertical, ChevronLeft, ChevronRight 
 } from 'lucide-react';
 import reviewApi from '../../api/reviewApi';
 import StatCard from '../../components/admin/StatCard';
@@ -17,13 +17,14 @@ const ReviewsPage = () => {
     pendingCount: 0,
     spamCount: 0
   });
+  const [pagination, setPagination] = useState({ page: 1, totalPages: 1, total: 0 });
   const [isLoading, setIsLoading] = useState(false);
   const [filters, setFilters] = useState({
     status: 'all',
     rating: '',
     search: '',
     page: 1,
-    limit: 10
+    limit: 5
   });
   const [selectedReview, setSelectedReview] = useState(null); // For Reply Modal
   const { addToast } = useToast();
@@ -32,38 +33,45 @@ const ReviewsPage = () => {
     setIsLoading(true);
     try {
       const response = await reviewApi.getAll(filters);
-      setReviews(response.reviews);
-      setStats(response.stats);
+      setReviews(response.reviews || []);
+      setStats(response.stats || { totalReviews: 0, avgRating: 0, pendingCount: 0, spamCount: 0 });
+      if (response.totalPages) {
+        setPagination({
+          page: response.currentPage,
+          totalPages: response.totalPages,
+          total: response.total
+        });
+      }
     } catch (error) {
       addToast('Không thể tải danh sách đánh giá', 'error');
     } finally {
       setIsLoading(false);
     }
-  }, [filters]);
+  }, [filters, addToast]);
 
   useEffect(() => {
     fetchReviews();
   }, [fetchReviews]);
 
+  const handlePageChange = (newPage) => {
+    setFilters(prev => ({ ...prev, page: newPage }));
+  };
+
   // Actions
   const handleStatusChange = async (id, newStatus) => {
     try {
-      // Optimistic Update
-      setReviews(prev => prev.map(r => r._id === id ? { ...r, status: newStatus } : r));
       await reviewApi.updateStatus(id, newStatus);
       addToast('Cập nhật trạng thái thành công', 'success');
-      fetchReviews(); // Refresh stats
+      fetchReviews();
     } catch (error) {
       addToast('Lỗi cập nhật trạng thái', 'error');
-      fetchReviews(); // Rollback
     }
   };
 
   const handleToggleSpam = async (id) => {
     try {
-      setReviews(prev => prev.map(r => r._id === id ? { ...r, isSpam: !r.isSpam } : r));
       await reviewApi.toggleSpam(id);
-      addToast('Đã đánh dấu spam', 'success');
+      addToast('Đã cập nhật trạng thái spam', 'success');
       fetchReviews();
     } catch (error) {
       addToast('Lỗi thao tác', 'error');
@@ -74,8 +82,8 @@ const ReviewsPage = () => {
     if (!window.confirm('Bạn chắc chắn muốn xóa đánh giá này?')) return;
     try {
       await reviewApi.delete(id);
-      setReviews(prev => prev.filter(r => r._id !== id));
       addToast('Đã xóa đánh giá', 'success');
+      fetchReviews();
     } catch (error) {
       addToast(error.response?.data?.message || 'Không thể xóa', 'error');
     }
@@ -93,7 +101,7 @@ const ReviewsPage = () => {
   };
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 text-left">
       {/* 1. Header & Stats */}
       <div className="flex justify-between items-end">
         <div>
@@ -133,7 +141,7 @@ const ReviewsPage = () => {
       </div>
 
       {/* 2. Filters */}
-      <div className="bg-white p-4 rounded-2xl border border-slate-100 flex flex-wrap gap-4 items-center justify-between">
+      <div className="bg-white p-4 rounded-2xl border border-slate-100 flex flex-wrap gap-4 items-center justify-between shadow-sm">
         <div className="flex gap-4 flex-1">
           <div className="relative flex-1 max-w-md">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
@@ -142,30 +150,18 @@ const ReviewsPage = () => {
               placeholder="Tìm kiếm nội dung, sản phẩm..." 
               className="w-full pl-10 pr-4 py-2 bg-slate-50 border-none rounded-xl text-sm font-medium focus:ring-2 focus:ring-indigo-100 outline-none"
               value={filters.search}
-              onChange={(e) => setFilters({ ...filters, search: e.target.value })}
+              onChange={(e) => setFilters({ ...filters, search: e.target.value, page: 1 })}
             />
           </div>
           <select 
-            className="bg-slate-50 px-4 py-2 rounded-xl text-sm font-bold text-slate-600 outline-none"
+            className="bg-slate-50 px-4 py-2 rounded-xl text-sm font-bold text-slate-600 outline-none cursor-pointer"
             value={filters.status}
-            onChange={(e) => setFilters({ ...filters, status: e.target.value })}
+            onChange={(e) => setFilters({ ...filters, status: e.target.value, page: 1 })}
           >
             <option value="all">Tất cả trạng thái</option>
             <option value="pending">Chờ duyệt</option>
             <option value="published">Đã đăng</option>
             <option value="hidden">Đã ẩn</option>
-          </select>
-          <select 
-            className="bg-slate-50 px-4 py-2 rounded-xl text-sm font-bold text-slate-600 outline-none"
-            value={filters.rating}
-            onChange={(e) => setFilters({ ...filters, rating: e.target.value })}
-          >
-            <option value="">Tất cả sao</option>
-            <option value="5">5 Sao</option>
-            <option value="4">4 Sao</option>
-            <option value="3">3 Sao</option>
-            <option value="2">2 Sao</option>
-            <option value="1">1 Sao</option>
           </select>
         </div>
       </div>
@@ -180,6 +176,46 @@ const ReviewsPage = () => {
           onDelete={handleDelete}
           onReply={(review) => setSelectedReview(review)}
         />
+        
+        {/* Pagination Navigation */}
+        {pagination.totalPages > 1 && (
+          <div className="px-8 py-6 bg-slate-50/50 border-t border-slate-100 flex items-center justify-between">
+            <p className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-400 italic">
+              Trang {pagination.page} / {pagination.totalPages} • {pagination.total} đánh giá
+            </p>
+            <div className="flex items-center gap-2">
+              <button 
+                onClick={() => handlePageChange(pagination.page - 1)}
+                disabled={pagination.page === 1}
+                className={`p-2 rounded-xl border transition-all ${pagination.page === 1 ? 'text-slate-200 border-slate-50 cursor-not-allowed' : 'text-slate-500 border-slate-200 hover:bg-white hover:text-indigo-600 shadow-sm'}`}
+              >
+                <ChevronLeft size={18} />
+              </button>
+              
+              {[...Array(pagination.totalPages)].map((_, i) => (
+                <button
+                  key={i + 1}
+                  onClick={() => handlePageChange(i + 1)}
+                  className={`w-10 h-10 rounded-xl text-[11px] font-black transition-all ${
+                    pagination.page === i + 1 
+                      ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200' 
+                      : 'text-slate-400 hover:bg-white hover:text-slate-900'
+                  }`}
+                >
+                  {i + 1}
+                </button>
+              ))}
+
+              <button 
+                onClick={() => handlePageChange(pagination.page + 1)}
+                disabled={pagination.page === pagination.totalPages}
+                className={`p-2 rounded-xl border transition-all ${pagination.page === pagination.totalPages ? 'text-slate-200 border-slate-50 cursor-not-allowed' : 'text-slate-500 border-slate-200 hover:bg-white hover:text-indigo-600 shadow-sm'}`}
+              >
+                <ChevronRight size={18} />
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Reply Modal */}

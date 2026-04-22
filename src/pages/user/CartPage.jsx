@@ -46,7 +46,7 @@ const CartPage = () => {
           <ShoppingBag size={40} strokeWidth={1} />
         </div>
         <div className="text-center space-y-4">
-          <h2 className="text-4xl font-serif italic text-stone-900">Your bag is empty.</h2>
+          <h2 className="text-4xl font-serif italic text-stone-900">Giỏ hàng của bạn đang trống.</h2>
           <p className="text-stone-400 font-light tracking-widest uppercase text-[10px]">Đã đến lúc bắt đầu một bộ sưu tập mới</p>
         </div>
         <button 
@@ -66,8 +66,8 @@ const CartPage = () => {
         {/* HEADER */}
         <div className="flex flex-col md:flex-row justify-between items-end mb-20 gap-8">
           <div className="space-y-6">
-            <span className="text-[10px] uppercase tracking-[0.5em] text-stone-400 font-bold">Your Selection</span>
-            <h1 className="text-6xl md:text-8xl font-serif italic tracking-tighter leading-none">The Bag.</h1>
+            <span className="text-[10px] uppercase tracking-[0.5em] text-stone-400 font-bold">Lựa chọn của bạn</span>
+            <h1 className="text-6xl md:text-8xl font-serif italic tracking-tighter leading-none">Túi đồ.</h1>
           </div>
           <div className="pb-2">
             <p className="text-stone-400 font-light italic">Số lượng: {cartItems.length} tác phẩm</p>
@@ -122,7 +122,7 @@ const CartPage = () => {
               <div className="absolute inset-0 opacity-10 bg-white/5" />
               
               <div className="relative z-10 space-y-8">
-                <h3 className="text-3xl font-serif italic">Investment Summary.</h3>
+                <h3 className="text-3xl font-serif italic">Tóm tắt đơn hàng.</h3>
                 
                 <div className="space-y-6 border-y border-white/10 py-10">
                   <div className="flex justify-between items-center text-xs tracking-widest text-stone-400 uppercase">
@@ -130,8 +130,8 @@ const CartPage = () => {
                     <span className="text-white font-bold">{formatCurrency(subtotal)}</span>
                   </div>
                   <div className="flex justify-between items-center text-xs tracking-widest text-stone-400 uppercase">
-                    <span>Vận chuyển tiêu chuẩn</span>
-                    <span className="text-white font-bold">{shipping === 0 ? 'Complimentary' : formatCurrency(shipping)}</span>
+                    <span>Vận chuyển</span>
+                    <span className="text-white font-bold">{shipping === 0 ? 'Miễn phí' : formatCurrency(shipping)}</span>
                   </div>
                 </div>
 
@@ -146,12 +146,12 @@ const CartPage = () => {
                   onClick={handleGoToCheckout}
                   className="group w-full py-6 bg-white text-stone-900 rounded-2xl text-[10px] font-black uppercase tracking-[0.4em] hover:bg-stone-200 transition-all flex items-center justify-center gap-4 mt-8"
                 >
-                  Tiến hành đặt hàng <ArrowRight size={16} className="group-hover:translate-x-2 transition-transform" />
+                  Tiến hành thanh toán <ArrowRight size={16} className="group-hover:translate-x-2 transition-transform" />
                 </button>
 
                 <div className="flex items-center gap-4 justify-center pt-8 border-t border-white/5">
                   <ShieldCheck size={16} className="text-stone-500" />
-                  <span className="text-[8px] uppercase tracking-[0.3em] text-stone-500 font-bold">Secure Checkout Guaranteed</span>
+                  <span className="text-[8px] uppercase tracking-[0.3em] text-stone-500 font-bold">Thanh toán an toàn 100%</span>
                 </div>
               </div>
             </div>

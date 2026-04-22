@@ -23,13 +23,13 @@ const getStatusBadge = (status) => {
 };
 
 // --- SUB-COMPONENTS ---
-const ProductListView = ({ products, onEdit, onDelete, onAddNew, searchQuery, onSearchChange, totalProducts }) => (
+const ProductListView = ({ products, onEdit, onDelete, onAddNew, searchQuery, onSearchChange, onSearchSubmit, pagination, onPageChange }) => (
   <div className="space-y-6 animate-in fade-in duration-300 text-left">
     <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm flex justify-between items-center">
       <div>
         <h3 className="text-lg font-bold text-gray-800">Quản lý kho sản phẩm</h3>
         <p className="text-sm text-gray-500">
-          {searchQuery ? `Tìm thấy ${products.length} trên tổng số ${totalProducts} sản phẩm` : `${totalProducts} sản phẩm`}
+          Tổng số {pagination.total} sản phẩm
         </p>
       </div>
       <div className="flex items-center gap-3">
@@ -41,6 +41,7 @@ const ProductListView = ({ products, onEdit, onDelete, onAddNew, searchQuery, on
             className="pl-9 pr-4 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none w-64"
             value={searchQuery}
             onChange={onSearchChange}
+            onKeyPress={(e) => e.key === 'Enter' && onSearchSubmit()}
           />
         </div>
         <button onClick={onAddNew} className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-semibold shadow-sm transition-all">
@@ -50,6 +51,7 @@ const ProductListView = ({ products, onEdit, onDelete, onAddNew, searchQuery, on
     </div>
     <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
       <table className="w-full text-left">
+        {/* ... table content giữ nguyên ... */}
         <thead className="bg-gray-50 border-b border-gray-200">
           <tr>
             <th className="p-4 text-sm font-semibold text-gray-600">Sản phẩm</th>
@@ -65,13 +67,11 @@ const ProductListView = ({ products, onEdit, onDelete, onAddNew, searchQuery, on
             <tr key={product._id} className="hover:bg-gray-50/50 transition cursor-default">
               <td className="p-4">
                 <div className="flex items-center gap-3">
-                  {product.isFeatured && <Star className="w-4 h-4 text-amber-400 fill-current" />}
                   <div className="w-12 h-12 bg-gray-100 rounded-lg border flex items-center justify-center overflow-hidden">
                     <img 
                         src={getProductImageUrl(product)} 
                         className="object-cover w-full h-full" 
                         alt={product.name} 
-                        onError={(e) => {e.target.src = 'https://placehold.co/150'}}
                     />
                   </div>
                   <div>
@@ -83,24 +83,53 @@ const ProductListView = ({ products, onEdit, onDelete, onAddNew, searchQuery, on
               <td className="p-4"><span className="text-xs bg-gray-100 px-2 py-1 rounded text-gray-600 font-medium">{product.category?.name || '---'}</span></td>
               <td className="p-4">
                 <div className="font-bold text-gray-800 text-sm">{formatCurrency(product.discountPrice > 0 ? product.discountPrice : product.price)}</div>
-                {product.discountPrice > 0 && <div className="text-xs text-gray-500 line-through">{formatCurrency(product.price)}</div>}
               </td>
-              <td className="p-4">
-                <div className={`text-sm font-bold ${product.stock > 0 ? 'text-gray-700' : 'text-rose-500'}`}>
-                  {product.stock} <span className="text-xs text-gray-400 font-medium">đơn vị</span>
-                </div>
-              </td>
+              <td className="p-4 text-sm font-bold text-gray-700">{product.stock}</td>
               <td className="p-4">{getStatusBadge(product.status)}</td>
               <td className="p-4 text-right">
                 <div className="flex justify-end gap-2">
-                  <button onClick={() => onEdit(product)} className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-all"><PencilSimple className="w-4 h-4"/></button>
-                  <button onClick={() => onDelete(product._id)} className="p-1.5 text-gray-400 hover:text-rose-600 hover:bg-rose-50 rounded transition-all"><Trash className="w-4 h-4" /></button>
+                  <button onClick={() => onEdit(product)} className="p-1.5 text-gray-400 hover:text-blue-600 rounded transition-all"><PencilSimple className="w-4 h-4"/></button>
+                  <button onClick={() => onDelete(product._id)} className="p-1.5 text-gray-400 hover:text-rose-600 rounded transition-all"><Trash className="w-4 h-4" /></button>
                 </div>
               </td>
             </tr>
           ))}
         </tbody>
       </table>
+
+      {/* Pagination UI */}
+      {pagination.totalPages > 1 && (
+        <div className="p-4 bg-gray-50 border-t flex justify-between items-center">
+          <span className="text-xs text-gray-500 font-medium italic">
+            Trang {pagination.page} / {pagination.totalPages}
+          </span>
+          <div className="flex gap-1">
+            <button 
+              disabled={pagination.page === 1}
+              onClick={() => onPageChange(pagination.page - 1)}
+              className="px-3 py-1 border rounded bg-white text-xs font-bold hover:bg-gray-50 disabled:opacity-50"
+            >
+              Trước
+            </button>
+            {[...Array(pagination.totalPages)].map((_, i) => (
+              <button
+                key={i+1}
+                onClick={() => onPageChange(i+1)}
+                className={`w-8 h-8 rounded text-xs font-bold transition-all ${pagination.page === i+1 ? 'bg-blue-600 text-white shadow-md' : 'bg-white text-gray-600 hover:bg-gray-100'}`}
+              >
+                {i+1}
+              </button>
+            ))}
+            <button 
+              disabled={pagination.page === pagination.totalPages}
+              onClick={() => onPageChange(pagination.page + 1)}
+              className="px-3 py-1 border rounded bg-white text-xs font-bold hover:bg-gray-50 disabled:opacity-50"
+            >
+              Sau
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   </div>
 );
@@ -361,42 +390,38 @@ const ProductPage = () => {
   const [currentProduct, setCurrentProduct] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+  
+  // Pagination State
+  const [pagination, setPagination] = useState({
+    page: 1,
+    limit: 5, // Chỉnh xuống 5 để dễ thấy phân trang
+    total: 0,
+    totalPages: 1
+  });
 
-  const fetchData = async () => {
+  const fetchData = async (page = 1) => {
     try {
       setIsLoading(true);
-      console.log("--- Fetching Admin Products ---");
       const [productsRes, categoriesRes] = await Promise.all([
-        productApi.getAll({ status: 'all', limit: 100 }), 
+        productApi.getAll({ 
+          status: 'all', 
+          page, 
+          limit: 5, // Đồng bộ với limit ở trên
+          search: searchQuery 
+        }), 
         categoryApi.getAll()
       ]);
 
-      console.log("Products API Response:", productsRes);
-      console.log("Categories API Response:", categoriesRes);
-
-      // Backend trả về { data: products, pagination: ... }
-      // Kiểm tra kỹ cấu trúc dữ liệu trả về
-      let rawProducts = [];
-      if (productsRes && productsRes.data && Array.isArray(productsRes.data)) {
-        rawProducts = productsRes.data;
-      } else if (Array.isArray(productsRes)) {
-        rawProducts = productsRes;
-      } else if (productsRes && productsRes.products && Array.isArray(productsRes.products)) {
-        rawProducts = productsRes.products;
+      // Xử lý sản phẩm
+      const productsData = productsRes.data || [];
+      setProducts(productsData);
+      
+      if (productsRes.pagination) {
+        setPagination(productsRes.pagination);
       }
       
-      console.log("Processed Products for State:", rawProducts);
-      setProducts(rawProducts);
-      
-      // Tương tự cho categories
-      let rawCategories = [];
-      if (categoriesRes && categoriesRes.data && Array.isArray(categoriesRes.data)) {
-        rawCategories = categoriesRes.data;
-      } else if (Array.isArray(categoriesRes)) {
-        rawCategories = categoriesRes;
-      }
-      console.log("Processed Categories for State:", rawCategories);
-
+      // Xử lý categories
+      let rawCategories = categoriesRes.data || categoriesRes || [];
       const flattenCategories = (cats, level = 0) => {
           if (!cats || !Array.isArray(cats)) return [];
           let flatList = [];
@@ -413,26 +438,26 @@ const ProductPage = () => {
     } catch (error) {
       console.error("Failed to fetch data:", error);
       setProducts([]); 
-      setCategories([]);
     } finally {
       setIsLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchData();
-  }, []);
+    fetchData(pagination.page);
+  }, [pagination.page]);
 
-  const filteredProducts = useMemo(() => {
-    if (!searchQuery.trim()) {
-      return products;
+  // Tìm kiếm (Trigger fetch mới thay vì dùng useMemo để filter client-side)
+  const handleSearch = () => {
+    setPagination(prev => ({ ...prev, page: 1 }));
+    fetchData(1);
+  };
+
+  const handlePageChange = (newPage) => {
+    if (newPage >= 1 && newPage <= pagination.totalPages) {
+      setPagination(prev => ({ ...prev, page: newPage }));
     }
-    const lowercasedQuery = searchQuery.toLowerCase();
-    return products.filter(product =>
-      product.name.toLowerCase().includes(lowercasedQuery) ||
-      product.sku.toLowerCase().includes(lowercasedQuery)
-    );
-  }, [products, searchQuery]);
+  };
 
 
   const handleAddNew = () => {
@@ -508,10 +533,12 @@ const ProductPage = () => {
     <div className="flex-1 overflow-y-auto p-6 scroll-smooth bg-gray-50">
       {activeTab === 'list' && (
         <ProductListView
-          products={filteredProducts}
-          totalProducts={products.length}
+          products={products}
+          pagination={pagination}
           searchQuery={searchQuery}
           onSearchChange={(e) => setSearchQuery(e.target.value)}
+          onSearchSubmit={handleSearch}
+          onPageChange={handlePageChange}
           onAddNew={handleAddNew}
           onEdit={handleEdit}
           onDelete={handleDelete}

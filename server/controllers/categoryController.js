@@ -1,12 +1,36 @@
 const Category = require('../models/Category');
 const Product = require('../models/Product');
 
-// @desc    Get all categories
+// @desc    Get all categories (with pagination support for admin)
 // @route   GET /api/categories
 // @access  Public
 exports.getCategories = async (req, res) => {
     try {
-        // The new frontend handles filtering and hierarchy, so we send the raw flat list.
+        const { page, limit } = req.query;
+        
+        if (page && limit) {
+            const pageNum = parseInt(page);
+            const limitNum = parseInt(limit);
+            const skip = (pageNum - 1) * limitNum;
+
+            const [categories, total] = await Promise.all([
+                Category.find({}).skip(skip).limit(limitNum),
+                Category.countDocuments({})
+            ]);
+
+            return res.status(200).json({
+                success: true,
+                data: categories,
+                pagination: {
+                    total,
+                    page: pageNum,
+                    limit: limitNum,
+                    totalPages: Math.ceil(total / limitNum)
+                }
+            });
+        }
+
+        // Mặc định trả về toàn bộ nếu không truyền page/limit (cho dropdown)
         const categories = await Category.find({});
         res.status(200).json({
             success: true,

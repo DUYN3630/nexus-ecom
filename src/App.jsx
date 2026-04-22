@@ -32,6 +32,7 @@ import PurchasedProductsPage from './pages/user/PurchasedProductsPage.jsx';
 import ComingSoonPage from './pages/user/ComingSoonPage.jsx';
 import OrderSuccessPage from './pages/user/OrderSuccessPage.jsx';
 import ExpertSupportPage from './pages/user/ExpertSupportPage.jsx';
+import ComparePage from './pages/user/ComparePage.jsx';
 
 // Special Experience Page
 import ProductExperience from './pages/user/ProductExperience.jsx';
@@ -47,6 +48,7 @@ import AdminMarketingPage from './pages/admin/MarketingPage.jsx';
 import AdminReviewsPage from './pages/admin/ReviewsPage.jsx';
 import AIHubPage from './pages/admin/AIHubPage.jsx';
 import SupportTicketPage from './pages/admin/SupportTicketPage.jsx';
+import RepairManagementPage from './pages/admin/RepairManagementPage.jsx';
 
 // Helper Components
 import ProtectedRoute from './components/Auth/ProtectedRoute.jsx';
@@ -80,6 +82,7 @@ const App = () => {
           
           <Route path="/product/:slug" element={<ProductDetailPage />} />
           <Route path="/cart" element={<CartPage />} />
+          <Route path="/compare" element={<ComparePage />} />
           <Route path="/wishlist" element={<WishlistPage />} />
           <Route path="/about" element={<AboutPage />} />
           <Route path="/iphone-experience" element={<ProductExperience />} />
@@ -128,6 +131,7 @@ const App = () => {
           <Route path="reviews" element={<AdminReviewsPage />} />
           <Route path="ai-hub" element={<AIHubPage />} />
           <Route path="tickets" element={<SupportTicketPage />} />
+          <Route path="repairs" element={<RepairManagementPage />} />
         </Route>
       </Routes>
     </BrowserRouter>

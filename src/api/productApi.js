@@ -3,7 +3,12 @@ import axiosClient from './axiosClient';
 const productApi = {
     getAll: (params) => {
         const url = '/products';
-        return axiosClient.get(url, { params });
+        return axiosClient.get(url, { 
+            params: {
+                ...params,
+                status: params?.status || 'all' // Admin mặc định lấy tất cả status
+            }
+        });
     },
     getBySlug: (slug) => {
         const url = `/products/slug/${slug}`;

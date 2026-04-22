@@ -4,9 +4,9 @@ const userApi = {
   /**
    * Lấy danh sách tất cả người dùng
    */
-  getAll: () => {
+  getAll: (params) => {
     const url = '/users';
-    return axiosClient.get(url);
+    return axiosClient.get(url, { params });
   },
 
   /**

@@ -25,14 +25,24 @@ const protect = async (req, res, next) => {
   }
 };
 
-// Middleware kiểm tra quyền Admin (Chấp nhận cả admin và Admin)
+// Middleware kiểm tra quyền Admin
 const admin = (req, res, next) => {
-  if (req.user && (req.user.role === 'admin' || req.user.role === 'Admin')) {
+  console.log("--- [AUTH DEBUG] ---");
+  console.log("User ID:", req.user?._id);
+  console.log("User Email:", req.user?.email);
+  console.log("User Role in DB:", req.user?.role);
+  
+  if (req.user && req.user.role && req.user.role.toLowerCase() === 'admin') {
+    console.log("Status: Access Granted ✅");
     next();
   } else {
-    console.log("Quyền bị từ chối cho role:", req.user?.role); // DEBUG giúp bạn
-    res.status(403).json({ message: 'Chỉ dành cho Quản trị viên.' });
+    console.log("Status: Access Denied ❌ (Role is not admin)");
+    res.status(403).json({ 
+      message: 'Chỉ dành cho Quản trị viên.',
+      debug_current_role: req.user?.role 
+    });
   }
+  console.log("--------------------");
 };
 
 module.exports = { protect, admin };

@@ -1,87 +1,109 @@
-const SupportTicket = require('../models/SupportTicket');
+const Setting = require('../models/Setting');
+const RepairRequest = require('../models/RepairRequest');
 const Expert = require('../models/Expert');
-const { generateText } = require('../utils/gemini');
 
-// 1. Lấy thống kê tổng quan và phân tích AI về các vấn đề hiện tại
-exports.getSupportAnalytics = async (req, res) => {
+// 1. Lấy cấu hình AI
+exports.getAISettings = async (req, res) => {
   try {
-    const totalTickets = await SupportTicket.countDocuments();
-    const activeTickets = await SupportTicket.countDocuments({ status: { $ne: 'resolved' } });
-    const resolvedTickets = await SupportTicket.countDocuments({ status: 'resolved' });
+    const keys = ['ai_system_instruction', 'ai_model_name', 'ai_temperature', 'ai_max_tokens'];
+    const settings = await Setting.find({ key: { $in: keys } });
     
-    const recentTickets = await SupportTicket.find()
-      .sort({ createdAt: -1 })
-      .limit(20)
-      .select('subject aiSummary chatHistory status');
+    const configMap = settings.reduce((acc, curr) => {
+      acc[curr.key] = curr.value;
+      return acc;
+    }, {});
 
-    const ticketDataString = recentTickets.map(t => 
-      `Chủ đề: ${t.subject}, Tóm tắt: ${t.aiSummary || 'Chưa có'}, Trạng thái: ${t.status}`
-    ).join('\n');
+    res.json(configMap);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
 
-    const analysisPrompt = `
-      Dựa trên dữ liệu các yêu cầu hỗ trợ sau đây, hãy thực hiện bằng TIẾNG VIỆT:
-      1. Tóm tắt 3 vấn đề chính mà khách hàng đang gặp phải nhiều nhất.
-      2. Đánh giá mức độ hài lòng chung của khách hàng (thang điểm 1-10).
-      3. Đưa ra 1 lời khuyên ngắn gọn để cải thiện dịch vụ.
-      
-      Dữ liệu:
-      ${ticketDataString}
+// 2. Cập nhật cấu hình AI
+exports.updateAISettings = async (req, res) => {
+  try {
+    const updates = req.body;
+    const results = [];
 
-      Yêu cầu trả lời định dạng JSON:
-      {
-        "topIssues": ["vấn đề 1", "vấn đề 2", "vấn đề 3"],
-        "satisfactionScore": 8.5,
-        "advice": "nội dung lời khuyên bằng tiếng Việt"
-      }
-    `;
-
-    let aiAnalysis = { topIssues: [], satisfactionScore: 0, advice: "Chưa có đủ dữ liệu để phân tích." };
-    try {
-      const aiResponse = await generateText(analysisPrompt, "Bạn là chuyên gia phân tích dữ liệu vận hành. Hãy trả lời hoàn toàn bằng tiếng Việt.");
-      const jsonStr = aiResponse.replace(/```json|```/g, '').trim();
-      aiAnalysis = JSON.parse(jsonStr);
-    } catch (e) {
-      console.error("Lỗi phân tích AI:", e);
+    for (const [key, value] of Object.entries(updates)) {
+      const setting = await Setting.findOneAndUpdate(
+        { key },
+        { value },
+        { upsert: true, new: true }
+      );
+      results.push(setting);
     }
+
+    res.json({ message: 'Cập nhật cấu hình AI thành công', data: results });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// 3. API Phân tích Thông minh (Tab Intelligence)
+exports.getAIAnalytics = async (req, res) => {
+  try {
+    const total = await RepairRequest.countDocuments();
+    const resolved = await RepairRequest.countDocuments({ status: 'Completed' });
+    const active = await RepairRequest.countDocuments({ status: { $in: ['Pending', 'Confirmed', 'Repairing'] } });
+    
+    const recentTickets = await RepairRequest.find()
+      .sort({ createdAt: -1 })
+      .limit(5)
+      .select('ticketNumber deviceType status description createdAt');
+
+    // Giả lập phân tích từ AI (Trong thực tế bạn có thể gọi Gemini để tóm tắt)
+    const aiAnalysis = {
+      topIssues: [
+        "Lỗi sạc Pin và Nguồn chiếm 45%",
+        "Vỡ màn hình/Mặt lưng chiếm 30%",
+        "Lỗi phần mềm sau khi cập nhật chiếm 15%"
+      ],
+      satisfactionScore: 8.5,
+      advice: "Nhu cầu sửa chữa Pin tăng cao trong tháng này, hãy nhập thêm linh kiện Pin chính hãng để tối ưu thời gian chờ."
+    };
 
     res.json({
       stats: {
-        total: totalTickets,
-        active: activeTickets,
-        resolved: resolvedTickets,
-        resolutionRate: totalTickets > 0 ? ((resolvedTickets / totalTickets) * 100).toFixed(1) : 0
+        total,
+        active,
+        resolved,
+        resolutionRate: total > 0 ? Math.round((resolved / total) * 100) : 0
       },
-      aiAnalysis,
-      recentTickets
+      recentTickets,
+      aiAnalysis
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
 
-// 2. Lấy thông tin hiệu năng chuyên gia
+// 4. API Giám sát Chuyên gia (Tab Experts)
 exports.getExpertPerformance = async (req, res) => {
   try {
-    const experts = await Expert.find();
-    const performance = await Promise.all(experts.map(async (expert) => {
-      const assignedTickets = await SupportTicket.countDocuments({ expert: expert._id });
-      const resolvedTickets = await SupportTicket.countDocuments({ expert: expert._id, status: 'resolved' });
+    const experts = await Expert.find({ status: 'active' });
+    
+    // Thống kê cho từng chuyên gia
+    const performanceData = await Promise.all(experts.map(async (expert) => {
+      const assigned = await RepairRequest.countDocuments({ expert: expert._id });
+      const resolved = await RepairRequest.countDocuments({ expert: expert._id, status: 'Completed' });
       
       return {
         _id: expert._id,
         name: expert.name,
+        role: expert.role,
         avatar: expert.avatar,
         specialty: expert.specialty,
         isOnline: expert.isOnline,
         stats: {
-          assigned: assignedTickets,
-          resolved: resolvedTickets,
-          efficiency: assignedTickets > 0 ? ((resolvedTickets / assignedTickets) * 100).toFixed(1) : 0
+          assigned,
+          resolved,
+          efficiency: assigned > 0 ? Math.round((resolved / assigned) * 100) : 100
         }
       };
     }));
 
-    res.json(performance);
+    res.json(performanceData);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

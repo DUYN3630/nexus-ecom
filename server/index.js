@@ -45,6 +45,8 @@ const aiSettingRoutes = require('./routes/aiSettingRoutes');
 const paymentRoutes = require('./routes/paymentRoutes');
 const trackingRoutes = require('./routes/trackingRoutes');
 
+const supportRoutes = require('./routes/supportRoutes');
+
 app.use('/api/auth', authRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/categories', categoryRoutes);
@@ -53,6 +55,14 @@ app.use('/api/users', userRoutes);
 app.use('/api/reviews', reviewRoutes);
 app.use('/api/experts', expertRoutes);
 app.use('/api/tickets', ticketRoutes);
+
+// ĐĂNG KÝ ROUTE SUPPORT TRỰC TIẾP ĐỂ TRÁNH LỖI 404
+const supportRouter = require('./routes/supportRoutes');
+app.use('/api/support', (req, res, next) => {
+    console.log(`--- [DEBUG] Support API Hit: ${req.method} ${req.url} ---`);
+    next();
+}, supportRouter);
+
 app.use('/api/upload', uploadRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/marketing', marketingRoutes);
@@ -68,39 +78,26 @@ app.get('/', (req, res) => {
 // Endpoint Chat chính thức
 app.post('/api/ai/chat', async (req, res) => {
     try {
-        const { prompt, userId, customInstruction } = req.body;
+        const { prompt, userId, customInstruction, systemInstruction, modelName, temperature, maxOutputTokens } = req.body;
 
         if (!prompt) {
             return res.status(400).json({ message: "Prompt is required" });
         }
 
-        // Lấy tất cả các cài đặt liên quan đến AI từ collection Setting
+        // Lấy config từ DB để làm dự phòng (fallback)
         const keys = ['ai_system_instruction', 'ai_model_name', 'ai_temperature', 'ai_max_tokens'];
         const settings = await Setting.find({ key: { $in: keys } });
-        
-        // Chuyển mảng settings thành một object configMap
         const configMap = settings.reduce((acc, curr) => {
             acc[curr.key] = curr.value;
             return acc;
         }, {});
 
-        const config = {
-            ai_system_instruction: configMap.ai_system_instruction || NEXUS_SYSTEM_INSTRUCTION,
-            ai_model_name: configMap.ai_model_name || "gemini-flash-latest", // Alias cho 1.5 flash ổn định
-            ai_temperature: parseFloat(configMap.ai_temperature) || 0.7,
-            ai_max_tokens: parseInt(configMap.ai_max_tokens) || 1000
-        };
-
-        let finalInstruction = config.ai_system_instruction;
-        if (customInstruction === 'NEXUS_EXPERT_SUPPORT_INSTRUCTION') {
-            finalInstruction = NEXUS_EXPERT_SUPPORT_INSTRUCTION;
-        }
-
+        // Hợp nhất cấu hình: Ưu tiên dữ liệu gửi từ Body (Admin Playground) > Database > Mặc định
         const options = {
-            systemInstruction: finalInstruction,
-            modelName: config.ai_model_name,
-            temperature: config.ai_temperature,
-            maxOutputTokens: config.ai_max_tokens
+            systemInstruction: systemInstruction || (customInstruction === 'NEXUS_EXPERT_SUPPORT_INSTRUCTION' ? NEXUS_EXPERT_SUPPORT_INSTRUCTION : (configMap.ai_system_instruction || NEXUS_SYSTEM_INSTRUCTION)),
+            modelName: modelName || configMap.ai_model_name || "gemini-flash-latest",
+            temperature: parseFloat(temperature) || parseFloat(configMap.ai_temperature) || 0.7,
+            maxOutputTokens: parseInt(maxOutputTokens) || parseInt(configMap.ai_max_tokens) || 1000
         };
 
         let text = await generateText(prompt, options);

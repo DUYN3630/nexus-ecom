@@ -13,7 +13,7 @@ const PromoBanner = () => {
           {/* Main Large Block (Left) */}
           <div 
             onClick={() => navigate('/products')}
-            className="md:col-span-8 relative rounded-[3rem] bg-slate-900 overflow-hidden group cursor-pointer shadow-2xl"
+            className="md:col-span-8 relative rounded-3xl bg-slate-900 overflow-hidden group cursor-pointer shadow-2xl"
           >
             <img 
               src="https://images.unsplash.com/photo-1517336712468-da1133206-80ce9b88a853?auto=format&fit=crop&q=80&w=1200" 
@@ -49,7 +49,7 @@ const PromoBanner = () => {
             {/* Top Right Block */}
             <div 
               onClick={() => navigate('/products')}
-              className="flex-1 relative rounded-[3rem] bg-indigo-50 overflow-hidden group cursor-pointer border border-indigo-100"
+              className="flex-1 relative rounded-3xl bg-indigo-50 overflow-hidden group cursor-pointer border border-indigo-100"
             >
               <img 
                 src="https://images.unsplash.com/photo-1544244015-0df4b3ffc6b0?auto=format&fit=crop&q=80&w=800" 
@@ -67,7 +67,7 @@ const PromoBanner = () => {
             {/* Bottom Right Block */}
             <div 
               onClick={() => navigate('/products')}
-              className="flex-1 relative rounded-[3rem] bg-slate-100 overflow-hidden group cursor-pointer border border-slate-200"
+              className="flex-1 relative rounded-3xl bg-slate-100 overflow-hidden group cursor-pointer border border-slate-200"
             >
               <img 
                 src="https://images.unsplash.com/photo-1546868871-7041f2a55e12?auto=format&fit=crop&q=80&w=800" 

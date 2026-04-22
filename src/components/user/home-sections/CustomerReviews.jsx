@@ -77,7 +77,7 @@ const CustomerReviews = () => {
           <div className="max-w-[1440px] mx-auto px-6 md:px-20 animate-pulse">
             <div className="h-10 w-64 bg-slate-200 rounded mb-16"></div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-              {[1,2,3,4].map(i => <div key={i} className="h-64 bg-white rounded-[2.5rem] border border-slate-100"></div>)}
+              {[1,2,3,4].map(i => <div key={i} className="h-64 bg-white rounded-2xl border border-slate-100"></div>)}
             </div>
           </div>
        </section>
@@ -125,7 +125,7 @@ const CustomerReviews = () => {
             return (
             <div 
               key={id} 
-              className="group bg-white p-8 rounded-[2.5rem] shadow-[0_10px_30px_-15px_rgba(0,0,0,0.05)] border border-slate-100/60 hover:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.1)] transition-all duration-500 flex flex-col h-full"
+              className="group bg-white p-8 rounded-2xl shadow-[0_10px_30px_-15px_rgba(0,0,0,0.05)] border border-slate-100/60 hover:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.1)] transition-all duration-500 flex flex-col h-full"
             >
               {/* User Info */}
               <div className="flex items-center gap-4 mb-6">
