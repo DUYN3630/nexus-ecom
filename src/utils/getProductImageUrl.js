@@ -1,48 +1,46 @@
-const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:5000';
-const PLACEHOLDER = 'https://placehold.co/600x600?text=Nexus+Product';
-const ERROR_PLACEHOLDER = 'https://placehold.co/600x600?text=Image+Error';
+// Link Backend Render thật của bạn
+const RENDER_BACKEND_URL = 'https://nexus-ecom-es17.onrender.com';
 
-/**
- * Xử lý URL ảnh sản phẩm từ backend.
- * Hỗ trợ cả ảnh link ngoài (http) và ảnh nội bộ (relative path).
- */
-export const getProductImageUrl = (product, index = 0) => {
-  if (!product) return PLACEHOLDER;
+const getProductImageUrl = (image) => {
+  // 1. Nếu không có dữ liệu ảnh
+  if (!image) return 'https://placehold.co/600x600?text=No+Image';
 
-  let image = null;
+  let path = '';
+
+  // 2. Xử lý nếu đầu vào là Object (Sản phẩm) hoặc String (Đường dẫn)
+  if (typeof image === 'object') {
+    path = image.images?.[0] || image.thumbnail || '';
+  } else {
+    path = image;
+  }
+
+  if (!path) return 'https://placehold.co/600x600?text=No+Image';
+
+  // 3. XỬ LÝ QUAN TRỌNG: Nếu đường dẫn chứa localhost hoặc 127.0.0.1
+  // Chúng ta sẽ cắt bỏ phần đó để lấy đường dẫn gốc (/uploads/...)
+  if (typeof path === 'string' && (path.includes('localhost') || path.includes('127.0.0.1'))) {
+    path = path.replace(/http:\/\/localhost:5000/g, '')
+               .replace(/http:\/\/127.0.0.1:5000/g, '');
+  }
+
+  // 4. Nếu là link tuyệt đối bên ngoài (Unsplash...) -> Trả về luôn và ép HTTPS
+  if (path.startsWith('http')) {
+    return path.replace('http://', 'https://');
+  }
+
+  // 5. Đảm bảo path bắt đầu bằng dấu /
+  const cleanPath = path.startsWith('/') ? path : `/${path}`;
+
+  // 6. KIỂM TRA MÔI TRƯỜNG ĐỂ GHÉP LINK
+  const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
   
-  // 1. Lấy từ mảng images (ưu tiên)
-  if (product.images && product.images.length > 0) {
-    image = product.images[index] || product.images[0];
-  } 
-  // 2. Fallback sang thuộc tính image đơn lẻ
-  else if (product.image) {
-    image = product.image;
+  if (isLocal) {
+    // Nếu ở máy bạn, dùng localhost
+    return `http://localhost:5000${cleanPath}`;
+  } else {
+    // Nếu ở Vercel, ép dùng link Render (HTTPS)
+    return `${RENDER_BACKEND_URL}${cleanPath}`;
   }
-  // 3. Fallback sang thumbnail (thường dùng cho Category)
-  else if (product.thumbnail) {
-    image = product.thumbnail;
-  }
-
-  // Nếu image là object (từ API cũ hoặc cấu trúc phức tạp)
-  if (image && typeof image === 'object') {
-    image = image.url || image.path;
-  }
-
-  if (!image) return PLACEHOLDER;
-
-  // Nếu là URL tuyệt đối (Unsplash, Cloudinary...)
-  if (typeof image === 'string' && (image.startsWith('http://') || image.startsWith('https://'))) {
-    return image;
-  }
-
-  // Nếu là đường dẫn tương đối từ backend
-  const cleanPath = typeof image === 'string' ? (image.startsWith('/') ? image : `/${image}`) : '';
-  if (!cleanPath) return PLACEHOLDER;
-
-  return `${API_URL}${cleanPath}`;
 };
-
-export const IMAGE_ERROR_PLACEHOLDER = ERROR_PLACEHOLDER;
 
 export default getProductImageUrl;

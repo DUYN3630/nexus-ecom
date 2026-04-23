@@ -3,6 +3,8 @@ import { ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
 import useBanner from '../../hooks/useBanner'; 
 import { HERO_SLIDES } from '../../constants/userContent';
 
+import getProductImageUrl from '../../utils/getProductImageUrl';
+
 const HeroSlider = () => {
   const [current, setCurrent] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
@@ -138,7 +140,7 @@ const HeroSlider = () => {
                    
                    {slide.media?.url && (
                     <img 
-                      src={slide.media.url.startsWith('http') ? slide.media.url : `http://127.0.0.1:5000${slide.media.url}`}
+                      src={getProductImageUrl(slide.media.url)}
                       className="relative w-full h-auto max-w-[550px] object-contain drop-shadow-[0_35px_35px_rgba(0,0,0,0.15)] hover:scale-105 transition-transform duration-[2000ms] ease-out" 
                       alt={slide.media?.altText || slide.name}
                     />
