@@ -1,34 +1,23 @@
 import axios from 'axios';
 
-// Tạo một instance của axios
+const getBaseURL = () => {
+  if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+    return 'http://localhost:5000/api';
+  }
+  return 'https://nexus-ecom-es17.onrender.com/api';
+};
+
 const axiosClient = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000/api', // Tự động lấy URL từ môi trường
+  baseURL: getBaseURL(),
   headers: {
     'Content-Type': 'application/json',
   },
 });
 
-// Interceptor để thêm token vào mỗi request
-axiosClient.interceptors.request.use(
-  (config) => {
-    // Kiểm tra tất cả các key có thể chứa token
-    const token = localStorage.getItem('token') || localStorage.getItem('accessToken');
-    if (token) {
-      config.headers['Authorization'] = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => {
-    return Promise.reject(error);
-  }
-);
-
-// Interceptor cho response
 axiosClient.interceptors.response.use(
-  (response) => {
-    return response.data;
-  },
+  (response) => response.data,
   (error) => {
+    console.error("API Error:", error.response?.status, error.config?.url);
     return Promise.reject(error);
   }
 );
