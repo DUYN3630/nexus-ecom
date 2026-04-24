@@ -149,6 +149,14 @@ app.use((err, req, res, next) => {
     res.status(500).json({ message: "Đã xảy ra lỗi nội bộ hệ thống!" });
 });
 
+// Middleware lọc sạch URL localhost/127.0.0.1 trước khi gửi về client
+app.set('json replacer', (key, value) => {
+  if (typeof value === 'string') {
+    return value.replace(/http:\/\/localhost:5000/g, '').replace(/http:\/\/127.0.0.1:5000/g, '');
+  }
+  return value;
+});
+
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
     console.log(`🚀 Server đang chạy tại cổng: ${PORT}`);
