@@ -11,6 +11,11 @@ const { NEXUS_SYSTEM_INSTRUCTION, NEXUS_EXPERT_SUPPORT_INSTRUCTION } = require('
 // Cấu hình môi trường
 dotenv.config();
 
+// Kiểm tra biến môi trường quan trọng
+if (!process.env.JWT_SECRET) {
+    console.error('❌ CẢNH BÁO: JWT_SECRET chưa được cấu hình trong môi trường!');
+}
+
 const app = express();
 app.use(cors());
 app.use(express.json());
