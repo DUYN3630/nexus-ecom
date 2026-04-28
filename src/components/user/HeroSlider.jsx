@@ -154,15 +154,6 @@ const HeroSlider = () => {
 
       {banners.length > 1 && (
         <>
-            <div className="absolute left-10 bottom-10 flex gap-4 z-20 opacity-0 group-hover/slider:opacity-100 transition-all duration-500 translate-y-2 group-hover/slider:translate-y-0">
-                <button onClick={prev} className="w-12 h-12 rounded-2xl border border-slate-200 flex items-center justify-center text-slate-400 hover:text-slate-900 hover:bg-white hover:border-white transition-all shadow-sm backdrop-blur-sm group/btn">
-                    <ChevronLeft size={20} strokeWidth={2.5} className="group-hover:-translate-x-0.5 transition-transform" />
-                </button>
-                <button onClick={next} className="w-12 h-12 rounded-2xl border border-slate-200 flex items-center justify-center text-slate-400 hover:text-slate-900 hover:bg-white hover:border-white transition-all shadow-sm backdrop-blur-sm group/btn">
-                    <ChevronRight size={20} strokeWidth={2.5} className="group-hover:translate-x-0.5 transition-transform" />
-                </button>
-            </div>
-            
             <div className="absolute bottom-10 right-10 flex flex-col gap-3 z-20 opacity-0 group-hover/slider:opacity-100 transition-all duration-500 translate-x-2 group-hover/slider:translate-x-0">
                 {banners.map((_, i) => (
                 <button 

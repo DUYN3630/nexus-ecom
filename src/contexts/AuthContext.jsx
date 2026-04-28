@@ -1,12 +1,8 @@
 import { createContext, useState, useEffect, useCallback } from 'react';
-import axiosClient from '../api/axiosClient';
 
-// 1. Tạo Context
 const AuthContext = createContext();
 
-// 2. Tạo Provider Component
 const AuthProvider = ({ children }) => {
-  const [token, setToken] = useState(localStorage.getItem('token'));
   const [user, setUser] = useState(() => {
     try {
       const savedUser = localStorage.getItem('user');
@@ -17,66 +13,32 @@ const AuthProvider = ({ children }) => {
   });
   const [isAuthLoading, setIsAuthLoading] = useState(true);
 
-  // Hàm đăng nhập
   const login = useCallback((newToken, newUser) => {
-    setToken(newToken);
-    setUser(newUser);
-    localStorage.setItem('token', newToken);
-    localStorage.setItem('user', JSON.stringify(newUser));
+    const userData = { ...newUser, token: newToken };
+    setUser(userData);
+    localStorage.setItem('user', JSON.stringify(userData));
+    localStorage.setItem('token', newToken); // Lưu rời để đảm bảo các thành phần cũ vẫn đọc được
   }, []);
 
-  // Hàm đăng xuất
   const logout = useCallback(() => {
-    setToken(null);
     setUser(null);
-    localStorage.removeItem('token');
     localStorage.removeItem('user');
+    localStorage.removeItem('token');
   }, []);
 
-  // Sync auth state across tabs & Initialize
   useEffect(() => {
-    const syncAuth = (event) => {
-      if (event.key === 'token') {
-        setToken(event.newValue);
-        if (!event.newValue) setUser(null);
-      }
-      if (event.key === 'user') {
-        try {
-          setUser(event.newValue ? JSON.parse(event.newValue) : null);
-        } catch (e) {
-          setUser(null);
-        }
-      }
-    };
+    // Tắt trạng thái Loading sau khi đã đọc xong Storage
+    const timer = setTimeout(() => setIsAuthLoading(false), 300);
+    return () => clearTimeout(timer);
+  }, []);
 
-    window.addEventListener('storage', syncAuth);
-    
-    // Setup Axios Interceptor
-    const interceptorId = axiosClient.interceptors.response.use(
-      (response) => response,
-      (error) => {
-        if (error.response && error.response.status === 401) {
-          logout();
-        }
-        return Promise.reject(error);
-      }
-    );
-
-    const timer = setTimeout(() => setIsAuthLoading(false), 200);
-
-    return () => {
-      window.removeEventListener('storage', syncAuth);
-      axiosClient.interceptors.response.eject(interceptorId);
-      clearTimeout(timer);
-    };
-  }, [logout]);
-
-  const isAuthenticated = !!token;
+  // Kiểm tra đăng nhập dựa trên việc có User và có Token
+  const isAuthenticated = !!(user && (user.token || localStorage.getItem('token')));
 
   return (
     <AuthContext.Provider value={{ 
-      token, 
       user, 
+      token: user?.token || localStorage.getItem('token'),
       login, 
       logout, 
       isAuthenticated,

@@ -1,10 +1,13 @@
 import axios from 'axios';
 
+// Link Backend Render thật của bạn
+const RENDER_API_URL = 'https://nexus-ecom-es17.onrender.com/api';
+
 const getBaseURL = () => {
   if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
     return 'http://localhost:5000/api';
   }
-  return 'https://nexus-ecom-es17.onrender.com/api';
+  return RENDER_API_URL;
 };
 
 const axiosClient = axios.create({
@@ -14,14 +17,15 @@ const axiosClient = axios.create({
   },
 });
 
-// INTERCEPTOR GỬI TOKEN: Tự động lấy token từ localStorage và đính vào Header
+// TỰ ĐỘNG GẮN TOKEN: Lấy từ localStorage mỗi khi gọi API
 axiosClient.interceptors.request.use(
   (config) => {
     const userString = localStorage.getItem('user');
     if (userString) {
       const user = JSON.parse(userString);
-      if (user && user.token) {
-        config.headers.Authorization = `Bearer ${user.token}`;
+      const token = user.token || localStorage.getItem('token');
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
       }
     }
     return config;
@@ -29,17 +33,16 @@ axiosClient.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// Interceptor nhận dữ liệu
+// XỬ LÝ LỖI 401: Nếu token hết hạn hoặc sai, tự động đăng xuất
 axiosClient.interceptors.response.use(
   (response) => response.data,
   (error) => {
-    console.error("API Error:", error.response?.status, error.config?.url);
-    // Nếu bị 401 (hết hạn hoặc token sai), tự động đẩy ra trang login
     if (error.response?.status === 401) {
-       localStorage.removeItem('user');
-       if (window.location.pathname !== '/login') {
+      localStorage.removeItem('user');
+      localStorage.removeItem('token');
+      if (window.location.pathname.startsWith('/admin')) {
          window.location.href = '/login';
-       }
+      }
     }
     return Promise.reject(error);
   }
