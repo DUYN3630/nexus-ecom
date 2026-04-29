@@ -23,8 +23,8 @@ const QuickEditDrawer = ({ banner, mode, isOpen, onClose, onSave }) => {
   useEffect(() => {
     if (isOpen) {
       // Load products/categories for selection
-      productApi.getAll().then(res => setProducts(res || [])); // Assuming array
-      categoryApi.getAll().then(res => setCategories(res.data || [])); // Assuming {data: []} based on previous fix
+      productApi.getAll().then(res => setProducts(res.data || [])); 
+      categoryApi.getAll().then(res => setCategories(res.data || [])); 
 
       if (banner && mode === 'edit') {
         setFormData({
@@ -196,7 +196,7 @@ const QuickEditDrawer = ({ banner, mode, isOpen, onClose, onSave }) => {
                   <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Chọn Sản phẩm</label>
                   <select name="productId" value={formData.linkTarget.productId} onChange={(e) => handleInputChange(e, 'linkTarget')} className="w-full p-4 bg-white border border-slate-200 rounded-2xl text-sm font-bold outline-none cursor-pointer">
                     <option value="">-- Chọn sản phẩm --</option>
-                    {products.map(p => <option key={p._id} value={p._id}>{p.name}</option>)}
+                    {Array.isArray(products) && products.map(p => <option key={p._id} value={p._id}>{p.name}</option>)}
                   </select>
                 </div>
               )}
@@ -206,7 +206,7 @@ const QuickEditDrawer = ({ banner, mode, isOpen, onClose, onSave }) => {
                   <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Chọn Danh mục</label>
                   <select name="categoryId" value={formData.linkTarget.categoryId} onChange={(e) => handleInputChange(e, 'linkTarget')} className="w-full p-4 bg-white border border-slate-200 rounded-2xl text-sm font-bold outline-none cursor-pointer">
                     <option value="">-- Chọn danh mục --</option>
-                    {categories.map(c => <option key={c._id} value={c._id}>{c.name}</option>)}
+                    {Array.isArray(categories) && categories.map(c => <option key={c._id} value={c._id}>{c.name}</option>)}
                   </select>
                 </div>
               )}

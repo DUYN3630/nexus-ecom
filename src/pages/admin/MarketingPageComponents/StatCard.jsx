@@ -1,7 +1,9 @@
-
-const StatCard = ({ title, value, icon: Icon, bgColor, textColor }) => {
+const StatCard = ({ title, value, icon: Icon, bgColor, textColor, onClick }) => {
   return (
-    <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm flex items-center gap-4 hover:-translate-y-1 transition-transform">
+    <div 
+      onClick={onClick}
+      className={`bg-white p-6 rounded-3xl border border-slate-100 shadow-sm flex items-center gap-4 transition-all ${onClick ? 'cursor-pointer hover:-translate-y-1 hover:shadow-md' : ''}`}
+    >
       <div className={`w-12 h-12 ${bgColor} ${textColor} rounded-2xl flex items-center justify-center`}>
         {Icon && <Icon className="w-6 h-6" />}
       </div>

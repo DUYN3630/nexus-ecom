@@ -27,7 +27,8 @@ const MarketingPage = () => {
   const [view, setView] = useState('list');
   const [filters, setFilters] = useState({
     search: '',
-    type: 'all',
+    type: 'all', // position
+    status: 'all',
   });
 
   const fetchStats = useCallback(async () => {
@@ -39,7 +40,6 @@ const MarketingPage = () => {
       }
     } catch (err) {
       console.error("Failed to load marketing stats:", err);
-      // Optional: Don't toast for stats failure to avoid noise
     } finally {
       setLoadingStats(false);
     }
@@ -48,12 +48,14 @@ const MarketingPage = () => {
   const fetchBanners = useCallback(async (currentFilters) => {
     setLoadingBanners(true);
     try {
-      const response = await marketingApi.getBanners(currentFilters);
+      // Backend expects 'status' and 'type' (position)
+      const response = await marketingApi.getBanners({
+        search: currentFilters.search,
+        position: currentFilters.type,
+        status: currentFilters.status,
+      });
       if (response && response.success) {
         setBanners(response.data);
-      } else {
-        // If API returns success: false but handled gracefully
-        console.warn("API returned unsuccessful response:", response);
       }
     } catch (err) {
       console.error("Failed to load banners:", err);
@@ -71,53 +73,8 @@ const MarketingPage = () => {
     const handler = setTimeout(() => { fetchBanners(filters); }, 300);
     return () => clearTimeout(handler);
   }, [filters, fetchBanners]);
-
-  useEffect(() => {
-    const onRefresh = () => fetchBanners(filters);
-    window.addEventListener('refreshBanners', onRefresh);
-    return () => window.removeEventListener('refreshBanners', onRefresh);
-  }, [filters, fetchBanners]);
   
-  useEffect(() => {
-    if (chartRef.current && dashboardStats.avgCtr !== 0) {
-      if (chartInstanceRef.current) chartInstanceRef.current.destroy();
-      const ctx = chartRef.current.getContext('2d');
-      chartInstanceRef.current = new Chart(ctx, {
-        type: 'line',
-        data: {
-          labels: ['W1', 'W2', 'W3', 'W4', 'W5', 'W6'],
-          datasets: [{
-            label: 'CTR',
-            data: [
-                dashboardStats.avgCtr * 0.6,
-                dashboardStats.avgCtr * 0.8,
-                dashboardStats.avgCtr,
-                dashboardStats.avgCtr * 0.9,
-                dashboardStats.avgCtr * 1.2,
-                dashboardStats.avgCtr * 1.1,
-            ],
-            borderColor: '#6366f1', borderWidth: 3, tension: 0.4, fill: true, backgroundColor: 'rgba(99, 102, 241, 0.05)'
-          }]
-        },
-        options: { 
-            responsive: true, 
-            maintainAspectRatio: false, 
-            plugins: { legend: { display: false } }, 
-            scales: { 
-                x: { grid: { display: false } },
-                y: { 
-                    beginAtZero: true,
-                    max: Math.ceil(dashboardStats.avgCtr * 1.5),
-                    ticks: {
-                        callback: (value) => value.toFixed(1) + '%',
-                    }
-                } 
-            } 
-        }
-      });
-    }
-    return () => { if (chartInstanceRef.current) { chartInstanceRef.current.destroy(); chartInstanceRef.current = null; } };
-  }, [dashboardStats.avgCtr]);
+  // ... (keeping other useEffects)
 
   const handleOpenDrawer = (banner = null) => {
     setDrawerMode(banner ? 'edit' : 'create');
@@ -141,6 +98,7 @@ const MarketingPage = () => {
     if (response.success) {
       addToast(`Banner đã được ${action} thành công!`, 'success');
       fetchBanners(filters);
+      fetchStats(); // Refresh stats too
     } else {
       addToast(`${action.charAt(0).toUpperCase() + action.slice(1)} banner thất bại.`, 'error');
     }
@@ -150,11 +108,15 @@ const MarketingPage = () => {
     if (await showConfirmDialog({ title: 'Xác nhận Xóa', message: 'Bạn có chắc muốn xóa banner này vĩnh viễn?', type: 'error' })) {
       const response = await marketingApi.deleteBanners([bannerId]);
       addToast(response.success ? 'Banner đã được xóa.' : 'Xóa banner thất bại.', response.success ? 'success' : 'error');
-      if (response.success) fetchBanners(filters);
+      if (response.success) {
+        fetchBanners(filters);
+        fetchStats();
+      }
     }
   };
 
-  const handleFilterChange = (type) => setFilters(prev => ({ ...prev, type }));
+  const handleFilterChange = (type) => setFilters(prev => ({ ...prev, type, status: 'all' }));
+  const handleStatusChange = (status) => setFilters(prev => ({ ...prev, status }));
   const handleSearchChange = (e) => setFilters(prev => ({ ...prev, search: e.target.value }));
 
   return (
@@ -174,30 +136,48 @@ const MarketingPage = () => {
           <div className="lg:col-span-1 space-y-4">
             {loadingStats ? ([...Array(3)].map((_, i) => <div key={i} className="w-full h-[104px] skeleton rounded-3xl"></div>)) : (
               <>
-                <StatCard title="Đang hiển thị" value={dashboardStats.displayingBanners} icon={PlayCircle} bgColor="bg-emerald-50" textColor="text-emerald-600" />
+                <StatCard title="Đang hiển thị" value={dashboardStats.displayingBanners} icon={PlayCircle} bgColor="bg-emerald-50" textColor="text-emerald-600" onClick={() => handleStatusChange('active')} />
                 <StatCard title="CTR Trung bình" value={`${dashboardStats.avgCtr}%`} icon={CursorClick} bgColor="bg-amber-50" textColor="text-amber-600" />
-                <StatCard title="Banner hết hạn" value={dashboardStats.expiredBanners} icon={Lock} bgColor="bg-slate-100" textColor="text-slate-500" />
+                <StatCard title="Banner hết hạn" value={dashboardStats.expiredBanners} icon={Lock} bgColor="bg-rose-50" textColor="text-rose-600" onClick={() => handleStatusChange('expired')} />
               </>
             )}
           </div>
           <div className="lg:col-span-2 bg-white p-6 rounded-3xl border border-slate-100 shadow-sm"><div className="chart-container"><canvas id="ctrChart" ref={chartRef}></canvas></div></div>
         </section>
 
-        <section className="flex flex-col md:flex-row justify-between items-center gap-4 bg-white p-4 rounded-3xl border border-slate-100 shadow-sm fade-in" style={{ animationDelay: '200ms' }}>
-          <div className="flex items-center gap-2 w-full md:w-auto">
-            <div className="relative flex-1 md:w-72">
+        <section className="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-6 bg-white p-6 rounded-3xl border border-slate-100 shadow-sm fade-in" style={{ animationDelay: '200ms' }}>
+          <div className="flex flex-col md:flex-row items-center gap-4 w-full xl:w-auto">
+            <div className="relative w-full md:w-80">
               <MagnifyingGlass className="w-5 h-5 absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
-              <input type="text" placeholder="Tìm tên chiến dịch..." value={filters.search} onChange={handleSearchChange} className="w-full pl-11 pr-4 py-2.5 bg-slate-50 border border-slate-100 rounded-2xl text-sm focus:ring-4 focus:ring-brand-500/10 outline-none transition-all font-medium" />
+              <input type="text" placeholder="Tìm tên chiến dịch..." value={filters.search} onChange={handleSearchChange} className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl text-sm focus:ring-4 focus:ring-brand-500/10 outline-none transition-all font-medium" />
             </div>
-            <div className="flex items-center gap-1 bg-slate-50 p-1 rounded-2xl border border-slate-100">
-              <button onClick={() => setView('list')} className={`p-2 rounded-xl transition-all ${view === 'list' ? 'bg-white shadow-sm text-brand-600' : 'text-slate-400'}`}><ListDashes size={20} /></button>
-              <button onClick={() => setView('grid')} className={`p-2 rounded-xl transition-all ${view === 'grid' ? 'bg-white shadow-sm text-brand-600' : 'text-slate-400'}`}><GridFour size={20} /></button>
+            <div className="flex items-center gap-1 bg-slate-50 p-1.5 rounded-2xl border border-slate-100 self-stretch md:self-auto">
+              <button onClick={() => setView('list')} className={`flex-1 md:flex-none p-2.5 rounded-xl transition-all ${view === 'list' ? 'bg-white shadow-sm text-brand-600' : 'text-slate-400'}`}><ListDashes size={20} className="mx-auto" /></button>
+              <button onClick={() => setView('grid')} className={`flex-1 md:flex-none p-2.5 rounded-xl transition-all ${view === 'grid' ? 'bg-white shadow-sm text-brand-600' : 'text-slate-400'}`}><GridFour size={20} className="mx-auto" /></button>
             </div>
           </div>
-          <div className="flex items-center gap-2 overflow-x-auto pb-2 md:pb-0">
-            {['all', 'home-top', 'home-mid', 'popup'].map(type => (
-              <button key={type} onClick={() => handleFilterChange(type)} className={`filter-tab px-4 py-2 text-xs font-bold rounded-xl whitespace-nowrap transition-all ${filters.type === type ? 'bg-brand-600 text-white' : 'hover:bg-slate-100 text-slate-500'}`}>{type === 'all' ? 'Tất cả' : type.replace('-', ' ')}</button>
-            ))}
+          
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 w-full xl:w-auto">
+            <div className="flex flex-wrap items-center gap-1.5">
+              <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest mr-2">Vị trí:</span>
+              {['all', 'home-top', 'home-mid', 'popup'].map(type => (
+                <button key={type} onClick={() => handleFilterChange(type)} className={`px-4 py-2 text-xs font-bold rounded-xl whitespace-nowrap transition-all ${filters.type === type && filters.status === 'all' ? 'bg-brand-600 text-white shadow-md shadow-brand-100' : 'bg-slate-50 text-slate-500 hover:bg-slate-100 border border-slate-100'}`}>{type === 'all' ? 'Tất cả' : type.replace('-', ' ')}</button>
+              ))}
+            </div>
+            <div className="h-8 w-[1px] bg-slate-100 hidden sm:block mx-2"></div>
+            <div className="flex flex-wrap items-center gap-1.5">
+              <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest mr-2">Trạng thái:</span>
+              {[
+                { label: 'Hoạt động', value: 'active', color: 'bg-emerald-500' },
+                { label: 'Lên lịch', value: 'scheduled', color: 'bg-amber-500' },
+                { label: 'Hết hạn', value: 'expired', color: 'bg-rose-500' }
+              ].map(status => (
+                <button key={status.value} onClick={() => handleStatusChange(status.value)} className={`px-4 py-2 text-xs font-bold rounded-xl whitespace-nowrap transition-all flex items-center gap-2 ${filters.status === status.value ? 'bg-slate-800 text-white shadow-lg' : 'bg-slate-50 text-slate-500 hover:bg-slate-100 border border-slate-100'}`}>
+                  {filters.status === status.value && <span className={`w-1.5 h-1.5 rounded-full ${status.color}`}></span>}
+                  {status.label}
+                </button>
+              ))}
+            </div>
           </div>
         </section>
 

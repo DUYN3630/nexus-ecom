@@ -6,9 +6,23 @@ const marketingController = {
   // GET /api/marketing/stats
   getDashboardStats: async (req, res) => {
     try {
+      const now = new Date();
       const totalBanners = await Marketing.countDocuments();
-      const activeBanners = await Marketing.countDocuments({ status: 'active' });
+      const activeBanners = await Marketing.countDocuments({ 
+        status: 'active',
+        $or: [
+          { 'schedule.endAt': { $exists: false } },
+          { 'schedule.endAt': { $gte: now } },
+          { 'schedule.endAt': null }
+        ]
+      });
       const scheduledBanners = await Marketing.countDocuments({ status: 'scheduled' });
+      const expiredBanners = await Marketing.countDocuments({ 
+        $or: [
+          { status: 'expired' },
+          { 'schedule.endAt': { $lt: now } }
+        ]
+      });
       const inactiveBanners = await Marketing.countDocuments({ status: 'inactive' });
 
       // Tính tổng click/impression
@@ -25,7 +39,8 @@ const marketingController = {
         data: {
           displayingBanners: activeBanners,
           scheduledBanners: scheduledBanners,
-          expiredBanners: inactiveBanners,
+          expiredBanners: expiredBanners,
+          inactiveBanners: inactiveBanners,
           total: totalBanners,
           avgCtr: avgCtr,
           totalClicks,
@@ -40,18 +55,45 @@ const marketingController = {
   // GET /api/marketing/banners (Admin List)
   getBanners: async (req, res) => {
     try {
-      const { search, type, position, page = 1, limit = 10 } = req.query;
-      const query = {};
+      const { search, type, position, status, page = 1, limit = 10 } = req.query;
+      const andConditions = [];
+      const now = new Date();
 
       if (search) {
-        query.name = { $regex: search, $options: 'i' };
+        andConditions.push({ name: { $regex: search, $options: 'i' } });
       }
       if (type && type !== 'all') {
-        query.type = type;
+        andConditions.push({ type });
       }
       if (position && position !== 'all') {
-        query.position = position;
+        andConditions.push({ position });
       }
+      
+      if (status && status !== 'all') {
+        if (status === 'expired') {
+          andConditions.push({
+            $or: [
+              { status: 'expired' },
+              { 'schedule.endAt': { $lt: now } }
+            ]
+          });
+        } else if (status === 'active') {
+          andConditions.push({ status: 'active' });
+          andConditions.push({
+            $or: [
+              { 'schedule.endAt': { $exists: false } },
+              { 'schedule.endAt': { $gte: now } },
+              { 'schedule.endAt': null }
+            ]
+          });
+        } else if (status === 'scheduled') {
+            andConditions.push({ status: 'scheduled' });
+        } else {
+            andConditions.push({ status });
+        }
+      }
+
+      const query = andConditions.length > 0 ? { $and: andConditions } : {};
 
       const pageNum = parseInt(page);
       const limitNum = parseInt(limit);

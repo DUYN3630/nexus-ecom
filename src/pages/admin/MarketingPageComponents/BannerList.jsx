@@ -36,14 +36,23 @@ const BannerList = ({ banners, onEdit, onDelete }) => (
               </span>
             </td>
             <td className="p-5 text-center">
-              <div className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full border ${
-                banner.status === 'active' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' :
-                banner.status === 'scheduled' ? 'bg-amber-50 text-amber-600 border-amber-100' :
-                'bg-slate-100 text-slate-400 border-slate-200'
-              }`}>
-                <Circle weight="fill" size={8} />
-                <span className="text-[10px] font-bold uppercase tracking-wide">{banner.status}</span>
-              </div>
+              {(() => {
+                const now = new Date();
+                const isExpired = banner.status === 'expired' || (banner.schedule?.endAt && new Date(banner.schedule.endAt) < now);
+                const statusLabel = isExpired ? 'expired' : banner.status;
+                
+                return (
+                  <div className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full border ${
+                    statusLabel === 'active' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' :
+                    statusLabel === 'scheduled' ? 'bg-amber-50 text-amber-600 border-amber-100' :
+                    statusLabel === 'expired' ? 'bg-rose-50 text-rose-600 border-rose-100' :
+                    'bg-slate-100 text-slate-400 border-slate-200'
+                  }`}>
+                    <Circle weight="fill" size={8} />
+                    <span className="text-[10px] font-bold uppercase tracking-wide">{statusLabel}</span>
+                  </div>
+                );
+              })()}
             </td>
             <td className="p-5 text-center">
               <div className="flex flex-col items-center">
