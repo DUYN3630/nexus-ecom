@@ -33,6 +33,7 @@ import ComingSoonPage from './pages/user/ComingSoonPage.jsx';
 import OrderSuccessPage from './pages/user/OrderSuccessPage.jsx';
 import ExpertSupportPage from './pages/user/ExpertSupportPage.jsx';
 import ComparePage from './pages/user/ComparePage.jsx';
+import SearchPage from './pages/user/SearchPage.jsx';
 
 // Special Experience Page
 import ProductExperience from './pages/user/ProductExperience.jsx';
@@ -87,6 +88,7 @@ const App = () => {
           <Route path="/about" element={<AboutPage />} />
           <Route path="/iphone-experience" element={<ProductExperience />} />
           <Route path="/support" element={<ExpertSupportPage />} />
+          <Route path="/search" element={<SearchPage />} />
           <Route path="/purchased-products" element={<ProtectedRoute><PurchasedProductsPage /></ProtectedRoute>} />
           
           <Route path="/checkout" element={<ProtectedRoute><CheckoutPage /></ProtectedRoute>} />

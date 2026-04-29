@@ -15,12 +15,11 @@ const PromoBanner = () => {
             onClick={() => navigate('/products')}
             className="md:col-span-8 relative rounded-3xl bg-slate-900 overflow-hidden group cursor-pointer shadow-2xl"
           >
-            <img 
-              src="https://images.unsplash.com/photo-1517336712468-da1133206-80ce9b88a853?auto=format&fit=crop&q=80&w=1200" 
-              className="w-full h-full object-cover opacity-60 group-hover:scale-105 transition-transform duration-[2000ms]" 
-              alt="MacBook Pro" 
-            />
-            <div className="absolute inset-0 p-12 flex flex-col justify-end">
+            <img
+              src="/products/macbookprom4.jpg"
+              className="w-full h-full object-cover opacity-60 group-hover:scale-105 transition-transform duration-[2000ms]"
+              alt="MacBook Pro"
+            />            <div className="absolute inset-0 p-12 flex flex-col justify-end">
                <div className="max-w-md space-y-4 translate-y-4 group-hover:translate-y-0 transition-transform duration-700">
                   <span className="text-[10px] font-black uppercase tracking-[0.4em] text-white/60 bg-white/10 backdrop-blur-md px-4 py-2 rounded-full border border-white/10 w-fit">
                     MacBook Pro M3

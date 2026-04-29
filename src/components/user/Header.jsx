@@ -70,7 +70,7 @@ const Header = ({ cartCount, onOpenMobileMenu, topOffset = 0 }) => {
   const handleSearchSubmit = (e) => {
     if (e.key === 'Enter' && searchQuery.trim() !== '') {
       trackingApi.trackEvent('search_keyword', { keyword: searchQuery.trim() });
-      navigate(`/iphone?q=${encodeURIComponent(searchQuery.trim())}`);
+      navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
       setSearchQuery('');
       e.target.blur();
     }
