@@ -1,5 +1,7 @@
 const User = require('../models/User');
 
+const Expert = require('../models/Expert');
+
 /**
  * @desc    Lấy danh sách người dùng với Tìm kiếm & Lọc
  */
@@ -67,11 +69,77 @@ exports.updateUserStatus = async (req, res) => {
             return res.status(404).json({ success: false, message: "Không tìm thấy người dùng" });
         }
 
+        const oldRole = user.role;
         if (role) user.role = role;
         if (status) user.status = status;
 
         await user.save();
+
+        // Nếu nâng cấp lên Expert và chưa có hồ sơ
+        if (role === 'Expert' && oldRole !== 'Expert') {
+            const expertExists = await Expert.findOne({ user: user._id });
+            if (!expertExists) {
+                const employeeId = `NX-${Math.floor(1000 + Math.random() * 9000)}`;
+                await Expert.create({
+                    user: user._id,
+                    employeeId,
+                    name: user.name,
+                    role: 'Apple Certified Technician',
+                    status: 'active'
+                });
+            }
+        }
+
         res.status(200).json({ success: true, data: user });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+/**
+ * @desc    Tạo người dùng mới (Dành cho Admin)
+ */
+exports.createUser = async (req, res) => {
+    try {
+        const { name, email, password, role, status } = req.body;
+
+        // Kiểm tra email trùng
+        const userExists = await User.findOne({ email });
+        if (userExists) {
+            return res.status(400).json({ success: false, message: "Email này đã được sử dụng" });
+        }
+
+        const user = await User.create({
+            name,
+            email,
+            password,
+            role: role || 'Customer',
+            status: status || 'active'
+        });
+
+        // Nếu là Expert, tự động tạo hồ sơ Expert
+        if (user.role === 'Expert') {
+            const employeeId = `NX-${Math.floor(1000 + Math.random() * 9000)}`;
+            await Expert.create({
+                user: user._id,
+                employeeId,
+                name: user.name,
+                role: 'Apple Certified Technician',
+                status: 'active'
+            });
+        }
+
+        res.status(201).json({
+            success: true,
+            message: "Đã tạo tài khoản thành công",
+            data: {
+                _id: user._id,
+                name: user.name,
+                email: user.email,
+                role: user.role,
+                status: user.status
+            }
+        });
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });
     }

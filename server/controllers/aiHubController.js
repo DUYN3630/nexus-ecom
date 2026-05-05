@@ -1,6 +1,7 @@
 const Setting = require('../models/Setting');
 const RepairRequest = require('../models/RepairRequest');
 const Expert = require('../models/Expert');
+const SupportTicket = require('../models/SupportTicket');
 
 // 1. Lấy cấu hình AI
 exports.getAISettings = async (req, res) => {
@@ -81,7 +82,8 @@ exports.getAIAnalytics = async (req, res) => {
 // 4. API Giám sát Chuyên gia (Tab Experts)
 exports.getExpertPerformance = async (req, res) => {
   try {
-    const experts = await Expert.find({ status: 'active' });
+    // Sử dụng .lean() để lấy dữ liệu thô, tránh việc Mongoose lọc bỏ do thiếu field required
+    const experts = await Expert.find().lean();
     
     // Thống kê cho từng chuyên gia
     const performanceData = await Promise.all(experts.map(async (expert) => {
@@ -90,11 +92,11 @@ exports.getExpertPerformance = async (req, res) => {
       
       return {
         _id: expert._id,
-        name: expert.name,
-        role: expert.role,
-        avatar: expert.avatar,
-        specialty: expert.specialty,
-        isOnline: expert.isOnline,
+        name: expert.name || "Chuyên gia chưa rõ tên",
+        role: expert.role || "Technician",
+        avatar: expert.avatar || 'https://via.placeholder.com/150',
+        specialty: expert.specialty || [],
+        isOnline: expert.isOnline !== undefined ? expert.isOnline : true,
         stats: {
           assigned,
           resolved,
@@ -104,6 +106,57 @@ exports.getExpertPerformance = async (req, res) => {
     }));
 
     res.json(performanceData);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// 5. API Lấy danh sách hội thoại hỗ trợ (Tab Chat Monitor)
+exports.getSupportTickets = async (req, res) => {
+  try {
+    const tickets = await SupportTicket.find()
+      .populate('user', 'name email avatar')
+      .sort({ updatedAt: -1 })
+      .limit(50);
+    
+    res.json(tickets);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// 6. Chuyển hội thoại AI thành đơn sửa chữa
+exports.convertToRepair = async (req, res) => {
+  try {
+    const { ticketId, expertId } = req.body;
+    const ticket = await SupportTicket.findById(ticketId).populate('user');
+    
+    if (!ticket) return res.status(404).json({ message: "Không tìm thấy hội thoại." });
+
+    const ticketNumber = `REP-AI-${Date.now()}`;
+    const guestInfo = ticket.user ? undefined : { 
+      name: ticket.guestInfo?.name || "Khách từ AI Chat", 
+      phone: ticket.phoneNumber || "0000000000" 
+    };
+
+    const newRepair = new RepairRequest({
+      ticketNumber,
+      user: ticket.user?._id,
+      guestInfo,
+      deviceType: ticket.deviceType || 'iPhone',
+      description: `[TỪ AI CHAT]: ${ticket.subject}\n\nTóm tắt hội thoại: ${ticket.chatHistory.map(m => `${m.role}: ${m.content}`).join('\n')}`,
+      expert: expertId || null, // Lưu ID chuyên gia được chọn
+      status: 'Pending',
+      urgency: 'Normal'
+    });
+
+    await newRepair.save();
+    
+    // Cập nhật trạng thái ticket
+    ticket.status = 'converted';
+    await ticket.save();
+
+    res.json({ success: true, message: "Đã chuyển thành đơn sửa chữa thành công!", data: newRepair });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

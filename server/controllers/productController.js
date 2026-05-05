@@ -323,62 +323,59 @@ const getFeaturedProducts = async (req, res) => {
         }
 
         // --- Step 2: Call AI to Generate Explanations (Now in a fail-safe block) ---
-            /*
-            // AI feature disabled due to persistent model compatibility errors.
-            try {
-                if (finalProducts.length > 0) {
-                    const productListForAI = JSON.stringify(finalProducts.map(p => ({ id: p._id, name: p.name, category: p.category?.name, description: p.description, keyBenefit: p.keyBenefit })));
+        try {
+            if (finalProducts.length > 0) {
+                const productListForAI = JSON.stringify(finalProducts.map(p => ({ id: p._id, name: p.name, category: p.category?.name, description: p.description, keyBenefit: p.keyBenefit })));
+                
+                const prompt = `
+                    You are an AI assistant for an e-commerce website.
+                    Context:
+                    User profile summary:
+                    - Interested in: ${userTopCategory}
+                    - Behavior: ${userBehaviorSummary}
+                    Featured products:
+                    ${productListForAI}
+                    Task:
+                    As a friendly shopping assistant, write short, engaging explanations (1 sentence each) explaining why each product is a great fit for this specific user.
+                    Rules:
+                    - Output must be in Vietnamese.
+                    - Sound natural, friendly, and helpful. Like a real, expert shopping assistant.
+                    - Directly connect a product feature to the user's known interests (e.g., "Because you like [category], you might enjoy this product's [feature]").
+                    - Do not mention user data, tracking, or "behavior". Instead of "Because you viewed X", say "Since you're interested in X...".
+                    - No technical jargon. Keep it simple and focus on benefits.
+                    - Be creative and avoid repetitive phrasing.
+                    Output format:
+                    A clean JSON array string, with no extra text or markdown:
+                    [
+                        {
+                        "productId": "...",
+                        "explanation": "..."
+                        }
+                    ]
+                `;
+                
+                const aiResponseString = await generateText(prompt);
+                if (aiResponseString) {
+                    const cleanedString = aiResponseString.replace(/```json/g, '').replace(/```/g, '').trim();
+                    const aiExplanations = JSON.parse(cleanedString);
                     
-                    const prompt = `
-                        You are an AI assistant for an e-commerce website.
-                        Context:
-                        User profile summary:
-                        - Interested in: ${userTopCategory}
-                        - Behavior: ${userBehaviorSummary}
-                        Featured products:
-                        ${productListForAI}
-                        Task:
-                        As a friendly shopping assistant, write short, engaging explanations (1 sentence each) explaining why each product is a great fit for this specific user.
-                        Rules:
-                        - Output must be in Vietnamese.
-                        - Sound natural, friendly, and helpful. Like a real, expert shopping assistant.
-                        - Directly connect a product feature to the user's known interests (e.g., "Because you like [category], you might enjoy this product's [feature]").
-                        - Do not mention user data, tracking, or "behavior". Instead of "Because you viewed X", say "Since you're interested in X...".
-                        - No technical jargon. Keep it simple and focus on benefits.
-                        - Be creative and avoid repetitive phrasing.
-                        Output format:
-                        A clean JSON array string, with no extra text or markdown:
-                        [
-                          {
-                            "productId": "...",
-                            "explanation": "..."
-                          }
-                        ]
-                    `;
-                    
-                    const aiResponseString = await generateText(prompt);
-                    if (aiResponseString) {
-                        const cleanedString = aiResponseString.replace(/```json/g, '').replace(/```/g, '').trim();
-                        const aiExplanations = JSON.parse(cleanedString);
-                        
-                        const explanationsMap = new Map(aiExplanations.map(item => [item.productId, item.explanation]));
+                    const explanationsMap = new Map(aiExplanations.map(item => [item.productId, item.explanation]));
 
-                        finalProducts = finalProducts.map(p => {
-                            const explanation = explanationsMap.get(p._id.toString());
-                            if (explanation) {
-                                const modifiableProduct = p.toObject();
-                                modifiableProduct.featuredReason = explanation;
-                                return modifiableProduct;
-                            }
-                            return p;
-                        });
-                    }
+                    finalProducts = finalProducts.map(p => {
+                        const explanation = explanationsMap.get(p._id.toString());
+                        if (explanation) {
+                            const modifiableProduct = p.toObject();
+                            modifiableProduct.featuredReason = explanation;
+                            return modifiableProduct;
+                        }
+                        return p;
+                    });
                 }
-            } catch (aiError) {
-                console.error("AI explanation generation failed. Returning products without AI reasons.", aiError);
-                // Fail silently - The original finalProducts array will be used.
             }
-            */
+        } catch (aiError) {
+            console.error("AI explanation generation failed. Returning products without AI reasons.", aiError);
+            // Fail silently - The original finalProducts array will be used.
+        }
 
         res.status(200).json(finalProducts);
 

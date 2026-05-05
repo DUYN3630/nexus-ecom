@@ -6,7 +6,8 @@ const { protect, admin } = require('../middleware/auth');
 router.use(protect, admin); // Bảo vệ tất cả các route bên dưới
 
 router.route('/')
-    .get(userController.getUsers);
+    .get(userController.getUsers)
+    .post(userController.createUser);
 
 router.route('/:id')
     .patch(userController.updateUserStatus) // Cập nhật vai trò/trạng thái

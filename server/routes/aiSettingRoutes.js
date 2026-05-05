@@ -13,4 +13,8 @@ router.get('/analytics', protect, admin, aiHubController.getAIAnalytics);
 // 3. Hiệu suất nhân sự (Tab Experts)
 router.get('/experts-performance', protect, admin, aiHubController.getExpertPerformance);
 
+// 4. Giám sát hội thoại (Tab Chat Monitor)
+router.get('/tickets', protect, admin, aiHubController.getSupportTickets);
+router.post('/convert-repair', protect, admin, aiHubController.convertToRepair);
+
 module.exports = router;

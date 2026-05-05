@@ -10,6 +10,10 @@ const aiSettingApi = {
   
   // Tab: Giám sát chuyên gia
   getExpertPerformance: () => axiosClient.get('/ai-settings/experts-performance'),
+
+  // Tab: Giám sát hội thoại
+  getSupportTickets: () => axiosClient.get('/ai-settings/tickets'),
+  convertToRepair: (ticketId, expertId) => axiosClient.post('/ai-settings/convert-repair', { ticketId, expertId }),
 };
 
 export default aiSettingApi;

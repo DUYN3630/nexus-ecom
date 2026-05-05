@@ -19,7 +19,7 @@ const AIHubPage = () => {
   // States cho cấu hình
   const [settings, setSettings] = useState({
     ai_system_instruction: '',
-    ai_model_name: 'gemini-1.5-flash',
+    ai_model_name: 'gemini-flash-latest',
     ai_temperature: 0.7,
     ai_max_tokens: 1000
   });
@@ -27,18 +27,34 @@ const AIHubPage = () => {
   // States cho phân tích vận hành
   const [analytics, setAnalytics] = useState(null);
   const [experts, setExperts] = useState([]);
+  const [tickets, setTickets] = useState([]);
+  const [selectedTicket, setSelectedTicket] = useState(null);
+  const [selectedExpertForAssign, setSelectedExpertForAssign] = useState('');
 
   useEffect(() => {
     if (activeTab === 'config') fetchSettings();
     if (activeTab === 'intelligence') fetchAnalytics();
     if (activeTab === 'experts') fetchExperts();
+    if (activeTab === 'monitoring') {
+      fetchTickets();
+      const interval = setInterval(fetchTickets, 30000);
+      return () => clearInterval(interval);
+    }
   }, [activeTab]);
+
+  const [lastTicketCount, setLastTicketCount] = useState(0);
+  useEffect(() => {
+    if (tickets.length > lastTicketCount && lastTicketCount !== 0) {
+      addToast('Có hội thoại mới từ khách hàng!', 'info');
+    }
+    setLastTicketCount(tickets.length);
+  }, [tickets]);
 
   const fetchSettings = async () => {
     setLoading(true);
     try {
-      const response = await aiSettingApi.getSettings();
-      if (response.data) setSettings(prev => ({ ...prev, ...response.data }));
+      const data = await aiSettingApi.getSettings();
+      if (data) setSettings(prev => ({ ...prev, ...data }));
     } catch (error) {
       addToast('Không thể tải cấu hình AI', 'error');
     } finally {
@@ -49,8 +65,8 @@ const AIHubPage = () => {
   const fetchAnalytics = async () => {
     setLoading(true);
     try {
-      const response = await aiSettingApi.getAnalytics();
-      setAnalytics(response.data || null);
+      const data = await aiSettingApi.getAnalytics();
+      setAnalytics(data || null);
     } catch (error) {
       addToast('Lỗi khi phân tích yêu cầu khách hàng', 'error');
       setAnalytics(null);
@@ -62,11 +78,23 @@ const AIHubPage = () => {
   const fetchExperts = async () => {
     setLoading(true);
     try {
-      const response = await aiSettingApi.getExpertPerformance();
-      setExperts(Array.isArray(response.data) ? response.data : []);
+      const data = await aiSettingApi.getExpertPerformance();
+      setExperts(Array.isArray(data) ? data : []);
     } catch (error) {
       addToast('Lỗi khi tải dữ liệu chuyên gia', 'error');
       setExperts([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchTickets = async () => {
+    setLoading(true);
+    try {
+      const data = await aiSettingApi.getSupportTickets();
+      setTickets(Array.isArray(data) ? data : []);
+    } catch (error) {
+      addToast('Lỗi khi tải danh sách hội thoại', 'error');
     } finally {
       setLoading(false);
     }
@@ -84,8 +112,26 @@ const AIHubPage = () => {
     }
   };
 
+  const handleConvertToRepair = async (ticketId) => {
+    if (!selectedExpertForAssign) {
+      addToast('Vui lòng chọn chuyên gia tiếp nhận!', 'warning');
+      return;
+    }
+    try {
+      const response = await aiSettingApi.convertToRepair(ticketId, selectedExpertForAssign);
+      if (response?.success) {
+        addToast(response.message, 'success');
+        fetchTickets();
+        setSelectedExpertForAssign('');
+      }
+    } catch (error) {
+      addToast('Lỗi khi chuyển đổi đơn hàng', 'error');
+    }
+  };
+
   const tabs = [
     { id: 'intelligence', label: 'Phân tích Yêu cầu', icon: Ticket },
+    { id: 'monitoring', label: 'Giám sát Hội thoại', icon: MessageSquare },
     { id: 'experts', label: 'Giám sát Chuyên gia', icon: Users },
     { id: 'config', label: 'Cấu hình Hệ thống', icon: Settings },
     { id: 'playground', label: 'Thử nghiệm Chat', icon: MessageSquare },
@@ -93,7 +139,6 @@ const AIHubPage = () => {
 
   return (
     <div className="p-6 bg-[#f8f9fa] min-h-screen">
-      {/* Header */}
       <div className="flex justify-between items-center mb-8">
         <div>
           <h1 className="text-3xl font-black text-slate-900 flex items-center gap-3 uppercase tracking-tighter">
@@ -105,7 +150,7 @@ const AIHubPage = () => {
         
         <div className="flex gap-3">
           <button 
-            onClick={() => activeTab === 'config' ? fetchSettings() : fetchAnalytics()}
+            onClick={() => activeTab === 'config' ? fetchSettings() : (activeTab === 'monitoring' ? fetchTickets() : fetchAnalytics())}
             className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold uppercase tracking-widest hover:bg-slate-50 transition-all"
           >
             <RotateCcw size={14} />
@@ -124,7 +169,6 @@ const AIHubPage = () => {
         </div>
       </div>
 
-      {/* Tabs Navigation */}
       <div className="flex gap-2 bg-slate-200/50 p-1.5 rounded-2xl mb-8 w-fit border border-slate-200">
         {tabs.map((tab) => (
           <button
@@ -142,9 +186,122 @@ const AIHubPage = () => {
         ))}
       </div>
 
-      {/* Main Content Area */}
       <AnimatePresence mode="wait">
-        {/* --- TAB 1: PHÂN TÍCH YÊU CẦU --- */}
+        {activeTab === 'monitoring' && (
+          <motion.div 
+            key="monitoring"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="grid grid-cols-1 lg:grid-cols-12 gap-6 h-[calc(100vh-250px)]"
+          >
+            <div className="lg:col-span-4 bg-white rounded-3xl border border-slate-200 overflow-hidden shadow-sm flex flex-col">
+              <div className="p-4 border-b border-slate-100 bg-slate-50/50">
+                 <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={14} />
+                    <input type="text" placeholder="Tìm số điện thoại, intent..." className="w-full pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-[10px] font-bold uppercase outline-none focus:border-brand-500" />
+                 </div>
+              </div>
+              <div className="flex-1 overflow-y-auto custom-scrollbar">
+                {tickets.length > 0 ? tickets.map((ticket) => (
+                  <div 
+                    key={ticket._id} 
+                    onClick={() => setSelectedTicket(ticket)}
+                    className={`p-4 border-b border-slate-50 cursor-pointer transition-all hover:bg-slate-50 ${selectedTicket?._id === ticket._id ? 'bg-brand-50/50 border-l-4 border-l-brand-500' : ''}`}
+                  >
+                    <div className="flex justify-between items-start mb-2">
+                      <span className={`px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-widest ${
+                        ticket.intent === 'repair_request' ? 'bg-red-100 text-red-600' : 
+                        ticket.intent === 'warranty_check' ? 'bg-blue-100 text-blue-600' : 'bg-slate-100 text-slate-600'
+                      }`}>
+                        {ticket.intent || 'Consulting'}
+                      </span>
+                      <span className="text-[8px] font-bold text-slate-400">{new Date(ticket.updatedAt).toLocaleTimeString()}</span>
+                    </div>
+                    <h4 className="text-xs font-black text-slate-900 truncate uppercase tracking-tight">
+                      {ticket.user?.name || ticket.guestInfo?.name || 'Khách vãng lai'}
+                    </h4>
+                    {ticket.phoneNumber && (
+                      <div className="flex items-center gap-1.5 mt-1">
+                        <Activity size={10} className="text-emerald-500" />
+                        <span className="text-[10px] font-black text-emerald-600">{ticket.phoneNumber}</span>
+                      </div>
+                    )}
+                    <p className="text-[10px] text-slate-400 line-clamp-1 mt-1 italic">"{ticket.subject}"</p>
+                  </div>
+                )) : (
+                  <div className="p-10 text-center text-slate-400 text-[10px] font-bold uppercase tracking-widest">
+                    Chưa có hội thoại nào
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="lg:col-span-8 bg-white rounded-3xl border border-slate-200 overflow-hidden shadow-sm flex flex-col">
+              {selectedTicket ? (
+                <>
+                  <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/30">
+                    <div className="flex items-center gap-4">
+                       <div className="w-10 h-10 bg-slate-900 rounded-xl flex items-center justify-center text-white">
+                          <Bot size={20} />
+                       </div>
+                       <div>
+                          <h3 className="text-sm font-black uppercase tracking-tight">Chi tiết hội thoại</h3>
+                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Lead ID: {selectedTicket._id.substring(selectedTicket._id.length - 8)}</p>
+                       </div>
+                    </div>
+                    <div className="flex gap-3 items-center">
+                       <select 
+                          value={selectedExpertForAssign}
+                          onChange={(e) => setSelectedExpertForAssign(e.target.value)}
+                          className="px-3 py-2 bg-white border border-slate-200 rounded-xl text-[10px] font-black uppercase tracking-tight outline-none focus:border-brand-500"
+                       >
+                          <option value="">-- Chọn chuyên gia --</option>
+                          {experts.map(exp => (
+                             <option key={exp._id} value={exp._id}>{exp.name}</option>
+                          ))}
+                       </select>
+                       <button 
+                          onClick={() => handleConvertToRepair(selectedTicket._id)}
+                          className={`px-4 py-2 text-white rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2 ${
+                            selectedTicket.status === 'converted' ? 'bg-slate-400 cursor-not-allowed' : 'bg-emerald-600 hover:bg-emerald-700'
+                          }`}
+                          disabled={selectedTicket.status === 'converted'}
+                       >
+                          <CheckCircle2 size={14} /> 
+                          {selectedTicket.status === 'converted' ? 'Đã chuyển đơn' : 'Chuyển thành Đơn sửa chữa'}
+                       </button>
+                    </div>
+                  </div>
+                  
+                  <div className="flex-1 overflow-y-auto p-6 space-y-4 custom-scrollbar bg-slate-50/20">
+                    {selectedTicket.chatHistory.map((msg, idx) => (
+                      <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                        <div className={`max-w-[80%] p-4 rounded-2xl text-xs font-medium ${
+                          msg.role === 'user' ? 'bg-slate-900 text-white' : 'bg-white border border-slate-100 text-slate-700 shadow-sm'
+                        }`}>
+                          {msg.content}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="p-4 border-t border-slate-100 bg-white">
+                    <div className="flex gap-3">
+                       <input type="text" placeholder="Gửi tin nhắn phản hồi (Can thiệp trực tiếp)..." className="flex-1 px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium outline-none" />
+                       <button className="p-3 bg-slate-900 text-white rounded-xl"><ArrowRight size={18} /></button>
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <div className="flex-1 flex flex-col items-center justify-center text-slate-300">
+                   <MessageSquare size={48} strokeWidth={1} className="mb-4 opacity-20" />
+                   <p className="text-xs font-black uppercase tracking-widest">Chọn một hội thoại để giám sát</p>
+                </div>
+              )}
+            </div>
+          </motion.div>
+        )}
+
         {activeTab === 'intelligence' && (
           <motion.div 
             key="intelligence"
@@ -153,7 +310,6 @@ const AIHubPage = () => {
             exit={{ opacity: 0, y: -10 }}
             className="space-y-6"
           >
-            {/* Stats Overview */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
               {[
                 { label: 'Tổng số Yêu cầu', value: analytics?.stats?.total || 0, icon: Ticket, color: 'blue' },
@@ -172,7 +328,6 @@ const AIHubPage = () => {
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-              {/* AI Analysis Card */}
               <div className="lg:col-span-2 space-y-6">
                 <div className="bg-slate-900 rounded-3xl p-8 text-white relative overflow-hidden">
                   <div className="relative z-10">
@@ -220,7 +375,6 @@ const AIHubPage = () => {
                   <div className="absolute top-[-50px] right-[-50px] w-64 h-64 bg-brand-600/10 rounded-full blur-3xl"></div>
                 </div>
 
-                {/* Recent Tickets List */}
                 <div className="bg-white rounded-3xl border border-slate-200 overflow-hidden shadow-sm">
                   <div className="p-6 border-b border-slate-100 flex justify-between items-center">
                     <h3 className="font-bold uppercase tracking-tight text-slate-800">Yêu cầu hỗ trợ gần đây</h3>
@@ -266,7 +420,6 @@ const AIHubPage = () => {
                 </div>
               </div>
 
-              {/* Sidebar: Real-time Monitor */}
               <div className="space-y-6">
                 <div className="bg-white rounded-3xl border border-slate-200 p-6 shadow-sm">
                   <h3 className="font-bold text-slate-800 uppercase tracking-tight mb-4 flex items-center gap-2">
@@ -305,7 +458,6 @@ const AIHubPage = () => {
           </motion.div>
         )}
 
-        {/* --- TAB 2: GIÁM SÁT CHUYÊN GIA --- */}
         {activeTab === 'experts' && (
           <motion.div 
             key="experts"
@@ -361,7 +513,6 @@ const AIHubPage = () => {
           </motion.div>
         )}
 
-        {/* --- TAB 3: CẤU HÌNH HỆ THỐNG --- */}
         {activeTab === 'config' && (
           <motion.div key="config" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-white rounded-3xl border border-slate-200 p-8 shadow-sm">
              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -398,6 +549,8 @@ const AIHubPage = () => {
                         >
                           <option value="gemini-1.5-flash">Gemini 1.5 Flash (Nhanh)</option>
                           <option value="gemini-1.5-pro">Gemini 1.5 Pro (Thông minh)</option>
+                          <option value="gemini-2.0-flash">Gemini 2.0 Flash</option>
+                          <option value="gemini-flash-latest">Gemini Flash Latest</option>
                         </select>
                       </div>
 
@@ -438,7 +591,6 @@ const AIHubPage = () => {
           </motion.div>
         )}
 
-        {/* --- TAB 4: THỬ NGHIỆM --- */}
         {activeTab === 'playground' && (
           <motion.div key="playground" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="h-[700px] bg-white rounded-3xl border border-slate-200 overflow-hidden shadow-sm">
              <AIChatBox currentSettings={settings} />
