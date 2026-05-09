@@ -1,13 +1,15 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import Chart from 'chart.js/auto';
-import { PlusCircle, Bell, PlayCircle, CursorClick, Lock, MagnifyingGlass, ListDashes, GridFour } from '@phosphor-icons/react';
+import { 
+  Plus, Bell, PlayCircle, MousePointer2, Lock, Search, 
+  List, LayoutGrid, RotateCcw, Activity, TrendingUp, AlertCircle
+} from 'lucide-react';
 import { useToast } from '../../contexts/ToastContext';
 import { useConfirmDialog } from '../../hooks/useConfirmDialog';
 import marketingApi from '../../api/marketingApi';
 import QuickEditDrawer from './MarketingPageComponents/QuickEditDrawer';
 import BannerList from './MarketingPageComponents/BannerList';
 import BannerGrid from './MarketingPageComponents/BannerGrid';
-import StatCard from './MarketingPageComponents/StatCard';
 
 const MarketingPage = () => {
   const chartRef = useRef(null);
@@ -48,7 +50,6 @@ const MarketingPage = () => {
   const fetchBanners = useCallback(async (currentFilters) => {
     setLoadingBanners(true);
     try {
-      // Backend expects 'status' and 'type' (position)
       const response = await marketingApi.getBanners({
         search: currentFilters.search,
         position: currentFilters.type,
@@ -74,7 +75,48 @@ const MarketingPage = () => {
     return () => clearTimeout(handler);
   }, [filters, fetchBanners]);
   
-  // ... (keeping other useEffects)
+  useEffect(() => {
+    if (chartRef.current && banners.length > 0) {
+      if (chartInstanceRef.current) {
+        chartInstanceRef.current.destroy();
+      }
+
+      const ctx = chartRef.current.getContext('2d');
+      const labels = banners.slice(0, 7).map(b => (b.name || 'Banner').substring(0, 10) + '...');
+      const data = banners.slice(0, 7).map(b => b.stats?.ctr || 0);
+
+      chartInstanceRef.current = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels,
+          datasets: [{
+            label: 'Tỷ lệ Click (CTR %)',
+            data,
+            borderColor: '#4f46e5',
+            backgroundColor: 'rgba(79, 70, 229, 0.1)',
+            fill: true,
+            tension: 0.4,
+            borderWidth: 3,
+            pointRadius: 4,
+            pointBackgroundColor: '#fff',
+            pointBorderColor: '#4f46e5',
+            pointBorderWidth: 2
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false }
+          },
+          scales: {
+            y: { beginAtZero: true, grid: { display: false }, ticks: { font: { weight: 'bold' } } },
+            x: { grid: { display: false }, ticks: { font: { weight: 'bold' } } }
+          }
+        }
+      });
+    }
+  }, [banners]);
 
   const handleOpenDrawer = (banner = null) => {
     setDrawerMode(banner ? 'edit' : 'create');
@@ -98,7 +140,7 @@ const MarketingPage = () => {
     if (response.success) {
       addToast(`Banner đã được ${action} thành công!`, 'success');
       fetchBanners(filters);
-      fetchStats(); // Refresh stats too
+      fetchStats(); 
     } else {
       addToast(`${action.charAt(0).toUpperCase() + action.slice(1)} banner thất bại.`, 'error');
     }
@@ -120,74 +162,121 @@ const MarketingPage = () => {
   const handleSearchChange = (e) => setFilters(prev => ({ ...prev, search: e.target.value }));
 
   return (
-    <div className="flex-1 flex flex-col min-w-0 relative">
-      <header className="h-20 bg-white border-b border-slate-100 flex items-center justify-between px-8 z-20">
-        <h2 className="text-lg font-bold text-slate-800">Quản lý Banner quảng cáo</h2>
-        <div className="flex items-center gap-4">
-          <button className="relative p-2 text-slate-400 hover:text-slate-600"><Bell size={24} /><span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span></button>
-          <button onClick={() => handleOpenDrawer(null)} className="px-5 py-2.5 bg-brand-600 text-white text-sm font-bold rounded-2xl shadow-lg shadow-brand-100 hover:bg-brand-700 transition-all flex items-center gap-2"><PlusCircle size={20} /> Tạo mới</button>
+    <div className="animate-in fade-in duration-500 text-left pb-12">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
+        <div>
+          <h1 className="text-2xl font-black text-slate-900 tracking-tight flex items-center gap-3">
+            Quản lý Marketing
+          </h1>
+          <p className="text-sm text-slate-500 font-medium">Hệ thống quản lý tài sản hình ảnh và chiến dịch quảng cáo chuẩn SEO</p>
         </div>
-      </header>
+        
+        <div className="flex items-center gap-3 w-full md:w-auto">
+          <button 
+            onClick={() => handleOpenDrawer(null)} 
+            className="flex-1 md:flex-none px-5 py-2.5 bg-brand-600 text-white rounded-xl text-sm font-bold shadow-lg shadow-brand-200 hover:bg-brand-700 transition-all flex items-center justify-center gap-2 active:scale-95"
+          >
+            <Plus size={18} /> Tạo Banner mới
+          </button>
+        </div>
+      </div>
 
-      <div className="flex-1 overflow-y-auto p-8 space-y-8 scroll-smooth" id="scrollContainer">
-        <section className="fade-in"><p className="text-slate-500 text-sm max-w-2xl leading-relaxed">Module quản lý tài sản hình ảnh chuẩn SEO. Phiên bản 2.0: Quản lý hàng loạt, khóa banner hết hạn.</p></section>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+        <div className="lg:col-span-1 space-y-4">
+          {loadingStats ? ([...Array(3)].map((_, i) => <div key={i} className="w-full h-24 bg-white animate-pulse rounded-2xl border border-slate-100"></div>)) : (
+            <>
+              <div onClick={() => handleStatusChange('active')} className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between group cursor-pointer hover:shadow-md transition-all">
+                <div>
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1">Đang hiển thị</p>
+                    <h4 className="text-2xl font-black text-emerald-600 tabular-nums">{dashboardStats.displayingBanners}</h4>
+                </div>
+                <div className="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center group-hover:scale-110 transition-transform"><PlayCircle size={22} /></div>
+              </div>
 
-        <section className="grid grid-cols-1 lg:grid-cols-3 gap-6 fade-in" style={{ animationDelay: '100ms' }}>
-          <div className="lg:col-span-1 space-y-4">
-            {loadingStats ? ([...Array(3)].map((_, i) => <div key={i} className="w-full h-[104px] skeleton rounded-3xl"></div>)) : (
-              <>
-                <StatCard title="Đang hiển thị" value={dashboardStats.displayingBanners} icon={PlayCircle} bgColor="bg-emerald-50" textColor="text-emerald-600" onClick={() => handleStatusChange('active')} />
-                <StatCard title="CTR Trung bình" value={`${dashboardStats.avgCtr}%`} icon={CursorClick} bgColor="bg-amber-50" textColor="text-amber-600" />
-                <StatCard title="Banner hết hạn" value={dashboardStats.expiredBanners} icon={Lock} bgColor="bg-rose-50" textColor="text-rose-600" onClick={() => handleStatusChange('expired')} />
-              </>
-            )}
+              <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between group hover:shadow-md transition-all">
+                <div>
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1">CTR Trung bình</p>
+                    <h4 className="text-2xl font-black text-amber-600 tabular-nums">{dashboardStats.avgCtr}%</h4>
+                </div>
+                <div className="w-12 h-12 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center group-hover:scale-110 transition-transform"><MousePointer2 size={22} /></div>
+              </div>
+
+              <div onClick={() => handleStatusChange('expired')} className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between group cursor-pointer hover:shadow-md transition-all">
+                <div>
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1">Banner hết hạn</p>
+                    <h4 className="text-2xl font-black text-rose-600 tabular-nums">{dashboardStats.expiredBanners}</h4>
+                </div>
+                <div className="w-12 h-12 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center group-hover:scale-110 transition-transform"><Lock size={22} /></div>
+              </div>
+            </>
+          )}
+        </div>
+        <div className="lg:col-span-2 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col">
+            <div className="flex items-center justify-between mb-6">
+                <h3 className="text-sm font-black uppercase tracking-widest text-slate-800 flex items-center gap-2">
+                    <TrendingUp size={18} className="text-brand-600" /> Biểu đồ Hiệu suất (CTR)
+                </h3>
+                <div className="flex items-center gap-2 text-[10px] font-bold text-slate-400 uppercase">
+                    <Activity size={12} className="text-emerald-500" /> Thời gian thực
+                </div>
+            </div>
+            <div className="flex-1 min-h-[200px]">
+                <canvas id="ctrChart" ref={chartRef}></canvas>
+            </div>
+        </div>
+      </div>
+
+      <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-6 bg-white p-4 rounded-2xl border border-slate-200 shadow-sm mb-8">
+        <div className="flex flex-col md:flex-row items-center gap-4 w-full xl:w-auto">
+          <div className="relative w-full md:w-80 group">
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-brand-500 transition-colors" size={16} />
+            <input 
+              type="text" 
+              placeholder="Tìm tên chiến dịch..." 
+              value={filters.search} 
+              onChange={handleSearchChange} 
+              className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium focus:bg-white focus:ring-1 focus:ring-brand-500 focus:border-brand-500 outline-none transition-all shadow-inner" 
+            />
           </div>
-          <div className="lg:col-span-2 bg-white p-6 rounded-3xl border border-slate-100 shadow-sm"><div className="chart-container"><canvas id="ctrChart" ref={chartRef}></canvas></div></div>
-        </section>
-
-        <section className="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-6 bg-white p-6 rounded-3xl border border-slate-100 shadow-sm fade-in" style={{ animationDelay: '200ms' }}>
-          <div className="flex flex-col md:flex-row items-center gap-4 w-full xl:w-auto">
-            <div className="relative w-full md:w-80">
-              <MagnifyingGlass className="w-5 h-5 absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
-              <input type="text" placeholder="Tìm tên chiến dịch..." value={filters.search} onChange={handleSearchChange} className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl text-sm focus:ring-4 focus:ring-brand-500/10 outline-none transition-all font-medium" />
-            </div>
-            <div className="flex items-center gap-1 bg-slate-50 p-1.5 rounded-2xl border border-slate-100 self-stretch md:self-auto">
-              <button onClick={() => setView('list')} className={`flex-1 md:flex-none p-2.5 rounded-xl transition-all ${view === 'list' ? 'bg-white shadow-sm text-brand-600' : 'text-slate-400'}`}><ListDashes size={20} className="mx-auto" /></button>
-              <button onClick={() => setView('grid')} className={`flex-1 md:flex-none p-2.5 rounded-xl transition-all ${view === 'grid' ? 'bg-white shadow-sm text-brand-600' : 'text-slate-400'}`}><GridFour size={20} className="mx-auto" /></button>
-            </div>
+          <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl border border-slate-200 self-stretch md:self-auto">
+            <button onClick={() => setView('list')} className={`flex-1 md:flex-none p-2 rounded-lg transition-all ${view === 'list' ? 'bg-white shadow-sm text-brand-600' : 'text-slate-400 hover:text-slate-600'}`}><List size={20} className="mx-auto" /></button>
+            <button onClick={() => setView('grid')} className={`flex-1 md:flex-none p-2 rounded-lg transition-all ${view === 'grid' ? 'bg-white shadow-sm text-brand-600' : 'text-slate-400 hover:text-slate-600'}`}><LayoutGrid size={20} className="mx-auto" /></button>
           </div>
-          
-          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 w-full xl:w-auto">
-            <div className="flex flex-wrap items-center gap-1.5">
-              <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest mr-2">Vị trí:</span>
-              {['all', 'home-top', 'home-mid', 'popup'].map(type => (
-                <button key={type} onClick={() => handleFilterChange(type)} className={`px-4 py-2 text-xs font-bold rounded-xl whitespace-nowrap transition-all ${filters.type === type && filters.status === 'all' ? 'bg-brand-600 text-white shadow-md shadow-brand-100' : 'bg-slate-50 text-slate-500 hover:bg-slate-100 border border-slate-100'}`}>{type === 'all' ? 'Tất cả' : type.replace('-', ' ')}</button>
-              ))}
-            </div>
-            <div className="h-8 w-[1px] bg-slate-100 hidden sm:block mx-2"></div>
-            <div className="flex flex-wrap items-center gap-1.5">
-              <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest mr-2">Trạng thái:</span>
-              {[
-                { label: 'Hoạt động', value: 'active', color: 'bg-emerald-500' },
-                { label: 'Lên lịch', value: 'scheduled', color: 'bg-amber-500' },
-                { label: 'Hết hạn', value: 'expired', color: 'bg-rose-500' }
-              ].map(status => (
-                <button key={status.value} onClick={() => handleStatusChange(status.value)} className={`px-4 py-2 text-xs font-bold rounded-xl whitespace-nowrap transition-all flex items-center gap-2 ${filters.status === status.value ? 'bg-slate-800 text-white shadow-lg' : 'bg-slate-50 text-slate-500 hover:bg-slate-100 border border-slate-100'}`}>
-                  {filters.status === status.value && <span className={`w-1.5 h-1.5 rounded-full ${status.color}`}></span>}
-                  {status.label}
-                </button>
-              ))}
-            </div>
+        </div>
+        
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 w-full xl:w-auto">
+          <div className="flex flex-wrap items-center gap-1.5">
+            {['all', 'home-top', 'home-mid', 'popup'].map(type => (
+              <button key={type} onClick={() => handleFilterChange(type)} className={`px-4 py-1.5 text-[10px] font-black uppercase tracking-widest rounded-lg whitespace-nowrap transition-all ${filters.type === type && filters.status === 'all' ? 'bg-brand-600 text-white shadow-lg shadow-brand-200' : 'bg-slate-50 text-slate-500 hover:bg-slate-100 border border-slate-200'}`}>{type === 'all' ? 'Tất cả vị trí' : type.replace('-', ' ')}</button>
+            ))}
           </div>
-        </section>
+          <div className="h-6 w-px bg-slate-200 hidden sm:block mx-1"></div>
+          <div className="flex flex-wrap items-center gap-1.5">
+            {[
+              { label: 'Hoạt động', value: 'active', color: 'bg-emerald-500' },
+              { label: 'Hết hạn', value: 'expired', color: 'bg-rose-500' }
+            ].map(status => (
+              <button key={status.value} onClick={() => handleStatusChange(status.value)} className={`px-4 py-1.5 text-[10px] font-black uppercase tracking-widest rounded-lg whitespace-nowrap transition-all flex items-center gap-2 ${filters.status === status.value ? 'bg-slate-800 text-white shadow-lg' : 'bg-slate-50 text-slate-500 hover:bg-slate-100 border border-slate-200'}`}>
+                {filters.status === status.value && <span className={`w-1.5 h-1.5 rounded-full ${status.color} animate-pulse`}></span>}
+                {status.label}
+              </button>
+            ))}
+            <button 
+                onClick={() => setFilters({ search: '', type: 'all', status: 'all' })}
+                className="p-2 text-slate-400 hover:text-brand-600 hover:bg-brand-50 rounded-lg transition-all"
+            >
+                <RotateCcw size={16} />
+            </button>
+          </div>
+        </div>
+      </div>
 
-        <section id="bannerWorkspace" className="fade-in" style={{ animationDelay: '300ms' }}>
-            {loadingBanners ? ( <div className="space-y-4">{[...Array(3)].map((_, i) => <div key={i} className="w-full h-16 skeleton rounded-2xl"></div>)}</div> )
-             : banners.length === 0 ? ( <p className="text-slate-500 text-center py-10">Không có banner nào được tìm thấy.</p> )
-             : view === 'list' ? ( <BannerList banners={banners} onEdit={handleOpenDrawer} onDelete={handleDeleteBanner} /> )
-             : ( <BannerGrid banners={banners} onEdit={handleOpenDrawer} /> )
-            }
-        </section>
+      <div className="fade-in">
+          {loadingBanners ? ( <div className="space-y-4">{[...Array(3)].map((_, i) => <div key={i} className="w-full h-20 bg-white animate-pulse rounded-2xl border border-slate-100"></div>)}</div> )
+            : banners.length === 0 ? ( <div className="py-20 text-center bg-white rounded-2xl border border-dashed border-slate-200"><p className="text-slate-400 font-bold uppercase tracking-widest text-[11px]">Không tìm thấy dữ liệu banner</p></div> )
+            : view === 'list' ? ( <BannerList banners={banners} onEdit={handleOpenDrawer} onDelete={handleDeleteBanner} /> )
+            : ( <BannerGrid banners={banners} onEdit={handleOpenDrawer} /> )
+          }
       </div>
 
       <QuickEditDrawer banner={currentBanner} mode={drawerMode} isOpen={isDrawerOpen} onClose={handleCloseDrawer} onSave={handleSaveBanner} />

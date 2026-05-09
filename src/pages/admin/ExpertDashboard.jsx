@@ -87,108 +87,112 @@ const ExpertDashboard = () => {
   };
 
   return (
-    <div className="p-8 bg-[#f8f9fa] min-h-screen space-y-8">
+    <div className="animate-in fade-in duration-500 text-left pb-12">
       {/* Simulation Header */}
-      <div className="bg-slate-900 rounded-[2rem] p-8 text-white flex flex-col md:flex-row justify-between items-center gap-6 shadow-2xl">
-         <div className="flex items-center gap-6">
-            <div className="w-16 h-16 bg-white/10 backdrop-blur-md rounded-2xl flex items-center justify-center border border-white/10">
-               <Briefcase size={32} className="text-brand-400" />
-            </div>
-            <div>
-               <h2 className="text-2xl font-black uppercase italic tracking-tighter">Bàn làm việc Chuyên gia</h2>
-               <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mt-1">Giao diện dành riêng cho Kỹ thuật viên Nexus</p>
-            </div>
-         </div>
-         
-         <div className="flex items-center gap-4 bg-white/5 p-4 rounded-2xl border border-white/10">
-            <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Đang xem với tư cách:</span>
-            <select 
-              value={selectedExpertId}
-              onChange={(e) => setSelectedExpertId(e.target.value)}
-              className="bg-slate-800 border-none rounded-xl px-4 py-2 text-xs font-black uppercase tracking-tight outline-none focus:ring-2 focus:ring-brand-500"
-            >
-               {experts.map(exp => (
-                 <option key={exp._id} value={exp._id}>{exp.name} ({exp.role})</option>
-               ))}
-            </select>
-         </div>
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-8">
+        <div>
+          <h1 className="text-2xl font-black text-slate-900 tracking-tight flex items-center gap-3">
+            Bàn làm việc Chuyên gia
+          </h1>
+          <p className="text-sm text-slate-500 font-medium">Giao diện điều phối và xử lý kỹ thuật dành riêng cho Kỹ thuật viên</p>
+        </div>
+        
+        <div className="flex items-center gap-3 bg-white p-2 px-4 rounded-xl border border-slate-200 shadow-sm transition-all focus-within:ring-1 focus-within:ring-brand-500 group">
+          <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400 border-r border-slate-100 pr-3 mr-1">Simulator</span>
+          <select 
+            value={selectedExpertId}
+            onChange={(e) => setSelectedExpertId(e.target.value)}
+            className="bg-transparent border-none text-xs font-black uppercase tracking-tight outline-none cursor-pointer text-slate-700"
+          >
+             {experts.map(exp => (
+               <option key={exp._id} value={exp._id}>{exp.name} ({exp.role})</option>
+             ))}
+          </select>
+          <User size={16} className="text-slate-400 group-hover:text-brand-500 transition-colors" />
+        </div>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-         <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm">
-            <div className="w-10 h-10 bg-amber-50 rounded-xl flex items-center justify-center text-amber-600 mb-4">
-               <Clock size={20} />
-            </div>
-            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Đang chờ xử lý</p>
-            <h4 className="text-2xl font-black text-slate-900 mt-1">{repairs.filter(r => r.status === 'Pending').length}</h4>
-         </div>
-         <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm">
-            <div className="w-10 h-10 bg-indigo-50 rounded-xl flex items-center justify-center text-indigo-600 mb-4">
-               <Activity size={20} />
-            </div>
-            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Đang thực hiện</p>
-            <h4 className="text-2xl font-black text-slate-900 mt-1">{repairs.filter(r => r.status === 'Repairing').length}</h4>
-         </div>
-         <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm">
-            <div className="w-10 h-10 bg-emerald-50 rounded-xl flex items-center justify-center text-emerald-600 mb-4">
-               <CheckCircle2 size={20} />
-            </div>
-            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Đã hoàn thành</p>
-            <h4 className="text-2xl font-black text-slate-900 mt-1">{repairs.filter(r => r.status === 'Completed').length}</h4>
-         </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+         {[
+           { label: 'Yêu cầu chờ xử lý', value: repairs.filter(r => r.status === 'Pending').length, color: 'text-amber-600', bg: 'bg-amber-50', icon: Clock },
+           { label: 'Đang trong tiến độ', value: repairs.filter(r => r.status === 'Repairing').length, color: 'text-brand-600', bg: 'bg-brand-50', icon: Activity },
+           { label: 'Yêu cầu hoàn tất', value: repairs.filter(r => r.status === 'Completed').length, color: 'text-emerald-600', bg: 'bg-emerald-50', icon: CheckCircle2 },
+         ].map((stat, i) => (
+           <div key={i} className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between group hover:shadow-md transition-all">
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1">{stat.label}</p>
+                <h4 className={`text-2xl font-black ${stat.color} tabular-nums`}>{stat.value}</h4>
+              </div>
+              <div className={`w-12 h-12 rounded-xl flex items-center justify-center border border-transparent group-hover:scale-110 transition-transform ${stat.bg} ${stat.color}`}>
+                <stat.icon size={22} />
+              </div>
+           </div>
+         ))}
       </div>
 
       {/* Work List */}
-      <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-xl shadow-slate-200/20 overflow-hidden">
-        <div className="p-8 border-b border-slate-50 flex justify-between items-center">
-           <h3 className="font-black uppercase italic tracking-tight">Danh sách yêu cầu phụ trách</h3>
-           <button onClick={fetchMyRepairs} className="p-2 hover:bg-slate-50 rounded-xl transition-all"><Activity size={18} className="text-slate-400" /></button>
+      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden mb-8">
+        <div className="p-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/30">
+           <h3 className="text-sm font-black uppercase tracking-widest text-slate-800 flex items-center gap-2">
+            <Briefcase size={18} className="text-brand-600" /> Danh sách công việc được giao
+           </h3>
+           <button 
+                onClick={fetchMyRepairs} 
+                className="p-2 bg-white border border-slate-200 rounded-xl text-slate-400 hover:text-brand-600 hover:border-brand-100 transition-all shadow-sm active:scale-95"
+            >
+                <RotateCcw size={18} />
+            </button>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-left">
-            <thead className="bg-slate-50/50 text-[10px] font-black text-slate-400 uppercase tracking-widest">
+            <thead className="bg-slate-50/50 text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100">
               <tr>
-                <th className="px-8 py-6">Mã đơn / Thiết bị</th>
-                <th className="px-8 py-6">Khách hàng</th>
-                <th className="px-8 py-6">Tình trạng lỗi</th>
-                <th className="px-8 py-6">Trạng thái</th>
-                <th className="px-8 py-6 text-right">Thao tác</th>
+                <th className="px-6 py-4">Mã đơn / Thiết bị</th>
+                <th className="px-6 py-4">Khách hàng</th>
+                <th className="px-6 py-4">Tình trạng lỗi</th>
+                <th className="px-6 py-4">Trạng thái</th>
+                <th className="px-6 py-4 text-right">Thao tác</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-50">
               {isLoading ? (
-                 <tr><td colSpan="5" className="py-20 text-center text-slate-400 font-bold uppercase text-[10px] tracking-widest">Đang tải danh sách công việc...</td></tr>
+                 <tr><td colSpan="5" className="py-20 text-center">
+                    <div className="flex flex-col items-center gap-3">
+                        <div className="w-10 h-10 border-4 border-brand-100 border-t-brand-600 rounded-full animate-spin"></div>
+                        <p className="text-sm font-bold text-slate-400 uppercase tracking-widest">Đang tải dữ liệu...</p>
+                    </div>
+                 </td></tr>
               ) : repairs.length === 0 ? (
                  <tr><td colSpan="5" className="py-32 text-center">
-                    <div className="flex flex-col items-center gap-4 opacity-20">
-                       <Briefcase size={64} strokeWidth={1} />
-                       <p className="text-xs font-black uppercase tracking-widest">Hiện tại bạn chưa có công việc nào được giao</p>
+                    <div className="flex flex-col items-center gap-4 opacity-20 text-slate-300">
+                       <Briefcase size={48} strokeWidth={1} />
+                       <p className="text-[11px] font-black uppercase tracking-widest">Hiện tại bạn chưa có công việc nào</p>
                     </div>
                  </td></tr>
               ) : (
                 repairs.map((repair) => (
-                  <tr key={repair._id} className="hover:bg-slate-50/30 transition-colors">
-                    <td className="px-8 py-6">
-                       <p className="text-[10px] font-bold text-brand-600 font-mono mb-1">{repair.ticketNumber}</p>
+                  <tr key={repair._id} className="hover:bg-slate-50/50 transition-colors group">
+                    <td className="px-6 py-4">
+                       <p className="text-[10px] font-bold text-brand-600 font-mono mb-1">#{repair.ticketNumber}</p>
                        <p className="text-sm font-black uppercase tracking-tight text-slate-800">{repair.deviceType}</p>
                     </td>
-                    <td className="px-8 py-6">
-                       <p className="text-xs font-bold text-slate-700">{repair.user?.name || repair.guestInfo?.name}</p>
-                       <p className="text-[10px] text-slate-400">{repair.user?.phone || repair.guestInfo?.phone}</p>
+                    <td className="px-6 py-4">
+                       <p className="text-xs font-bold text-slate-700 uppercase tracking-tight">{repair.user?.name || repair.guestInfo?.name}</p>
+                       <p className="text-[10px] text-slate-400 font-bold font-mono">{repair.user?.phone || repair.guestInfo?.phone}</p>
                     </td>
-                    <td className="px-8 py-6 max-w-xs">
-                       <p className="text-xs text-slate-600 font-medium italic line-clamp-2">"{repair.description}"</p>
+                    <td className="px-6 py-4">
+                       <p className="text-xs text-slate-500 font-medium italic line-clamp-1 max-w-[200px]">&quot;{repair.description}&quot;</p>
                     </td>
-                    <td className="px-8 py-6">
+                    <td className="px-6 py-4">
                        <span className={getStatusBadge(repair.status)}>{repair.status}</span>
                     </td>
-                    <td className="px-8 py-6 text-right">
+                    <td className="px-6 py-4 text-right">
                        <button 
                          onClick={() => openUpdateModal(repair)}
-                         className="px-6 py-2.5 bg-slate-900 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-brand-600 transition-all shadow-lg shadow-slate-200"
+                         className="px-5 py-2 bg-slate-900 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-black transition-all active:scale-95 shadow-lg shadow-slate-200"
                        >
-                         Cập nhật tiến độ
+                         Cập nhật
                        </button>
                     </td>
                   </tr>

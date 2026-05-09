@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { 
-  MessageSquare, Star, AlertTriangle, CheckCircle, Search, Filter, MoreVertical, ChevronLeft, ChevronRight 
+  MessageSquare, Star, AlertTriangle, CheckCircle, Search, Filter, MoreVertical, ChevronLeft, ChevronRight, Clock, RotateCcw 
 } from 'lucide-react';
 import reviewApi from '../../api/reviewApi';
 import StatCard from '../../components/admin/StatCard';
@@ -101,121 +101,119 @@ const ReviewsPage = () => {
   };
 
   return (
-    <div className="space-y-8 text-left">
+    <div className="animate-in fade-in duration-500 text-left pb-12">
       {/* 1. Header & Stats */}
-      <div className="flex justify-between items-end">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
         <div>
           <h1 className="text-2xl font-black text-slate-900 tracking-tight">Quản lý Đánh giá</h1>
-          <p className="text-sm text-slate-500 mt-1">Theo dõi phản hồi từ khách hàng</p>
+          <p className="text-sm text-slate-500 font-medium">Theo dõi và kiểm duyệt phản hồi từ cộng đồng khách hàng</p>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <StatCard 
-          title="Tổng đánh giá" 
-          value={stats.totalReviews} 
-          icon={MessageSquare} 
-          trend="+12%" 
-          color="bg-blue-50 text-blue-600"
-        />
-        <StatCard 
-          title="Điểm trung bình" 
-          value={stats.avgRating?.toFixed(1) || 0} 
-          icon={Star} 
-          trend="Ổn định" 
-          color="bg-yellow-50 text-yellow-600"
-        />
-        <StatCard 
-          title="Chờ duyệt" 
-          value={stats.pendingCount} 
-          icon={CheckCircle} 
-          trend="Cần xử lý ngay" 
-          color="bg-emerald-50 text-emerald-600"
-        />
-        <StatCard 
-          title="Spam / Rác" 
-          value={stats.spamCount} 
-          icon={AlertTriangle} 
-          color="bg-red-50 text-red-600"
-        />
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        {[
+            { title: "Tổng đánh giá", value: stats.totalReviews, sub: "+12% so với tháng trước", icon: MessageSquare, color: "bg-brand-50 text-brand-600" },
+            { title: "Điểm trung bình", value: stats.avgRating?.toFixed(1) || 0, sub: "Dựa trên trải nghiệm thực", icon: Star, color: "bg-amber-50 text-amber-600" },
+            { title: "Chờ phê duyệt", value: stats.pendingCount, sub: "Cần xử lý trong 24h", icon: Clock, color: "bg-blue-50 text-blue-600" },
+            { title: "Báo cáo Spam", value: stats.spamCount, sub: "Tự động phát hiện", icon: AlertTriangle, color: "bg-rose-50 text-rose-600" }
+        ].map((stat, i) => (
+            <div key={i} className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-5 group hover:shadow-md transition-all">
+                <div className={`w-14 h-14 rounded-xl flex items-center justify-center ${stat.color} border border-transparent group-hover:scale-110 transition-transform shadow-sm`}>
+                    <stat.icon className="w-7 h-7" />
+                </div>
+                <div>
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">{stat.title}</p>
+                    <h3 className="text-2xl font-black text-slate-800 tabular-nums">{stat.value}</h3>
+                    <p className="text-[10px] text-slate-400 mt-0.5 font-bold">{stat.sub}</p>
+                </div>
+            </div>
+        ))}
       </div>
 
       {/* 2. Filters */}
-      <div className="bg-white p-4 rounded-2xl border border-slate-100 flex flex-wrap gap-4 items-center justify-between shadow-sm">
-        <div className="flex gap-4 flex-1">
-          <div className="relative flex-1 max-w-md">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-            <input 
-              type="text" 
-              placeholder="Tìm kiếm nội dung, sản phẩm..." 
-              className="w-full pl-10 pr-4 py-2 bg-slate-50 border-none rounded-xl text-sm font-medium focus:ring-2 focus:ring-indigo-100 outline-none"
-              value={filters.search}
-              onChange={(e) => setFilters({ ...filters, search: e.target.value, page: 1 })}
-            />
-          </div>
-          <select 
-            className="bg-slate-50 px-4 py-2 rounded-xl text-sm font-bold text-slate-600 outline-none cursor-pointer"
-            value={filters.status}
-            onChange={(e) => setFilters({ ...filters, status: e.target.value, page: 1 })}
-          >
-            <option value="all">Tất cả trạng thái</option>
-            <option value="pending">Chờ duyệt</option>
-            <option value="published">Đã đăng</option>
-            <option value="hidden">Đã ẩn</option>
-          </select>
+      <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col md:flex-row gap-4 items-center justify-between mb-8">
+        <div className="relative w-full md:w-96 group">
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-brand-500 transition-colors" size={16} />
+          <input 
+            type="text" 
+            placeholder="Tìm theo nội dung, tên sản phẩm..." 
+            className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium focus:bg-white focus:ring-1 focus:ring-brand-500 focus:border-brand-500 outline-none transition-all shadow-inner"
+            value={filters.search}
+            onChange={(e) => setFilters({ ...filters, search: e.target.value, page: 1 })}
+          />
+        </div>
+        <div className="flex items-center gap-3 w-full md:w-auto">
+            <select 
+                className="flex-1 md:flex-none bg-white px-4 py-2.5 border border-slate-200 rounded-xl text-[11px] font-black uppercase tracking-widest text-slate-600 outline-none cursor-pointer focus:ring-1 focus:ring-brand-500 transition-all shadow-sm"
+                value={filters.status}
+                onChange={(e) => setFilters({ ...filters, status: e.target.value, page: 1 })}
+            >
+                <option value="all">Tất cả Trạng thái</option>
+                <option value="pending">Chờ phê duyệt</option>
+                <option value="published">Đã hiển thị</option>
+                <option value="hidden">Đã ẩn (Private)</option>
+            </select>
+            <button 
+                onClick={() => setFilters({ ...filters, search: '', status: 'all', page: 1 })}
+                className="p-2.5 bg-white border border-slate-200 rounded-xl text-slate-400 hover:text-brand-600 hover:border-brand-100 transition-all shadow-sm"
+            >
+                <RotateCcw size={18} />
+            </button>
         </div>
       </div>
 
       {/* 3. Table */}
-      <div className="bg-white rounded-[2rem] border border-slate-100 overflow-hidden shadow-sm">
-        <ReviewsTable 
-          reviews={reviews} 
-          isLoading={isLoading}
-          onStatusChange={handleStatusChange}
-          onToggleSpam={handleToggleSpam}
-          onDelete={handleDelete}
-          onReply={(review) => setSelectedReview(review)}
-        />
+      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden mb-8 flex flex-col min-h-[400px]">
+        <div className="flex-1 overflow-x-auto">
+            <ReviewsTable 
+            reviews={reviews} 
+            isLoading={isLoading}
+            onStatusChange={handleStatusChange}
+            onToggleSpam={handleToggleSpam}
+            onDelete={handleDelete}
+            onReply={(review) => setSelectedReview(review)}
+            />
+        </div>
         
         {/* Pagination Navigation */}
-        {pagination.totalPages > 1 && (
-          <div className="px-8 py-6 bg-slate-50/50 border-t border-slate-100 flex items-center justify-between">
-            <p className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-400 italic">
-              Trang {pagination.page} / {pagination.totalPages} • {pagination.total} đánh giá
+        <div className="px-6 py-4 bg-slate-50/50 border-t border-slate-100 flex justify-between items-center text-left">
+            <p className="text-[11px] text-slate-400 font-black uppercase tracking-widest">
+              Trang {pagination.page} / {pagination.totalPages || 1} • {pagination.total} đánh giá
             </p>
             <div className="flex items-center gap-2">
               <button 
                 onClick={() => handlePageChange(pagination.page - 1)}
                 disabled={pagination.page === 1}
-                className={`p-2 rounded-xl border transition-all ${pagination.page === 1 ? 'text-slate-200 border-slate-50 cursor-not-allowed' : 'text-slate-500 border-slate-200 hover:bg-white hover:text-indigo-600 shadow-sm'}`}
+                className="p-2 bg-white border border-slate-200 rounded-xl text-slate-600 hover:bg-slate-50 disabled:opacity-40 transition-all shadow-sm"
               >
                 <ChevronLeft size={18} />
               </button>
               
-              {[...Array(pagination.totalPages)].map((_, i) => (
-                <button
-                  key={i + 1}
-                  onClick={() => handlePageChange(i + 1)}
-                  className={`w-10 h-10 rounded-xl text-[11px] font-black transition-all ${
-                    pagination.page === i + 1 
-                      ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200' 
-                      : 'text-slate-400 hover:bg-white hover:text-slate-900'
-                  }`}
-                >
-                  {i + 1}
-                </button>
-              ))}
+              <div className="flex gap-1">
+                {[...Array(pagination.totalPages)].map((_, i) => (
+                    <button
+                        key={i + 1}
+                        onClick={() => handlePageChange(i + 1)}
+                        className={`w-9 h-9 rounded-xl text-xs font-black transition-all ${
+                            pagination.page === i + 1 
+                            ? 'bg-brand-600 text-white shadow-lg shadow-brand-200' 
+                            : 'bg-white text-slate-500 border border-slate-200 hover:bg-slate-50'
+                        }`}
+                    >
+                    {i + 1}
+                    </button>
+                )).slice(Math.max(0, pagination.page - 3), Math.min(pagination.totalPages, pagination.page + 2))}
+              </div>
 
               <button 
                 onClick={() => handlePageChange(pagination.page + 1)}
-                disabled={pagination.page === pagination.totalPages}
-                className={`p-2 rounded-xl border transition-all ${pagination.page === pagination.totalPages ? 'text-slate-200 border-slate-50 cursor-not-allowed' : 'text-slate-500 border-slate-200 hover:bg-white hover:text-indigo-600 shadow-sm'}`}
+                disabled={pagination.page === pagination.totalPages || pagination.totalPages === 0}
+                className="p-2 bg-white border border-slate-200 rounded-xl text-slate-600 hover:bg-slate-50 disabled:opacity-40 transition-all shadow-sm"
               >
                 <ChevronRight size={18} />
               </button>
             </div>
-          </div>
-        )}
+        </div>
       </div>
 
       {/* Reply Modal */}

@@ -2,7 +2,7 @@ import { useEffect, useState, useRef } from 'react';
 import Chart from 'chart.js/auto';
 import { 
   DollarSign, ShoppingBag, Users, Activity, Download, 
-  Search, Eye, Tag, Calendar
+  Search, Eye, Tag, Calendar, TrendingUp
 } from 'lucide-react';
 import { getOverviewStats } from '../../api/analyticsApi';
 import { formatCurrency } from '../../utils/formatCurrency';
@@ -77,70 +77,117 @@ export const AnalyticsPage = () => {
     }
   }, [stats]);
 
-  if (loading) return <div className="p-8 text-center">Đang tải phân tích...</div>;
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4 text-left">
+        <div className="w-12 h-12 border-4 border-brand-200 border-t-brand-600 rounded-full animate-spin"></div>
+        <p className="text-sm font-bold text-slate-400 uppercase tracking-widest">Đang tính toán dữ liệu...</p>
+      </div>
+    );
+  }
 
   return (
-    <div className="fade-in space-y-8 pb-12">
-      <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold text-slate-900">Trung tâm Phân tích</h1>
-        <div className="flex gap-2 bg-white p-1 rounded-xl border">
+    <div className="animate-in fade-in duration-500 text-left pb-12">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
+        <div>
+          <h1 className="text-2xl font-black text-slate-900 tracking-tight">Trung tâm Phân tích</h1>
+          <p className="text-sm text-slate-500 font-medium">Báo cáo hiệu suất kinh doanh và hành vi khách hàng thời gian thực</p>
+        </div>
+        <div className="flex gap-2 bg-slate-200/50 p-1 rounded-xl border border-slate-200 shadow-inner">
           {['7', '30', '90'].map(r => (
-            <button key={r} onClick={() => setTimeRange(r)} className={`px-4 py-1.5 rounded-lg text-xs font-bold ${timeRange === r ? 'bg-brand-600 text-white' : 'text-slate-600'}`}>{r} ngày</button>
+            <button 
+                key={r} 
+                onClick={() => setTimeRange(r)} 
+                className={`px-5 py-2 rounded-lg text-xs font-black uppercase tracking-widest transition-all ${timeRange === r ? 'bg-white text-brand-600 shadow-sm border border-slate-100' : 'text-slate-500 hover:text-slate-800'}`}
+            >
+                {r} ngày
+            </button>
           ))}
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <StatCard title="Doanh thu" value={formatCurrency(stats?.totalRevenue)} icon={DollarSign} color="brand" />
-        <StatCard title="Đơn hàng" value={stats?.totalOrders} icon={ShoppingBag} color="amber" />
-        <StatCard title="Khách mới" value={stats?.newUsers} icon={Users} color="purple" />
-        <StatCard title="Chuyển đổi" value={`${stats?.conversionRate}%`} icon={Activity} color="cyan" />
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <StatCard title="Tổng doanh thu" value={formatCurrency(stats?.totalRevenue)} sub="+15.2% so với kỳ trước" icon={DollarSign} color="brand" />
+        <StatCard title="Sản lượng đơn" value={stats?.totalOrders} sub="Đang vận chuyển: 8" icon={ShoppingBag} color="amber" />
+        <StatCard title="Khách hàng mới" value={stats?.newUsers} sub="Tỷ lệ quay lại: 24%" icon={Users} color="purple" />
+        <StatCard title="Tỷ lệ chuyển đổi" value={`${stats?.conversionRate}%`} sub="Chuẩn ngành: 2.1%" icon={Activity} color="cyan" />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 bg-white p-6 rounded-2xl border h-96">
-            <h3 className="font-bold mb-4">Biểu đồ Doanh thu</h3>
-            <div className="h-72"><canvas ref={chartRef}></canvas></div>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
+        <div className="lg:col-span-2 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm h-[450px] flex flex-col">
+            <div className="flex items-center justify-between mb-8 border-b border-slate-50 pb-4">
+                <h3 className="text-sm font-black uppercase tracking-widest text-slate-800 flex items-center gap-2">
+                    <TrendingUp size={18} className="text-brand-600" /> Xu hướng Doanh thu
+                </h3>
+                <div className="flex items-center gap-2 text-[10px] font-bold text-slate-400 uppercase tracking-tighter">
+                    <Activity size={12} className="text-emerald-500" /> Real-time
+                </div>
+            </div>
+            <div className="flex-1 min-h-0"><canvas ref={chartRef}></canvas></div>
         </div>
-        <div className="bg-white p-6 rounded-2xl border h-96">
-            <h3 className="font-bold mb-4">Theo Danh mục</h3>
-            <div className="h-72"><canvas ref={pieChartRef}></canvas></div>
+        <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm h-[450px] flex flex-col">
+            <h3 className="text-sm font-black uppercase tracking-widest text-slate-800 mb-8 border-b border-slate-50 pb-4">Cơ cấu Ngành hàng</h3>
+            <div className="flex-1 min-h-0 flex items-center justify-center relative">
+                <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                    <span className="text-xs font-bold text-slate-400 uppercase">Top 1</span>
+                    <span className="text-lg font-black text-slate-800">{stats?.categoryRevenue?.[0]?._id || 'N/A'}</span>
+                </div>
+                <canvas ref={pieChartRef}></canvas>
+            </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div className="bg-white p-6 rounded-2xl border shadow-sm">
-            <h3 className="font-bold mb-4">Top Sản phẩm bán chạy</h3>
-            <div className="space-y-3">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+            <h3 className="text-sm font-black uppercase tracking-widest text-slate-800 mb-8 border-b border-slate-50 pb-4">Top Sản phẩm hiệu suất cao</h3>
+            <div className="space-y-4">
                 {stats?.topSellingProducts?.map((p, i) => (
-                    <div key={i} className="flex justify-between items-center p-2 hover:bg-slate-50 rounded-lg">
-                        <span className="text-sm font-medium">{p.name}</span>
-                        <span className="text-sm font-bold text-brand-600">{formatCurrency(p.revenue)}</span>
+                    <div key={i} className="flex justify-between items-center p-3 hover:bg-slate-50 rounded-xl transition-colors border border-transparent hover:border-slate-100 group">
+                        <div className="flex items-center gap-4 min-w-0">
+                            <div className="w-9 h-9 rounded-lg bg-slate-50 border border-slate-200 flex items-center justify-center text-xs font-black text-slate-400 group-hover:text-brand-600 group-hover:border-brand-200 transition-colors">0{i+1}</div>
+                            <span className="text-sm font-bold text-slate-700 truncate max-w-[250px]">{p.name}</span>
+                        </div>
+                        <span className="text-sm font-black text-brand-600 tabular-nums">{formatCurrency(p.revenue)}</span>
                     </div>
                 ))}
             </div>
           </div>
-          <div className="bg-white p-6 rounded-2xl border shadow-sm">
-            <h3 className="font-bold mb-4">Từ khóa tìm kiếm</h3>
+          <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+            <h3 className="text-sm font-black uppercase tracking-widest text-slate-800 mb-8 border-b border-slate-50 pb-4">Phân tích Từ khóa tiềm năng</h3>
             <div className="flex flex-wrap gap-2">
                 {stats?.topKeywords?.map((k, i) => (
-                    <span key={i} className="px-3 py-1 bg-slate-100 rounded-full text-xs font-medium text-slate-600">{k._id} ({k.count})</span>
+                    <div key={i} className="px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl flex items-center gap-3 hover:bg-white hover:border-brand-500 hover:shadow-lg transition-all group cursor-default">
+                        <span className="text-xs font-bold text-slate-600 group-hover:text-brand-600">{k._id}</span>
+                        <span className="px-2 py-0.5 bg-white border border-slate-100 rounded-lg text-[10px] font-black text-slate-400 group-hover:text-brand-600 group-hover:border-brand-200 transition-colors">{k.count}</span>
+                    </div>
                 ))}
             </div>
+            {(!stats?.topKeywords || stats.topKeywords.length === 0) && (
+                <div className="py-12 text-center text-slate-300 font-bold uppercase text-[10px] tracking-widest italic">Chưa có dữ liệu tìm kiếm</div>
+            )}
           </div>
       </div>
     </div>
   );
 };
 
-const StatCard = ({ title, value, icon: Icon, color }) => {
-  const colors = { brand: 'bg-blue-50 text-blue-600', amber: 'bg-amber-50 text-amber-600', purple: 'bg-purple-50 text-purple-600', cyan: 'bg-cyan-50 text-cyan-600' };
+const StatCard = ({ title, value, sub, icon: Icon, color }) => {
+  const colors = { 
+      brand: 'bg-brand-50 text-brand-600 border-brand-100', 
+      amber: 'bg-amber-50 text-amber-600 border-amber-100', 
+      purple: 'bg-purple-50 text-purple-600 border-purple-100', 
+      cyan: 'bg-cyan-50 text-cyan-600 border-cyan-100' 
+  };
   return (
-    <div className="bg-white p-6 rounded-2xl border shadow-sm">
-      <div className="flex justify-between items-start">
-        <div><p className="text-xs text-slate-500 font-bold uppercase mb-1">{title}</p><h3 className="text-xl font-black">{value}</h3></div>
-        <div className={`p-2 rounded-lg ${colors[color]}`}><Icon className="w-5 h-5" /></div>
-      </div>
+    <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-5 group hover:shadow-md transition-all">
+        <div className={`w-14 h-14 rounded-xl flex items-center justify-center border border-transparent group-hover:scale-110 transition-transform shadow-sm ${colors[color]}`}>
+            <Icon className="w-7 h-7" />
+        </div>
+        <div className="min-w-0">
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">{title}</p>
+            <h3 className="text-2xl font-black text-slate-800 tabular-nums truncate">{value}</h3>
+            <p className="text-[10px] text-slate-400 mt-0.5 font-bold">{sub}</p>
+        </div>
     </div>
   );
 };
