@@ -11,12 +11,13 @@ import {
   ChevronDown, Save, UserCheck, Clock, CreditCard
 } from 'lucide-react';
 import { formatDate, formatTime } from '../../utils/dateHelper';
-import { useAuth } from '../../hooks/useAuth';
+import { useSelector } from 'react-redux';
+import { selectCurrentUser } from '../../store/slices/authSlice';
 import { useToast } from '../../contexts/ToastContext';
 import { useConfirmDialog } from '../../hooks/useConfirmDialog';
 
 export const AccountManagementPage = () => {
-  const { user: currentUser } = useAuth();
+  const currentUser = useSelector(selectCurrentUser);
   const { addToast } = useToast();
   const { showConfirmDialog } = useConfirmDialog();
   const [users, setUsers] = useState([]);
@@ -219,12 +220,12 @@ export const AccountManagementPage = () => {
         {/* FILTER BAR */}
         <div className="p-4 border-b border-slate-100 flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-slate-50/30">
           <div className="flex gap-6 overflow-x-auto no-scrollbar">
-            {['all', 'admin', 'expert', 'customer'].map(tab => (
+            {['all', 'Admin', 'Expert', 'Customer'].map(tab => (
               <button 
                 key={tab} 
                 onClick={() => setRoleFilter(tab === 'all' ? '' : tab)} 
                 className={`pb-2 text-xs font-bold transition-all relative whitespace-nowrap uppercase tracking-widest ${ 
-                    (roleFilter.toLowerCase() === tab || (tab === 'all' && !roleFilter)) 
+                    (roleFilter === tab || (tab === 'all' && !roleFilter)) 
                     ? 'text-brand-600 after:content-[""] after:absolute after:bottom-0 after:left-0 after:w-full after:h-[2px] after:bg-brand-600' 
                     : 'text-slate-400 hover:text-slate-600'
                 }`}
@@ -433,7 +434,6 @@ export const AccountManagementPage = () => {
       )}
       </AnimatePresence>
 
-      {/* --- MODAL 2: CHI TIẾT & CẬP NHẬT --- */}
       <AnimatePresence>
       {isDetailModalOpen && selectedUser && (
         <div className="fixed inset-0 z-[1000] flex justify-end">
@@ -506,7 +506,6 @@ export const AccountManagementPage = () => {
       )}
       </AnimatePresence>
 
-      {/* Reset Pass Modal */}
       <AnimatePresence>
       {isResetModalOpen && (
           <div className="fixed inset-0 z-[1100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">

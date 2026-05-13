@@ -23,7 +23,9 @@ const SupportTicketPage = () => {
     setLoading(true);
     try {
       const response = await ticketApi.getAll({ status: filterStatus });
-      setTickets(response.data);
+      // Xử lý linh hoạt cho cả trường hợp API trả về mảng trực tiếp hoặc object { data: ... }
+      const ticketData = Array.isArray(response) ? response : (response.data || []);
+      setTickets(ticketData);
     } catch (error) {
       addToast('Không thể tải danh sách yêu cầu hỗ trợ', 'error');
     } finally {

@@ -1,5 +1,8 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { useSelector, useDispatch } from 'react-redux';
+import { selectCurrentUser } from './store/slices/authSlice';
+import { setCart } from './store/slices/cartSlice';
 
 // Layouts
 import { AdminLayout } from './layouts/AdminLayout.jsx';
@@ -57,6 +60,22 @@ import ScrollToTop from './components/common/ScrollToTop.jsx';
 import './features/product-experience/ProductExperience.css';
 
 const App = () => {
+  const dispatch = useDispatch();
+  const currentUser = useSelector(selectCurrentUser);
+
+  // Effect to load cart from localStorage on initial load or user change
+  useEffect(() => {
+    const cartKey = currentUser ? `nexus_cart_${currentUser._id || currentUser.id}` : 'nexus_cart_guest';
+    try {
+      const storedCart = localStorage.getItem(cartKey);
+      const initialCart = storedCart ? JSON.parse(storedCart) : [];
+      dispatch(setCart(initialCart));
+    } catch (error) {
+      console.error('Failed to load and set cart from localStorage', error);
+      dispatch(setCart([])); // Reset to empty cart on error
+    }
+  }, [currentUser, dispatch]);
+
   return (
     <BrowserRouter 
       future={{ 

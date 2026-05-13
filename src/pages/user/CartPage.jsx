@@ -2,16 +2,19 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Minus, Plus, Trash2, ArrowRight, ShieldCheck, ShoppingBag } from 'lucide-react';
 import EmptyState from '../../components/common/EmptyState';
-import { useCart } from '../../contexts/CartContext';
 import { formatCurrency } from '../../utils/formatCurrency';
-
-import { useAuth } from '../../hooks/useAuth';
+import { useSelector, useDispatch } from 'react-redux';
+import { selectCartItems, updateQuantity as updateQuantityAction, removeFromCart as removeFromCartAction } from '../../store/slices/cartSlice';
+import { selectIsAuthenticated } from '../../store/slices/authSlice';
 import { useToast } from '../../contexts/ToastContext';
 
 const CartPage = () => {
   const navigate = useNavigate();
-  const { cartItems, updateQuantity, removeFromCart } = useCart();
-  const { isAuthenticated } = useAuth();
+  const dispatch = useDispatch();
+  
+  const cartItems = useSelector(selectCartItems);
+  const isAuthenticated = useSelector(selectIsAuthenticated);
+  
   const { addToast } = useToast();
 
   const handleGoToCheckout = () => {
@@ -28,6 +31,14 @@ const CartPage = () => {
 
     console.log("Navigating to checkout with", cartItems.length, "items");
     navigate('/checkout');
+  };
+
+  const removeFromCart = (productId, variant) => {
+    dispatch(removeFromCartAction({ productId, variant }));
+  };
+
+  const updateQuantity = (productId, quantity, variant) => {
+    dispatch(updateQuantityAction({ productId, quantity, variant }));
   };
 
   const subtotal = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);

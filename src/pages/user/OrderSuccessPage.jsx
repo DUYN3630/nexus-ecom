@@ -2,7 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { CheckCircle, XCircle, Loader, ShoppingBag, Home, RefreshCw } from 'lucide-react';
 import axiosClient from '../../api/axiosClient';
-import { useCart } from '../../contexts/CartContext';
+import { useDispatch } from 'react-redux';
+import { clearCart as clearCartAction } from '../../store/slices/cartSlice';
 import { formatCurrency } from '../../utils/formatCurrency';
 
 /**
@@ -19,7 +20,7 @@ import { formatCurrency } from '../../utils/formatCurrency';
 const OrderSuccessPage = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { clearCart } = useCart();
+  const dispatch = useDispatch();
 
   const orderId     = searchParams.get('orderId');
   const resultCode  = searchParams.get('resultCode');   // MoMo: '0' = success
@@ -34,7 +35,7 @@ const OrderSuccessPage = () => {
       // COD hoặc Bank Transfer: luôn thành công
       if (method === 'COD' || method === 'BANK') {
         setStatus('success');
-        clearCart();
+        dispatch(clearCartAction());
         return;
       }
 
@@ -51,7 +52,7 @@ const OrderSuccessPage = () => {
           } catch {
             setStatus('success'); // resultCode=0 nên vẫn là thành công
           }
-          clearCart();
+          dispatch(clearCartAction());
         } else {
           setStatus('failed');
         }

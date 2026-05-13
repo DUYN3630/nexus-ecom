@@ -1,6 +1,7 @@
 import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
-import useAuth from '../../hooks/useAuth';
+import { useSelector } from 'react-redux';
+import { selectIsAuthenticated, selectCurrentUser } from '../../store/slices/authSlice';
 
 /**
  * A component to protect routes based on authentication status and user roles.
@@ -9,17 +10,13 @@ import useAuth from '../../hooks/useAuth';
  * @param {string} [props.role] The required role to access the route (e.g., 'admin').
  */
 const ProtectedRoute = ({ children, role }) => {
-  const { isAuthenticated, user, isAuthLoading } = useAuth();
+  const isAuthenticated = useSelector(selectIsAuthenticated);
+  const user = useSelector(selectCurrentUser);
   const location = useLocation();
 
-  if (isAuthLoading) {
-    // Show a loading spinner or a blank page while checking auth status
-    return (
-      <div className="w-screen h-screen flex items-center justify-center">
-        <div>Loading...</div>
-      </div>
-    );
-  }
+  // The Redux store is initialized synchronously from localStorage, 
+  // so a dedicated 'isAuthLoading' state is no longer necessary.
+  // The first render will have the correct `isAuthenticated` value.
 
   if (!isAuthenticated) {
     // Redirect them to the /login page, but save the current location they were

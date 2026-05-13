@@ -57,6 +57,7 @@ const aiSettingRoutes = require('./routes/aiSettingRoutes');
 const paymentRoutes = require('./routes/paymentRoutes');
 const trackingRoutes = require('./routes/trackingRoutes');
 const supportRoutes = require('./routes/supportRoutes');
+const chatRoutes = require('./routes/chatRoutes');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/products', productRoutes);
@@ -82,102 +83,11 @@ app.use('/api/ai-settings', (req, res, next) => {
 }, aiSettingRoutes);
 app.use('/api/payment', paymentRoutes);
 app.use('/api/tracking', trackingRoutes);
+app.use('/api/ai', chatRoutes);
 
 // Test Route
 app.get('/', (req, res) => {
     res.send('🚀 Nexus E-commerce Backend is Live and Running!');
-});
-
-// Endpoint Chat chính thức
-app.post('/api/ai/chat', async (req, res) => {
-    console.log("--- [DEBUG] AI Chat Request Received ---");
-    const { prompt, userId, sessionId, customInstruction, systemInstruction, modelName, temperature, maxOutputTokens } = req.body;
-
-    try {
-        if (!prompt) return res.status(400).json({ message: "Prompt is required" });
-
-        // Lấy config từ DB
-        const settings = await Setting.find({ key: { $in: ['ai_system_instruction', 'ai_model_name', 'ai_temperature', 'ai_max_tokens'] } });
-        const configMap = settings.reduce((acc, curr) => { acc[curr.key] = curr.value; return acc; }, {});
-
-        // Quyết định System Instruction
-        let finalSystemInstruction = systemInstruction;
-        if (customInstruction === 'NEXUS_EXPERT_SUPPORT_INSTRUCTION') {
-            finalSystemInstruction = NEXUS_EXPERT_SUPPORT_INSTRUCTION;
-        } else if (!finalSystemInstruction) {
-            finalSystemInstruction = configMap.ai_system_instruction || NEXUS_SYSTEM_INSTRUCTION;
-        }
-
-        // Ép AI không nhắc đến Google
-        let finalPrompt = prompt;
-        if (customInstruction === 'NEXUS_EXPERT_SUPPORT_INSTRUCTION') {
-            finalPrompt = `BẠN LÀ NHÂN VIÊN NEXUS STORE. TUYỆT ĐỐI KHÔNG NÓI BẠN LÀ AI CỦA GOOGLE. \nCâu hỏi khách: ${prompt}`;
-        }
-
-        const options = {
-            systemInstruction: finalSystemInstruction,
-            modelName: modelName || configMap.ai_model_name || "gemini-flash-latest",
-            temperature: 0.3,
-            maxOutputTokens: 500
-        };
-
-        let text = await generateText(finalPrompt, options);
-        console.log("--- [DEBUG] Gemini Response Received ---");
-
-        if (text) {
-            text = text.replace(/Tôi là một trí tuệ nhân tạo được huấn luyện bởi Google/g, 'Em là chuyên gia kỹ thuật của Nexus Store')
-                       .replace(/trí tuệ nhân tạo được huấn luyện bởi Google/g, 'nhân viên Nexus Store')
-                       .replace(/[*#\-_>[\]{}~|+=\\^`()]/g, '')
-                       .replace(/\s+/g, ' ').trim();
-        } else {
-            console.warn("--- [WARN] Gemini returned empty text ---");
-            text = "Dạ, em chưa tìm được câu trả lời phù hợp. Anh/Chị thử hỏi cách khác nhé.";
-        }
-
-        // --- XỬ LÝ LƯU TICKET (QUAN TRỌNG) ---
-        const cleanUserId = (userId && userId !== 'null' && userId !== 'undefined' && mongoose.Types.ObjectId.isValid(userId)) ? userId : null;
-        const cleanSessionId = (sessionId && sessionId !== 'null' && sessionId !== 'undefined') ? sessionId : null;
-        const userIdentifier = cleanUserId ? { user: cleanUserId } : (cleanSessionId ? { sessionId: cleanSessionId } : null);
-
-        console.log("--- [DEBUG] User Identifier for Ticket:", userIdentifier);
-
-        if (userIdentifier) {
-            try {
-                let ticket = await SupportTicket.findOne({ ...userIdentifier, status: { $ne: 'resolved' } });
-                if (!ticket) {
-                    console.log("--- [DEBUG] Creating New Support Ticket ---");
-                    ticket = new SupportTicket({ 
-                        ...userIdentifier, 
-                        subject: prompt.substring(0, 50), 
-                        status: 'diagnosing' 
-                    });
-                } else {
-                    console.log("--- [DEBUG] Updating Existing Ticket:", ticket._id);
-                }
-                
-                ticket.chatHistory.push({ role: 'user', content: prompt });
-                ticket.chatHistory.push({ role: 'ai', content: text });
-
-                // Extraction thô (Số điện thoại)
-                const phoneMatch = prompt.match(/(0[3|5|7|8|9][0-9]{8})\b/);
-                if (phoneMatch) {
-                    ticket.phoneNumber = phoneMatch[0];
-                    console.log("--- [DEBUG] Regex Found Phone:", phoneMatch[0]);
-                }
-
-                await ticket.save();
-                console.log("--- [DEBUG] Ticket Saved Successfully ---");
-            } catch (err) {
-                console.error("--- [ERROR] Save Ticket Failed:", err.message);
-                // Không return lỗi 500 ở đây để khách vẫn nhận được câu trả lời từ AI
-            }
-        }
-
-        return res.json({ text });
-    } catch (error) {
-        console.error("--- [ERROR] AI Chat Endpoint:", error);
-        res.status(500).json({ message: "Lỗi AI hệ thống", error: error.message });
-    }
 });
 
 app.use((err, req, res, next) => {

@@ -19,7 +19,7 @@ const AIHubPage = () => {
   // States cho cấu hình
   const [settings, setSettings] = useState({
     ai_system_instruction: '',
-    ai_model_name: 'gemini-flash-latest',
+    ai_model_name: 'gemini-2.0-flash',
     ai_temperature: 0.7,
     ai_max_tokens: 1000
   });
@@ -560,7 +560,7 @@ const AIHubPage = () => {
                           <option value="gemini-1.5-flash">Gemini 1.5 Flash (Turbo)</option>
                           <option value="gemini-1.5-pro">Gemini 1.5 Pro (Ultra)</option>
                           <option value="gemini-2.0-flash">Gemini 2.0 Flash (Latest)</option>
-                          <option value="gemini-flash-latest">Flash Engine Auto</option>
+                          <option value="gemini-2.0-flash-lite">Gemini 2.0 Flash Lite</option>
                         </select>
                       </div>
 

@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Star, MessageSquare, User, BadgeCheck, X, Send, Filter, ChevronDown } from 'lucide-react';
 import reviewApi from '../../../api/reviewApi';
-import { useAuth } from '../../../hooks/useAuth';
+import { useSelector } from 'react-redux';
+import { selectIsAuthenticated } from '../../../store/slices/authSlice';
 import { useToast } from '../../../contexts/ToastContext';
 
 const ReviewSection = ({ productId }) => {
-  const { isAuthenticated } = useAuth();
+  const isAuthenticated = useSelector(selectIsAuthenticated);
   const { addToast } = useToast();
   
   const [reviews, setReviews] = useState([]);

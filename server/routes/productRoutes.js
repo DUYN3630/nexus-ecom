@@ -24,9 +24,24 @@ const upload = multer({
 });
 
 const createProductValidation = [
+  // Name (String)
   body('name').trim().notEmpty().withMessage('Tên sản phẩm không được để trống'),
-  body('price').notEmpty().withMessage('Giá không được để trống').isFloat({ min: 0 }),
+  // SKU (String, optional)
+  body('sku').optional({ checkFalsy: true }).trim(),
+  // Price (Number, required)
+  body('price').notEmpty().withMessage('Giá không được để trống').toFloat(),
+  // Discount Price (Number, optional)
+  body('discountPrice').optional({ checkFalsy: true }).toFloat(),
+  // Stock (Integer, optional)
+  body('stock').optional({ checkFalsy: true }).toInt(),
+  // Category (ObjectID, required)
   body('category').notEmpty().withMessage('Danh mục không được để trống'),
+  // Description (String, optional)
+  body('description').optional({ checkFalsy: true }).trim(),
+  // Status (Enum, optional, default: 'draft')
+  body('status').optional().isIn(['active', 'archived', 'draft']).withMessage('Trạng thái không hợp lệ'),
+  // isFeatured (Boolean, optional)
+  body('isFeatured').optional().toBoolean()
 ];
 
 // --- Product Routes ---

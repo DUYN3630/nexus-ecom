@@ -137,7 +137,10 @@ const ExpertSupportPage = () => {
     const userId = user?._id;
 
     try {
-      const response = await geminiApi.chatWithAi(message, 'NEXUS_EXPERT_SUPPORT_INSTRUCTION', userId);
+      const response = await geminiApi.chatWithAi(message, {
+        customInstruction: 'NEXUS_EXPERT_SUPPORT_INSTRUCTION',
+        userId: userId,
+      });
       setChatMessages([...newMessages, { role: 'ai', content: response.text }]);
     } catch (error) {
       addToast('Mất kết nối với AI Support', 'error');

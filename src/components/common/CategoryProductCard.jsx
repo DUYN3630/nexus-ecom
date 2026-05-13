@@ -1,7 +1,8 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ShoppingBag, ArrowRight, Info, Heart } from 'lucide-react';
-import { useCart } from '../../contexts/CartContext';
+import { useDispatch } from 'react-redux';
+import { addToCart as addToCartAction } from '../../store/slices/cartSlice';
 import { useToast } from '../../contexts/ToastContext';
 import { useWishlist } from '../../contexts/WishlistContext';
 import { getProductImageUrl, IMAGE_ERROR_PLACEHOLDER } from '../../utils/getProductImageUrl';
@@ -70,7 +71,7 @@ const CategoryProductCard = ({
   titleItalic = true,
 }) => {
   const navigate = useNavigate();
-  const { addToCart } = useCart();
+  const dispatch = useDispatch();
   const { addToast } = useToast();
   const { toggleWishlist, isInWishlist } = useWishlist();
 
@@ -80,7 +81,7 @@ const CategoryProductCard = ({
 
   const handlePurchase = (e) => {
     e.stopPropagation();
-    addToCart(product, 1);
+    dispatch(addToCartAction({ product, quantity: 1 }));
     addToast(`Đã thêm ${product.name} vào giỏ hàng`, 'success');
   };
 

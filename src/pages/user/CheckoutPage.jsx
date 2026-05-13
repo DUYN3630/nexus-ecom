@@ -4,8 +4,9 @@ import {
   ArrowLeft, ShieldCheck, Truck, CreditCard, 
   MapPin, Phone, User, Smartphone, ArrowRight, AlertCircle
 } from 'lucide-react';
-import { useCart } from '../../contexts/CartContext';
-import { useAuth } from '../../hooks/useAuth';
+import { useSelector, useDispatch } from 'react-redux';
+import { selectCartItems, clearCart as clearCartAction } from '../../store/slices/cartSlice';
+import { selectCurrentUser } from '../../store/slices/authSlice';
 import orderApi from '../../api/orderApi';
 import axiosClient from '../../api/axiosClient';
 import { useToast } from '../../contexts/ToastContext';
@@ -13,17 +14,30 @@ import { formatCurrency } from '../../utils/formatCurrency';
 
 const CheckoutPage = () => {
   const navigate = useNavigate();
-  const { cartItems, clearCart } = useCart();
-  const { user } = useAuth();
+  const dispatch = useDispatch();
+  const cartItems = useSelector(selectCartItems);
+  const user = useSelector(selectCurrentUser);
   const { addToast } = useToast();
   const [isProcessing, setIsProcessing] = useState(false);
   
   const [formData, setFormData] = useState({
-    customerName: '',
-    phone: '',
-    address: '',
+    customerName: user?.name || '',
+    phone: user?.phone || '',
+    address: user?.address || '',
     paymentMethod: 'MOMO'
   });
+
+  // Sync form data if user data loads after initial render
+  useEffect(() => {
+    if (user) {
+      setFormData(prev => ({
+        ...prev,
+        customerName: prev.customerName || user.name || '',
+        phone: prev.phone || user.phone || '',
+        address: prev.address || user.address || '',
+      }));
+    }
+  }, [user]);
 
   const subtotal = cartItems.reduce((sum, item) => sum + (item.price || 0) * (item.quantity || 1), 0);
   const shipping = subtotal > 2000000 ? 0 : 50000;
@@ -39,17 +53,15 @@ const CheckoutPage = () => {
     setIsProcessing(true);
     
     try {
-      // Bước 1: Tạo đơn hàng trong DB
       const orderPayload = {
         customer: {
           name: formData.customerName,
           phone: formData.phone,
           address: formData.address,
-          email: user?.email || '', // Thêm email từ auth context
+          email: user?.email || '',
         },
-        // Fallback cho customer fields cũ nếu có
         customerName: formData.customerName,
-        customerEmail: user?.email || '', // Thêm cả ở root nếu backend cũ dùng
+        customerEmail: user?.email || '',
         shippingAddress: formData.address,
         totalAmount,
         paymentMethod: formData.paymentMethod,
@@ -58,30 +70,25 @@ const CheckoutPage = () => {
           name: item.name,
           quantity: item.quantity,
           price: item.price,
-          image: item.images?.[0] || '',
+          image: item.image || '',
         })),
       };
 
       const savedOrder = await orderApi.createOrder(orderPayload);
       const orderId = savedOrder._id;
 
-      // Bước 2: Xử lý theo phương thức thanh toán
       if (formData.paymentMethod === 'MOMO') {
-        // Gọi server tạo link MoMo
         const { payUrl } = await axiosClient.post('/payment/momo/create', { orderId });
-        
         if (!payUrl) throw new Error('Không nhận được link thanh toán từ MoMo');
         
-        clearCart();
+        dispatch(clearCartAction());
         addToast('Đang chuyển sang MoMo...', 'info');
         
-        // Redirect sang trang MoMo
         window.location.href = payUrl;
-        return; // Dừng ở đây, user sẽ quay lại /order-success
+        return;
       }
 
-      // COD hoặc Bank Transfer: hoàn tất ngay
-      clearCart();
+      dispatch(clearCartAction());
       addToast('Đặt hàng thành công!', 'success');
       navigate(`/order-success?orderId=${orderId}&method=${formData.paymentMethod}`);
 

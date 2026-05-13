@@ -13,9 +13,9 @@ exports.getAllTickets = async (req, res) => {
       .populate('expert', 'name')
       .sort({ createdAt: -1 });
 
-    res.json(tickets);
+    res.json({ success: true, data: tickets });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ success: false, message: error.message });
   }
 };
 
@@ -31,9 +31,9 @@ exports.updateTicket = async (req, res) => {
       { new: true }
     );
 
-    res.json(ticket);
+    res.json({ success: true, data: ticket });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ success: false, message: error.message });
   }
 };
 
@@ -41,8 +41,8 @@ exports.updateTicket = async (req, res) => {
 exports.deleteTicket = async (req, res) => {
   try {
     await SupportTicket.findByIdAndDelete(req.params.id);
-    res.json({ message: 'Đã xóa yêu cầu hỗ trợ' });
+    res.json({ success: true, message: 'Đã xóa yêu cầu hỗ trợ' });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ success: false, message: error.message });
   }
 };

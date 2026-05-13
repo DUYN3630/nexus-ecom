@@ -1,17 +1,15 @@
-import { useState, useEffect, useCallback, useContext } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Search, ShoppingBag, Scale, ArrowRight, ChevronRight, Plus, Cpu } from 'lucide-react';
 import axiosClient from '../../api/axiosClient';
 import { formatCurrency } from '../../utils/formatCurrency';
 import { Link, useNavigate } from 'react-router-dom';
 import debounce from 'lodash/debounce';
-import { CartContext } from '../../contexts/CartContext';
+import { useDispatch } from 'react-redux';
+import { addToCart as addToCartAction } from '../../store/slices/cartSlice';
 import '../../styles/StoreGallery.css';
 
 const BASE_URL = 'http://127.0.0.1:5000';
 
-// ═══════════════════════════════════════════════════════════════════════════
-// PRODUCT CARD – y hệt FeaturedProducts trên trang chủ
-// ═══════════════════════════════════════════════════════════════════════════
 const ProductCard = ({ product, getImageUrl, onAddToCart, onCompare, isComparing }) => {
   const navigate = useNavigate();
 
@@ -25,7 +23,6 @@ const ProductCard = ({ product, getImageUrl, onAddToCart, onCompare, isComparing
       onClick={() => navigate(`/product/${product.slug}`)}
       className="group flex cursor-pointer flex-col rounded-2xl border border-slate-200/60 bg-white p-6 text-left shadow-sm transition-all duration-300 hover:shadow-lg hover:border-slate-300/60"
     >
-      {/* IMAGE AREA – aspect-square y trang chủ */}
       <div className="relative mb-6 block aspect-square w-full overflow-hidden rounded-xl">
         <img
           src={getImageUrl(product.images?.[0])}
@@ -33,7 +30,6 @@ const ProductCard = ({ product, getImageUrl, onAddToCart, onCompare, isComparing
           className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
           onError={(e) => { e.target.src = 'https://via.placeholder.com/300?text=No+Image'; }}
         />
-        {/* Badge discount */}
         {hasDiscount && (
           <div className="absolute top-3 left-3 z-10">
             <span className="rounded-full bg-red-500 px-2.5 py-1 text-[10px] font-black uppercase tracking-widest text-white shadow-sm">
@@ -41,7 +37,6 @@ const ProductCard = ({ product, getImageUrl, onAddToCart, onCompare, isComparing
             </span>
           </div>
         )}
-        {/* Action buttons */}
         <div className="absolute top-3 right-3 z-10 flex flex-col gap-2 opacity-0 group-hover:opacity-100 translate-x-2 group-hover:translate-x-0 transition-all duration-300">
           <button
             onClick={(e) => { e.stopPropagation(); onAddToCart(); }}
@@ -64,7 +59,6 @@ const ProductCard = ({ product, getImageUrl, onAddToCart, onCompare, isComparing
         </div>
       </div>
 
-      {/* INFO AREA – y trang chủ */}
       <div className="flex flex-1 flex-col">
         <h3 className="mb-2 text-lg font-bold leading-tight text-slate-800 line-clamp-2">
           {product.name}
@@ -99,11 +93,8 @@ const ProductCard = ({ product, getImageUrl, onAddToCart, onCompare, isComparing
   );
 };
 
-// ═══════════════════════════════════════════════════════════════════════════
-// STORE PAGE
-// ═══════════════════════════════════════════════════════════════════════════
 const StorePage = () => {
-  const { addToCart } = useContext(CartContext);
+  const dispatch = useDispatch();
   const navigate = useNavigate();
 
   const [products, setProducts] = useState([]);
@@ -161,6 +152,11 @@ const StorePage = () => {
     });
     setIsCompareOpen(true);
   };
+  
+  const handleAddToCart = (product) => {
+    dispatch(addToCartAction({ product, quantity: 1 }));
+    // Consider adding a toast message for user feedback
+  };
 
   const getImageUrl = (imagePath) => {
     if (!imagePath) return '';
@@ -190,7 +186,7 @@ const StorePage = () => {
         </div>
       </div>
 
-      {/* HEADER – giống style trang chủ */}
+      {/* HEADER */}
       <header className="pt-32 pb-10 px-6 md:px-10 max-w-7xl mx-auto">
         <div className="mb-10 flex flex-col items-start justify-between gap-4 md:flex-row md:items-end">
           <div>
@@ -250,7 +246,7 @@ const StorePage = () => {
         </div>
       </nav>
 
-      {/* PRODUCT GRID – grid-cols-4 y FeaturedProducts */}
+      {/* PRODUCT GRID */}
       <main className="py-16 px-6 md:px-10 max-w-7xl mx-auto">
         {loading ? (
           <div className="grid grid-cols-1 gap-x-8 gap-y-10 md:grid-cols-2 lg:grid-cols-4">
@@ -279,7 +275,7 @@ const StorePage = () => {
                 key={product._id}
                 product={product}
                 getImageUrl={getImageUrl}
-                onAddToCart={() => addToCart(product)}
+                onAddToCart={() => handleAddToCart(product)}
                 onCompare={() => toggleCompare(product)}
                 isComparing={compareList.some((p) => p._id === product._id)}
               />
@@ -393,7 +389,7 @@ const StorePage = () => {
                     </div>
                   </div>
                   <button
-                    onClick={() => addToCart(p)}
+                    onClick={() => handleAddToCart(p)}
                     className="w-full mt-3 py-2.5 bg-slate-800 text-white rounded-lg text-xs font-semibold hover:bg-slate-900 transition-colors"
                   >
                     Thêm vào giỏ

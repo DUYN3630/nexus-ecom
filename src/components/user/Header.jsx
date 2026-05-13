@@ -4,8 +4,8 @@ import {
   ShoppingBag, Search, User, Menu, Cpu, LogOut, ChevronDown, Package, Settings, Star, ChevronRight, Heart
 } from 'lucide-react';
 import { NAV_CATEGORIES } from '../../constants/userContent';
-import { useContext } from 'react';
-import { AuthContext } from '../../contexts/AuthContext';
+import { useSelector, useDispatch } from 'react-redux';
+import { selectIsAuthenticated, selectCurrentUser, logout as logoutAction } from '../../store/slices/authSlice';
 import { useWishlist } from '../../contexts/WishlistContext';
 import trackingApi from '../../api/trackingApi'; // Import tracking API
 
@@ -15,14 +15,17 @@ const Header = ({ cartCount, onOpenMobileMenu, topOffset = 0 }) => {
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [showUserDropdown, setShowUserDropdown] = useState(false);
-  
+
   const navigate = useNavigate();
-  const { isAuthenticated, user, logout } = useContext(AuthContext);
+  const dispatch = useDispatch();
+  const isAuthenticated = useSelector(selectIsAuthenticated);
+  const user = useSelector(selectCurrentUser);
+
   const { wishlist } = useWishlist();
   const dropdownRef = useRef(null);
 
   const handleLogout = () => {
-    logout();
+    dispatch(logoutAction());
     setShowUserDropdown(false);
     navigate('/'); 
   };
@@ -30,7 +33,7 @@ const Header = ({ cartCount, onOpenMobileMenu, topOffset = 0 }) => {
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 20);
     window.addEventListener('scroll', handleScroll);
-    
+
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         setShowUserDropdown(false);
@@ -114,7 +117,7 @@ const Header = ({ cartCount, onOpenMobileMenu, topOffset = 0 }) => {
 
         {/* Tiện ích người dùng */}
         <div className="flex items-center gap-2 md:gap-4">
-          
+
           {isAuthenticated ? (
             <div className="relative" ref={dropdownRef}>
                 <button 
@@ -137,7 +140,7 @@ const Header = ({ cartCount, onOpenMobileMenu, topOffset = 0 }) => {
                 {/* --- A. DROPDOWN TÀI KHOẢN (MINI PROFILE CARD) --- */}
                 {showUserDropdown && (
                     <div className="absolute top-full right-0 mt-3 w-64 bg-white rounded-xl shadow-[0_20px_40px_-15px_rgba(0,0,0,0.15)] border border-slate-100 overflow-hidden animate-in fade-in slide-in-from-top-2 z-[110]">
-                        
+
                         {/* 1. Header: Avatar & Thông tin */}
                         <div className="p-4 bg-slate-50/50 border-b border-slate-100">
                             <div className="flex items-center gap-3">
@@ -156,7 +159,7 @@ const Header = ({ cartCount, onOpenMobileMenu, topOffset = 0 }) => {
                               </div>
                             </div>
                         </div>
-                        
+
                         {/* 2. Body: Các chức năng chính */}
                         <div className="p-2">
                           <div className="space-y-0.5">
@@ -230,7 +233,7 @@ const Header = ({ cartCount, onOpenMobileMenu, topOffset = 0 }) => {
                             </div>
                           )}
                         </div>
-                        
+
                         {/* 4. Footer: Nút Sign Out tách biệt */}
                         <div className="p-2 bg-slate-50/50 border-t border-slate-100">
                           <button 
@@ -268,7 +271,7 @@ const Header = ({ cartCount, onOpenMobileMenu, topOffset = 0 }) => {
               </span>
             )}
           </button>
-          
+
           <button className="p-2 -mr-2 text-black hover:bg-slate-100 rounded-full transition-all" onClick={onOpenMobileMenu}>
             <Menu size={24} strokeWidth={2.5} />
           </button>

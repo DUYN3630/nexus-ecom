@@ -1,13 +1,14 @@
 import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
 import { useToast } from './ToastContext';
-import { AuthContext } from './AuthContext';
+import { useSelector } from 'react-redux';
+import { selectCurrentUser } from '../store/slices/authSlice';
 
 const WishlistContext = createContext();
 
 export const useWishlist = () => useContext(WishlistContext);
 
 export const WishlistProvider = ({ children }) => {
-  const { user } = useContext(AuthContext);
+  const user = useSelector(selectCurrentUser);
   const { addToast } = useToast();
 
   // Key lưu trữ dựa trên userId

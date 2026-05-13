@@ -2,8 +2,8 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
 import './index.css';
-import { AuthProvider } from './contexts/AuthContext';
-import { CartProvider } from './contexts/CartContext';
+import { Provider } from 'react-redux';
+import { store } from './store/store';
 import { ToastProvider } from './contexts/ToastContext';
 import { ConfirmDialogProvider } from './contexts/ConfirmDialogContext';
 import { WishlistProvider } from './contexts/WishlistContext';
@@ -13,33 +13,27 @@ import { GoogleOAuthProvider } from '@react-oauth/google';
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || "missing-id";
 
 ReactDOM.createRoot(document.getElementById('root')).render(
-  <React.StrictMode>
-    {GOOGLE_CLIENT_ID !== "missing-id" ? (
-      <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
-        <AuthProvider>
+  <Provider store={store}>
+    <React.StrictMode>
+      {GOOGLE_CLIENT_ID !== "missing-id" ? (
+        <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
           <ToastProvider>
             <ConfirmDialogProvider>
               <WishlistProvider>
-                <CartProvider>
-                  <App />
-                </CartProvider>
+                <App />
               </WishlistProvider>
             </ConfirmDialogProvider>
           </ToastProvider>
-        </AuthProvider>
-      </GoogleOAuthProvider>
-    ) : (
-      <AuthProvider>
+        </GoogleOAuthProvider>
+      ) : (
         <ToastProvider>
           <ConfirmDialogProvider>
             <WishlistProvider>
-              <CartProvider>
-                <App />
-              </CartProvider>
+              <App />
             </WishlistProvider>
           </ConfirmDialogProvider>
         </ToastProvider>
-      </AuthProvider>
-    )}
-  </React.StrictMode>
+      )}
+    </React.StrictMode>
+  </Provider>
 );

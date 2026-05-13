@@ -31,11 +31,11 @@ export const AIChatBox = ({ currentSettings }) => {
       // Gọi API với TOÀN BỘ cấu hình hiện tại từ trang AI Hub
       const response = await geminiApi.chatWithAi(
         prompt, 
-        currentSettings?.ai_system_instruction,
         {
+          systemInstruction: currentSettings?.ai_system_instruction,
           modelName: currentSettings?.ai_model_name,
           temperature: currentSettings?.ai_temperature,
-          maxOutputTokens: currentSettings?.ai_max_tokens
+          maxOutputTokens: currentSettings?.ai_max_tokens,
         }
       );
       

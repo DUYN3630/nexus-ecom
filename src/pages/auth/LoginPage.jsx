@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useGoogleLogin } from '@react-oauth/google';
-import useAuth from '../../hooks/useAuth';
 import authApi from '../../api/authApi';
 import { useToast } from '../../contexts/ToastContext';
+import { useDispatch, useSelector } from 'react-redux';
+import { setUser, selectIsAuthenticated } from '../../store/slices/authSlice';
 
 // --- ICONS ---
 const GoogleIcon = () => (
@@ -38,7 +39,8 @@ const FloatingLabelInput = ({ id, label, type = "text", value, onChange }) => (
 const LoginPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { login, isAuthenticated, isAuthLoading } = useAuth();
+  const dispatch = useDispatch();
+  const isAuthenticated = useSelector(selectIsAuthenticated);
   const { addToast } = useToast();
 
   const [isSignIn, setIsSignIn] = useState(location.pathname !== '/register');
@@ -54,14 +56,14 @@ const LoginPage = () => {
   }, [location.pathname]);
 
   useEffect(() => {
-    if (!isAuthLoading && isAuthenticated) {
+    if (isAuthenticated) {
       const from = location.state?.from?.pathname || '/';
       navigate(from, { replace: true });
     }
-  }, [isAuthenticated, isAuthLoading, navigate, location]);
+  }, [isAuthenticated, navigate, location]);
 
   const handleLoginSuccess = (token, user) => {
-    login(token, user);
+    dispatch(setUser({ token, user }));
     const role = user.role ? user.role.toLowerCase() : '';
     if (role === 'admin' || role === 'staff') {
         navigate('/admin', { replace: true });
@@ -131,8 +133,7 @@ const LoginPage = () => {
     },
   });
 
-  if (isAuthLoading) return <div className="min-h-screen bg-white flex items-center justify-center font-bold uppercase tracking-widest text-slate-300">Đang khởi tạo bảo mật...</div>;
-  if (isAuthenticated) return null;
+  if (isAuthenticated) return null; // Simplified loading state
 
   return (
     <div className="flex items-center justify-center min-h-screen p-4 bg-gray-100 text-left">

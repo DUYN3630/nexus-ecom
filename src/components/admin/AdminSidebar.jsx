@@ -100,33 +100,39 @@ export const AdminSidebar = () => {
 
   const menuGroups = [
     {
-      title: "Tổng quan",
+      title: "Hệ thống & Báo cáo",
       items: [
-        { name: 'Dashboard', icon: LayoutDashboard, path: '/admin' },
-        { name: 'Đơn hàng', icon: ShoppingCart, path: '/admin/orders' },
-        { name: 'Quản lý sửa chữa', icon: Wrench, path: '/admin/repairs' },
-        { name: 'Phân tích', icon: PieChart, path: '/admin/analytics' },
-        { name: 'AI Hub', icon: Sparkles, path: '/admin/ai-hub' },
+        { name: 'Bảng điều khiển', icon: LayoutDashboard, path: '/admin' },
+        { name: 'Phân tích kinh doanh', icon: PieChart, path: '/admin/analytics' },
+        { name: 'Cấu hình AI Hub', icon: Sparkles, path: '/admin/ai-hub' },
       ]
     },
     {
-      title: "Quản lý",
+      title: "Vận hành bán hàng",
       items: [
-        { name: 'Sản phẩm', icon: Package, path: '/admin/products' },
-        { name: 'Danh mục', icon: Layers, path: '/admin/categories' },
-        { name: 'Đánh giá', icon: Star, path: '/admin/reviews' },
-        { name: 'Marketing', icon: Megaphone, path: '/admin/marketing' },
+        { name: 'Quản lý Đơn hàng', icon: ShoppingCart, path: '/admin/orders', badge: 'Mới' },
+        { name: 'Yêu cầu Sửa chữa', icon: Wrench, path: '/admin/repairs' },
+        { name: 'Hỗ trợ & Tickets', icon: Ticket, path: '/admin/tickets' },
       ]
     },
     {
-      title: "Tài khoản & Phân quyền",
-      isOpen: false,
+      title: "Danh mục & Sản phẩm",
       items: [
-        { 
-          name: 'Quản lý Tài khoản', 
-          icon: Shield, 
-          path: '/admin/accounts'
-        },
+        { name: 'Kho Sản phẩm', icon: Package, path: '/admin/products' },
+        { name: 'Phân cấp Danh mục', icon: Layers, path: '/admin/categories' },
+        { name: 'Đánh giá khách hàng', icon: Star, path: '/admin/reviews' },
+      ]
+    },
+    {
+      title: "Chiến dịch Marketing",
+      items: [
+        { name: 'Quản lý Marketing', icon: Megaphone, path: '/admin/marketing' },
+      ]
+    },
+    {
+      title: "Nhân sự & Bảo mật",
+      items: [
+        { name: 'Quản lý Tài khoản', icon: Users, path: '/admin/accounts' },
       ]
     }
   ];

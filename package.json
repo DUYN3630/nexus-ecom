@@ -14,6 +14,7 @@
     "@phosphor-icons/react": "^2.1.10",
     "@phosphor-icons/web": "^2.1.2",
     "@react-oauth/google": "^0.13.4",
+    "@reduxjs/toolkit": "^2.11.2",
     "autoskills": "^0.2.7",
     "axios": "^1.13.2",
     "chart.js": "^4.5.1",
@@ -25,21 +26,27 @@
     "react": "^18.2.0",
     "react-chartjs-2": "^5.3.1",
     "react-dom": "^18.2.0",
+    "react-redux": "^9.2.0",
     "react-router-dom": "^6.30.3",
     "tailwind-merge": "^2.2.0",
     "uuid": "^13.0.0"
   },
   "devDependencies": {
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
     "@types/react": "^18.2.43",
     "@types/react-dom": "^18.2.17",
-    "@vitejs/plugin-react": "^4.2.1",
+    "@vitejs/plugin-react": "^6.0.1",
+    "@vitest/ui": "^4.1.6",
     "autoprefixer": "^10.4.23",
     "eslint": "^8.55.0",
     "eslint-plugin-react": "^7.33.2",
     "eslint-plugin-react-hooks": "^4.6.0",
     "eslint-plugin-react-refresh": "^0.4.5",
+    "jsdom": "^29.1.1",
     "postcss": "^8.5.6",
     "tailwindcss": "^3.4.19",
-    "vite": "^5.0.8"
+    "vite": "^8.0.12",
+    "vitest": "^4.1.6"
   }
 }

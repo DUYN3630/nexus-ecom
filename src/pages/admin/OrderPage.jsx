@@ -7,13 +7,14 @@ import {
 } from 'lucide-react';
 import FilterableHeader from '../../components/admin/ui/FilterableHeader';
 import orderApi from '../../api/orderApi';
-import { useAuth } from '../../hooks/useAuth';
+import { useSelector } from 'react-redux';
+import { selectCurrentUser } from '../../store/slices/authSlice';
 
 // --- HELPERS ---
 const formatCurrency = (amount) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
 
 export const OrderPage = () => {
-  const { user } = useAuth();
+  const user = useSelector(selectCurrentUser);
   const [orders, setOrders] = useState([]);
   const [displayOrders, setDisplayOrders] = useState([]);
   const [loading, setLoading] = useState(true);

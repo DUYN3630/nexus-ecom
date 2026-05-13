@@ -13,7 +13,8 @@ import useProductDetail from '../../../hooks/useProductDetail';
 import trackingApi from '../../../api/trackingApi';
 import usePageTiming from '../../../hooks/usePageTiming';
 import { formatCurrency } from '../../../utils/formatCurrency';
-import { useCart } from '../../../contexts/CartContext';
+import { useDispatch } from 'react-redux';
+import { addToCart as addToCartAction } from '../../../store/slices/cartSlice';
 import { useToast } from '../../../contexts/ToastContext';
 import { useWishlist } from '../../../contexts/WishlistContext';
 import '../../../styles/ProductDetailEditorial.css';
@@ -30,7 +31,7 @@ const ProductDetailPage = () => {
   const { addToRecentlyViewed } = useRecentlyViewed();
   
   const { product, isLoading, error } = useProductDetail(slug);
-  const { addToCart } = useCart();
+  const dispatch = useDispatch();
   const { addToast } = useToast();
   const { toggleWishlist, isInWishlist } = useWishlist();
 
@@ -72,8 +73,8 @@ const ProductDetailPage = () => {
       selectedOptions: selection,
     });
     
-    // Call Context Action
-    addToCart(product, quantity, selection);
+    // Dispatch Redux Action
+    dispatch(addToCartAction({ product, quantity, variant: selection }));
     
     addToast('Đã thêm sản phẩm vào giỏ hàng', 'success');
     
@@ -82,7 +83,7 @@ const ProductDetailPage = () => {
 
   const handleBuyNow = () => {
     if (!product) return;
-    addToCart(product, quantity, selection);
+    dispatch(addToCartAction({ product, quantity, variant: selection }));
     navigate('/checkout');
   };
 

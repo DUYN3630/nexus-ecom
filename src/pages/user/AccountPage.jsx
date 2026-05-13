@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { Package, User, LogOut, ChevronRight, Clock, ShoppingBag, Wrench, ShieldCheck, MessageSquare } from 'lucide-react';
-import useAuth from '../../hooks/useAuth';
+import { useSelector, useDispatch } from 'react-redux';
+import { selectCurrentUser, logout as logoutAction } from '../../store/slices/authSlice';
 import { useNavigate, useParams } from 'react-router-dom';
 import orderApi from '../../api/orderApi';
 import supportApi from '../../api/supportApi';
 import { formatCurrency } from '../../utils/formatCurrency';
 
 const AccountPage = () => {
-  const { user, logout } = useAuth();
+  const dispatch = useDispatch();
+  const user = useSelector(selectCurrentUser);
   const navigate = useNavigate();
   const { tab } = useParams();
   const [activeTab, setActiveTab] = useState(tab || 'orders');
@@ -59,7 +61,7 @@ const AccountPage = () => {
   };
 
   const handleLogout = () => {
-    logout();
+    dispatch(logoutAction());
     navigate('/login');
   };
 

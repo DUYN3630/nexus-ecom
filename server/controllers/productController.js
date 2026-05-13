@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 const Product = require('../models/Product');
 const Category = require('../models/Category');
+const Review = require('../models/Review');
 
 // @desc    Fetch all products (with filtering, searching, and sorting)
 // @route   GET /api/products
@@ -94,47 +95,31 @@ const getProducts = async (req, res) => {
 // @access  Private/Admin
 const createProduct = async (req, res) => {
     try {
-        // req.body contains the text fields
-        // req.files contains the uploaded image files (thanks to multer)
-        let { name, sku, category, price, discountPrice, stock, description, specifications, status, isFeatured } = req.body;
+        // Data is now sanitized and type-converted by express-validator middleware
+        const { name, sku, category, price, discountPrice, stock, description, specifications, status, isFeatured } = req.body;
 
         if (!req.files || req.files.length === 0) {
             return res.status(400).json({ message: 'Bạn phải tải lên ít nhất một hình ảnh.' });
         }
         
-        // --- SANITIZE DATA ---
-        if (stock === 'null' || stock === '' || stock === undefined) stock = 0;
-        else stock = Number(stock);
-
-        if (price === 'null' || price === '' || price === undefined) price = 0;
-        else price = Number(price);
-
-        if (discountPrice === 'null' || discountPrice === '' || discountPrice === undefined) discountPrice = 0;
-        else discountPrice = Number(discountPrice);
-
-        // Sanitize category input
-        if (category === 'null' || category === '') {
-            category = null;
-        }
-
         // Map uploaded files to their web-accessible paths
         const images = req.files.map(file => {
-            // We'll store the path relative to the server's public folder
             return `/${file.path.replace(/\\/g, '/').split('public/')[1]}`;
         });
 
         const createdProduct = await new Product({
             name,
             sku,
-            category,
+            category: category || null, // Ensure category is null if it's an empty string after validation
             price,
             discountPrice,
             stock,
             description,
             images,
+            // JSON parsing for specifications is still needed here as it's complex data
             specifications: typeof specifications === 'string' ? JSON.parse(specifications || '{}') : specifications,
             status,
-            isFeatured: isFeatured === 'true' || isFeatured === true,
+            isFeatured, // This is now a clean boolean from the middleware
         }).save();
 
         res.status(201).json(createdProduct);
@@ -259,15 +244,15 @@ const getProductBySlug = async (req, res) => {
 };
 
 const TrackingEvent = require('../models/TrackingEvent');
-const { generateText } = require('../utils/gemini');
+// const { generateText } = require('../utils/gemini'); // Not used here anymore
 
-// @desc    Get featured products (Personalized with AI Explanations)
+// @desc    Get featured products (Personalized - AI reasons removed for quota management)
 // @route   GET /api/products/featured
 // @access  Public
 const getFeaturedProducts = async (req, res) => {
     const { sessionId } = req.query;
     const userId = req.user?._id;
-    const targetProductCount = 4; // Lower count for AI processing
+    const targetProductCount = 4; // Number of featured products to return
     
     try {
         let personalizedProducts = new Map();
@@ -279,6 +264,7 @@ const getFeaturedProducts = async (req, res) => {
             : (sessionId ? { sessionId: sessionId } : null);
 
         // --- Step 1: Gather Products & User Insights ---
+        // This part remains to still provide some level of personalization based on user behavior
         if (userIdentifier) {
             const recentSearches = await TrackingEvent.find({ ...userIdentifier, eventType: 'search_keyword' }).sort({ createdAt: -1 }).limit(5);
             const viewedEvents = await TrackingEvent.aggregate([
@@ -322,66 +308,17 @@ const getFeaturedProducts = async (req, res) => {
             finalProducts = recentProducts;
         }
 
-        // --- Step 2: Call AI to Generate Explanations (Now in a fail-safe block) ---
-        try {
-            if (finalProducts.length > 0) {
-                const productListForAI = JSON.stringify(finalProducts.map(p => ({ id: p._id, name: p.name, category: p.category?.name, description: p.description, keyBenefit: p.keyBenefit })));
-                
-                const prompt = `
-                    You are an AI assistant for an e-commerce website.
-                    Context:
-                    User profile summary:
-                    - Interested in: ${userTopCategory}
-                    - Behavior: ${userBehaviorSummary}
-                    Featured products:
-                    ${productListForAI}
-                    Task:
-                    As a friendly shopping assistant, write short, engaging explanations (1 sentence each) explaining why each product is a great fit for this specific user.
-                    Rules:
-                    - Output must be in Vietnamese.
-                    - Sound natural, friendly, and helpful. Like a real, expert shopping assistant.
-                    - Directly connect a product feature to the user's known interests (e.g., "Because you like [category], you might enjoy this product's [feature]").
-                    - Do not mention user data, tracking, or "behavior". Instead of "Because you viewed X", say "Since you're interested in X...".
-                    - No technical jargon. Keep it simple and focus on benefits.
-                    - Be creative and avoid repetitive phrasing.
-                    Output format:
-                    A clean JSON array string, with no extra text or markdown:
-                    [
-                        {
-                        "productId": "...",
-                        "explanation": "..."
-                        }
-                    ]
-                `;
-                
-                const aiResponseString = await generateText(prompt);
-                if (aiResponseString) {
-                    const cleanedString = aiResponseString.replace(/```json/g, '').replace(/```/g, '').trim();
-                    const aiExplanations = JSON.parse(cleanedString);
-                    
-                    const explanationsMap = new Map(aiExplanations.map(item => [item.productId, item.explanation]));
-
-                    finalProducts = finalProducts.map(p => {
-                        const explanation = explanationsMap.get(p._id.toString());
-                        if (explanation) {
-                            const modifiableProduct = p.toObject();
-                            modifiableProduct.featuredReason = explanation;
-                            return modifiableProduct;
-                        }
-                        return p;
-                    });
-                }
-            }
-        } catch (aiError) {
-            console.error("AI explanation generation failed. Returning products without AI reasons.", aiError);
-            // Fail silently - The original finalProducts array will be used.
-        }
+        // --- AI GENERATION REMOVED FOR QUOTA MANAGEMENT ---
+        // The previous AI call was here. It's removed to prevent quota exhaustion.
+        // The `finalProducts` array now contains only database-fetched, personalized products.
+        // If AI explanations are needed in the future, a more efficient,
+        // batched, or cached approach should be implemented.
 
         res.status(200).json(finalProducts);
 
     } catch (error) {
         console.error("Error fetching personalized featured products:", error);
-        res.status(500).json({ message: 'Server Error' });
+        res.status(500).json({ message: 'Lỗi server khi lấy sản phẩm nổi bật' });
     }
 };
 

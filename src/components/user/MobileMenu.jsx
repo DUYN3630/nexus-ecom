@@ -1,15 +1,18 @@
-import React, { useState, useContext } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   X, ChevronDown, Home, LogOut, ShieldCheck, MapPin, Newspaper, Phone, Sparkles
 } from 'lucide-react';
 import { NAV_CATEGORIES } from '../../constants/userContent';
-import { AuthContext } from '../../contexts/AuthContext';
+import { useSelector, useDispatch } from 'react-redux';
+import { selectIsAuthenticated, selectCurrentUser, logout as logoutAction } from '../../store/slices/authSlice';
 
 const MobileMenu = ({ isOpen, onClose }) => {
   const [expandedCat, setExpandedCat] = useState(null);
   const navigate = useNavigate();
-  const { isAuthenticated, user, logout } = useContext(AuthContext);
+  const dispatch = useDispatch();
+  const isAuthenticated = useSelector(selectIsAuthenticated);
+  const user = useSelector(selectCurrentUser);
 
   const handleLinkClick = (path) => {
     navigate(path);
@@ -31,7 +34,7 @@ const MobileMenu = ({ isOpen, onClose }) => {
   };
 
   const handleLogout = () => {
-    logout();
+    dispatch(logoutAction());
     onClose();
     navigate('/');
   };
@@ -77,7 +80,7 @@ const MobileMenu = ({ isOpen, onClose }) => {
             </div>
             
             <h2 className="text-xl font-black uppercase tracking-tight leading-tight">
-              Chào {isAuthenticated ? (user?.name?.split(' ')[0] || 'Duy') : 'Bạn'},<br/>
+              Chào {isAuthenticated ? (user?.name?.split(' ')[0] || 'Bạn') : 'Bạn'},<br/>
               <span className="text-white/40">hôm nay bạn muốn tìm gì?</span>
             </h2>
 

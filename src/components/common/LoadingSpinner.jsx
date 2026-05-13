@@ -12,7 +12,7 @@ const LoadingSpinner = ({
   trackColor = 'border-slate-200'
 }) => {
   return (
-    <div className={`min-h-screen flex items-center justify-center ${bgColor}`}>
+    <div className={`min-h-screen flex items-center justify-center ${bgColor}`} role="status" aria-label="Loading...">
       <div className={`w-10 h-10 border-4 ${trackColor} ${spinnerColor} rounded-full animate-spin`} />
     </div>
   );

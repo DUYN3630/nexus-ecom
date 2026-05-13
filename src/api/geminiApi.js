@@ -14,12 +14,28 @@ export const runChat = async (prompt) => {
 // 2. Default export với đầy đủ tính năng cho AI Hub/Expert Page
 const geminiApi = {
   runChat,
-  chatWithAi: async (prompt, systemInstruction = null, options = {}) => {
+  /**
+   * @param {string} prompt - Tin nhắn của user
+   * @param {Object} options - Các tùy chọn
+   * @param {string} [options.customInstruction] - Tên instruction đặc biệt (VD: 'NEXUS_EXPERT_SUPPORT_INSTRUCTION')
+   * @param {string} [options.systemInstruction] - System instruction tùy chỉnh
+   * @param {string} [options.userId] - ID user đã đăng nhập
+   * @param {string} [options.sessionId] - Session ID cho khách vãng lai
+   * @param {string} [options.modelName] - Tên model Gemini
+   * @param {number} [options.temperature] - Nhiệt độ (0-2)
+   * @param {number} [options.maxOutputTokens] - Giới hạn tokens
+   */
+  chatWithAi: async (prompt, options = {}) => {
     try {
       const response = await axiosClient.post('/ai/chat', { 
-        prompt, 
-        systemInstruction,
-        ...options 
+        prompt,
+        customInstruction: options.customInstruction || null,
+        systemInstruction: options.systemInstruction || null,
+        userId: options.userId || null,
+        sessionId: options.sessionId || null,
+        modelName: options.modelName || null,
+        temperature: options.temperature || null,
+        maxOutputTokens: options.maxOutputTokens || null,
       });
       return response; 
     } catch (error) {
@@ -30,3 +46,4 @@ const geminiApi = {
 };
 
 export default geminiApi;
+
