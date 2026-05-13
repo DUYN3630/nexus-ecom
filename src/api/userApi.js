@@ -2,6 +2,20 @@ import axiosClient from './axiosClient';
 
 const userApi = {
   /**
+   * Lấy thông tin cá nhân (Profile)
+   */
+  getProfile: () => {
+    return axiosClient.get('/users/profile');
+  },
+
+  /**
+   * Cập nhật thông tin cá nhân
+   */
+  updateProfile: (userData) => {
+    return axiosClient.put('/users/profile', userData);
+  },
+
+  /**
    * Lấy danh sách tất cả người dùng
    */
   getAll: (params) => {

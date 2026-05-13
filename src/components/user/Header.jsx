@@ -124,11 +124,13 @@ const Header = ({ cartCount, onOpenMobileMenu, topOffset = 0 }) => {
                   className="flex items-center gap-2 pl-1 pr-3 py-1 bg-slate-50 hover:bg-slate-100 rounded-full transition-all border border-slate-100"
                   onClick={() => setShowUserDropdown(!showUserDropdown)}
                 >
-                    <div className="w-8 h-8 bg-black rounded-full flex items-center justify-center text-white overflow-hidden shadow-sm">
+                    <div className="w-8 h-8 rounded-full flex items-center justify-center text-white overflow-hidden shadow-sm">
                         {user?.avatar ? (
                             <img src={user.avatar} alt={user.name} className="w-full h-full object-cover" />
                         ) : (
-                            <span className="font-black text-[10px]">{user?.name?.charAt(0) || 'U'}</span>
+                            <div className="w-full h-full bg-gradient-to-br from-brand-500 to-indigo-600 flex items-center justify-center">
+                                <span className="font-black text-[10px] uppercase">{user?.name?.charAt(0) || 'U'}</span>
+                            </div>
                         )}
                     </div>
                     <span className="text-[11px] font-black text-black hidden md:block max-w-[80px] truncate uppercase tracking-tighter">
@@ -144,8 +146,14 @@ const Header = ({ cartCount, onOpenMobileMenu, topOffset = 0 }) => {
                         {/* 1. Header: Avatar & Thông tin */}
                         <div className="p-4 bg-slate-50/50 border-b border-slate-100">
                             <div className="flex items-center gap-3">
-                              <div className="w-12 h-12 bg-black rounded-lg flex items-center justify-center text-white font-black text-xl shadow-lg ring-2 ring-white relative">
-                                {user?.name?.charAt(0) || 'U'}
+                              <div className="w-12 h-12 rounded-lg flex items-center justify-center text-white font-black text-xl shadow-lg ring-2 ring-white relative overflow-hidden">
+                                {user?.avatar ? (
+                                    <img src={user.avatar} alt={user.name} className="w-full h-full object-cover" />
+                                ) : (
+                                    <div className="w-full h-full bg-gradient-to-br from-brand-500 to-indigo-600 flex items-center justify-center">
+                                        {user?.name?.charAt(0) || 'U'}
+                                    </div>
+                                )}
                                 <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-500 border-2 border-white rounded-full shadow-sm"></span>
                               </div>
                               <div className="flex-1 min-w-0">

@@ -234,8 +234,14 @@ const AccountPage = () => {
                               <ShieldCheck size={60} />
                            </div>
                            <div className="flex items-center gap-3 mb-4 relative z-10">
-                              <div className="w-8 h-8 rounded-full bg-white text-indigo-600 flex items-center justify-center text-[10px] font-black uppercase shadow-lg">
-                                 {repair.expert?.name?.charAt(0) || 'G'}
+                              <div className="w-8 h-8 rounded-full overflow-hidden text-indigo-600 flex items-center justify-center text-[10px] font-black uppercase shadow-lg ring-2 ring-white">
+                                 {repair.expert?.avatar ? (
+                                     <img src={repair.expert.avatar} className="w-full h-full object-cover" />
+                                 ) : (
+                                     <div className="w-full h-full bg-white flex items-center justify-center">
+                                         {repair.expert?.name?.charAt(0) || 'G'}
+                                     </div>
+                                 )}
                               </div>
                               <div>
                                  <p className="text-[10px] font-black uppercase tracking-widest text-indigo-100">Lời nhắn từ Nexus Genius</p>
@@ -275,8 +281,14 @@ const AccountPage = () => {
             {activeTab === 'profile' && (
               <div className="bg-white p-8 md:p-12 rounded-[2.5rem] border border-slate-100 space-y-10 animate-in fade-in slide-in-from-right-4 duration-500 shadow-sm">
                 <div className="flex items-center gap-6">
-                  <div className="w-24 h-24 bg-black rounded-3xl flex items-center justify-center text-white text-3xl font-black shadow-xl ring-8 ring-slate-50">
-                    {user?.name?.charAt(0) || 'U'}
+                  <div className="w-24 h-24 rounded-3xl flex items-center justify-center text-white text-3xl font-black shadow-xl ring-8 ring-slate-50 overflow-hidden">
+                    {user?.avatar ? (
+                        <img src={user.avatar} className="w-full h-full object-cover" />
+                    ) : (
+                        <div className="w-full h-full bg-gradient-to-br from-brand-500 to-indigo-600 flex items-center justify-center">
+                            {user?.name?.charAt(0) || 'U'}
+                        </div>
+                    )}
                   </div>
                   <div>
                     <h3 className="text-xl font-black uppercase tracking-tighter italic leading-tight">{user?.name || 'Khách hàng'}</h3>

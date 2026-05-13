@@ -6,6 +6,7 @@ const SupportTicket = require('../models/SupportTicket');
 // 1. Lấy cấu hình AI
 exports.getAISettings = async (req, res) => {
   try {
+    console.log("--- [DEBUG] Fetching AI Settings ---");
     const keys = ['ai_system_instruction', 'ai_model_name', 'ai_temperature', 'ai_max_tokens'];
     const settings = await Setting.find({ key: { $in: keys } });
     
@@ -16,6 +17,7 @@ exports.getAISettings = async (req, res) => {
 
     res.json(configMap);
   } catch (error) {
+    console.error("--- [ERROR] getAISettings Failed:", error.message);
     res.status(500).json({ message: error.message });
   }
 };
@@ -23,6 +25,7 @@ exports.getAISettings = async (req, res) => {
 // 2. Cập nhật cấu hình AI
 exports.updateAISettings = async (req, res) => {
   try {
+    console.log("--- [DEBUG] Updating AI Settings ---", req.body);
     const updates = req.body;
     const results = [];
 
@@ -37,6 +40,7 @@ exports.updateAISettings = async (req, res) => {
 
     res.json({ message: 'Cập nhật cấu hình AI thành công', data: results });
   } catch (error) {
+    console.error("--- [ERROR] updateAISettings Failed:", error.message);
     res.status(500).json({ message: error.message });
   }
 };
@@ -82,45 +86,64 @@ exports.getAIAnalytics = async (req, res) => {
 // 4. API Giám sát Chuyên gia (Tab Experts)
 exports.getExpertPerformance = async (req, res) => {
   try {
-    // Sử dụng .lean() để lấy dữ liệu thô, tránh việc Mongoose lọc bỏ do thiếu field required
+    console.log("--- [DEBUG] Fetching Expert Performance ---");
+    // Sử dụng .lean() để lấy dữ liệu thô
     const experts = await Expert.find().lean();
     
+    if (!experts || experts.length === 0) {
+      console.log("--- [DEBUG] No experts found in database ---");
+      return res.json([]);
+    }
+
     // Thống kê cho từng chuyên gia
     const performanceData = await Promise.all(experts.map(async (expert) => {
-      const assigned = await RepairRequest.countDocuments({ expert: expert._id });
-      const resolved = await RepairRequest.countDocuments({ expert: expert._id, status: 'Completed' });
-      
-      return {
-        _id: expert._id,
-        name: expert.name || "Chuyên gia chưa rõ tên",
-        role: expert.role || "Technician",
-        avatar: expert.avatar || 'https://via.placeholder.com/150',
-        specialty: expert.specialty || [],
-        isOnline: expert.isOnline !== undefined ? expert.isOnline : true,
-        stats: {
-          assigned,
-          resolved,
-          efficiency: assigned > 0 ? Math.round((resolved / assigned) * 100) : 100
-        }
-      };
+      try {
+        const assigned = await RepairRequest.countDocuments({ expert: expert._id });
+        const resolved = await RepairRequest.countDocuments({ expert: expert._id, status: 'Completed' });
+        
+        return {
+          _id: expert._id,
+          name: expert.name || "Chuyên gia chưa rõ tên",
+          role: expert.role || "Technician",
+          avatar: expert.avatar || null,
+          specialty: expert.specialty || [],
+          isOnline: expert.isOnline !== undefined ? expert.isOnline : true,
+          stats: {
+            assigned,
+            resolved,
+            efficiency: assigned > 0 ? Math.round((resolved / assigned) * 100) : 100
+          }
+        };
+      } catch (err) {
+        console.error(`--- [ERROR] Stats failed for expert ${expert._id}:`, err.message);
+        return null;
+      }
     }));
 
-    res.json(performanceData);
+    // Lọc bỏ các kết quả null nếu có lỗi trong vòng lặp
+    const cleanData = performanceData.filter(item => item !== null);
+    
+    console.log(`--- [DEBUG] Sending performance data for ${cleanData.length} experts ---`);
+    res.json(cleanData);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error("--- [ERROR] getExpertPerformance Crash:", error.message);
+    res.status(500).json({ message: "Lỗi hệ thống khi tải dữ liệu chuyên gia" });
   }
 };
 
 // 5. API Lấy danh sách hội thoại hỗ trợ (Tab Chat Monitor)
 exports.getSupportTickets = async (req, res) => {
   try {
+    console.log("--- [DEBUG] Fetching Support Tickets ---");
     const tickets = await SupportTicket.find()
       .populate('user', 'name email avatar')
       .sort({ updatedAt: -1 })
       .limit(50);
     
+    console.log(`--- [DEBUG] Found ${tickets.length} tickets ---`);
     res.json(tickets);
   } catch (error) {
+    console.error("--- [ERROR] Get Support Tickets Failed:", error.message);
     res.status(500).json({ message: error.message });
   }
 };

@@ -157,10 +157,10 @@ export const AdminSidebar = () => {
           <div className="absolute bottom-[calc(100%-8px)] left-4 right-4 bg-white border border-slate-200 rounded-2xl shadow-2xl p-2 mb-2 animate-in slide-in-from-bottom-2 duration-200 z-50 overflow-hidden text-left">
             <div className="p-2">
               <p className="px-2 pb-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Cá nhân</p>
-              <button className="w-full flex items-center gap-3 px-3 py-2 text-sm text-slate-600 hover:bg-slate-50 rounded-lg transition-colors text-left">
+              <NavLink to="/admin/profile" className="w-full flex items-center gap-3 px-3 py-2 text-sm text-slate-600 hover:bg-slate-50 rounded-lg transition-colors text-left">
                 <User className="w-4 h-4 text-slate-400" />
                 Hồ sơ cá nhân
-              </button>
+              </NavLink>
             </div>
             <div className="h-px bg-slate-100 my-1 mx-2"></div>
             <div className="p-2">

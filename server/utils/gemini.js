@@ -15,7 +15,7 @@ const generateText = async (prompt, options = {}) => {
     } = options;
 
     // Chuẩn hóa modelName
-    let finalModelName = (optionsModelName || "gemini-2.0-flash").toString().toLowerCase().trim();
+    let finalModelName = (optionsModelName || "gemini-flash-latest").toString().toLowerCase().trim();
     
     console.log(`--- [DEBUG] Final Model Name Sent to Google: "${finalModelName}" ---`);
 

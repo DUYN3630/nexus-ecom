@@ -244,7 +244,7 @@ const AIHubPage = () => {
                 <>
                   <div className="p-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/30">
                     <div className="flex items-center gap-4">
-                       <div className="w-11 h-11 bg-slate-900 rounded-xl flex items-center justify-center text-white shadow-lg">
+                       <div className="w-11 h-11 bg-gradient-to-br from-brand-500 to-indigo-600 rounded-xl flex items-center justify-center text-white shadow-lg">
                           <Bot size={22} />
                        </div>
                        <div>
@@ -479,8 +479,14 @@ const AIHubPage = () => {
               <div key={expert._id} className="bg-white rounded-2xl border border-slate-200 p-8 shadow-sm hover:shadow-xl hover:border-brand-500/50 transition-all group flex flex-col">
                 <div className="flex items-center gap-5 mb-8">
                   <div className="relative">
-                    <div className="w-20 h-20 rounded-2xl bg-slate-100 overflow-hidden ring-4 ring-slate-50 shadow-inner group-hover:scale-105 transition-transform">
-                      <img src={expert.avatar || 'https://via.placeholder.com/150'} alt={expert.name} className="w-full h-full object-cover" />
+                    <div className="w-20 h-20 rounded-2xl bg-slate-100 overflow-hidden ring-4 ring-slate-50 shadow-inner group-hover:scale-105 transition-transform flex items-center justify-center">
+                      {expert.avatar ? (
+                        <img src={expert.avatar} alt={expert.name} className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="w-full h-full bg-gradient-to-br from-brand-500 to-indigo-600 flex items-center justify-center text-white text-2xl font-black uppercase tracking-tighter">
+                          {expert.name?.charAt(0) || 'E'}
+                        </div>
+                      )}
                     </div>
                     <div className={`absolute -top-1.5 -right-1.5 w-5 h-5 border-4 border-white rounded-full shadow-sm ${expert.isOnline ? 'bg-emerald-500' : 'bg-slate-300'}`}></div>
                   </div>

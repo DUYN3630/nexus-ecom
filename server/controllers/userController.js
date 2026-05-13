@@ -3,6 +3,52 @@ const User = require('../models/User');
 const Expert = require('../models/Expert');
 
 /**
+ * @desc    Lấy thông tin cá nhân (Profile)
+ */
+exports.getProfile = async (req, res) => {
+    try {
+        const user = await User.findById(req.user._id).select('-password');
+        if (!user) return res.status(404).json({ success: false, message: "Không tìm thấy" });
+        res.status(200).json({ success: true, data: user });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+/**
+ * @desc    Cập nhật thông tin cá nhân
+ */
+exports.updateProfile = async (req, res) => {
+    try {
+        const { name, phone, avatar } = req.body;
+        const user = await User.findById(req.user._id);
+
+        if (!user) return res.status(404).json({ success: false, message: "Không tìm thấy" });
+
+        if (name) user.name = name;
+        if (phone) user.phone = phone;
+        if (avatar) user.avatar = avatar;
+
+        await user.save();
+
+        res.status(200).json({ 
+            success: true, 
+            message: "Cập nhật hồ sơ thành công",
+            data: {
+                id: user._id,
+                name: user.name,
+                email: user.email,
+                phone: user.phone,
+                avatar: user.avatar,
+                role: user.role
+            }
+        });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+/**
  * @desc    Lấy danh sách người dùng với Tìm kiếm & Lọc
  */
 exports.getUsers = async (req, res) => {

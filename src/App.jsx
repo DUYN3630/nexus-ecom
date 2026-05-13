@@ -53,6 +53,7 @@ import AdminReviewsPage from './pages/admin/ReviewsPage.jsx';
 import AIHubPage from './pages/admin/AIHubPage.jsx';
 import SupportTicketPage from './pages/admin/SupportTicketPage.jsx';
 import RepairManagementPage from './pages/admin/RepairManagementPage.jsx';
+import AdminProfilePage from './pages/admin/ProfilePage.jsx';
 
 // Helper Components
 import ProtectedRoute from './components/Auth/ProtectedRoute.jsx';
@@ -153,6 +154,7 @@ const App = () => {
           <Route path="ai-hub" element={<AIHubPage />} />
           <Route path="tickets" element={<SupportTicketPage />} />
           <Route path="repairs" element={<RepairManagementPage />} />
+          <Route path="profile" element={<AdminProfilePage />} />
         </Route>
       </Routes>
     </BrowserRouter>

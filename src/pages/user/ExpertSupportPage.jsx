@@ -312,8 +312,14 @@ const ExpertSupportPage = () => {
               {filteredExperts.map((expert) => (
                 <div key={expert._id} className="bg-white border border-slate-200 rounded-xl p-5 hover:border-slate-900 transition-all cursor-pointer group">
                   <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-lg bg-slate-100 overflow-hidden grayscale group-hover:grayscale-0 transition-all">
-                      {expert.avatar ? <img src={expert.avatar} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center bg-slate-200 text-slate-500 font-black">{expert.name.charAt(0)}</div>}
+                    <div className="w-12 h-12 rounded-lg bg-slate-100 overflow-hidden grayscale group-hover:grayscale-0 transition-all flex items-center justify-center">
+                      {expert.avatar ? (
+                        <img src={expert.avatar} className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="w-full h-full bg-gradient-to-br from-slate-700 to-slate-900 flex items-center justify-center text-white text-lg font-black uppercase">
+                          {expert.name?.charAt(0) || 'E'}
+                        </div>
+                      )}
                     </div>
                     <div className="flex-1">
                       <h4 className="text-sm font-black uppercase tracking-tight">{expert.name}</h4>

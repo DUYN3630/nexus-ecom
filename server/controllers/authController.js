@@ -334,3 +334,32 @@ exports.resetPassword = async (req, res) => {
         res.status(500).json({ message: "Có lỗi xảy ra. Vui lòng thử lại sau." });
     }
 };
+
+// --- THAY ĐỔI MẬT KHẨU (LOGGED-IN USER) ---
+exports.changePassword = async (req, res) => {
+    try {
+        const { currentPassword, newPassword } = req.body;
+        const userId = req.user.id; // Lấy từ middleware "protect"
+
+        const user = await User.findById(userId);
+        if (!user) {
+            return res.status(404).json({ message: "Không tìm thấy người dùng." });
+        }
+
+        // Kiểm tra mật khẩu hiện tại
+        const isMatch = await bcrypt.compare(currentPassword, user.password);
+        if (!isMatch) {
+            return res.status(401).json({ message: "Mật khẩu hiện tại không đúng." });
+        }
+
+        // Cập nhật mật khẩu mới (pre-save hook sẽ tự hash)
+        user.password = newPassword;
+        await user.save();
+
+        res.json({ message: "Đổi mật khẩu thành công." });
+
+    } catch (err) {
+        console.error('Change password error:', err);
+        res.status(500).json({ message: "Có lỗi xảy ra khi đổi mật khẩu." });
+    }
+};

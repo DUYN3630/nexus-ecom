@@ -68,19 +68,11 @@ app.use('/api/reviews', reviewRoutes);
 app.use('/api/experts', expertRoutes);
 app.use('/api/tickets', ticketRoutes);
 
-// ĐĂNG KÝ ROUTE SUPPORT TRỰC TIẾP ĐỂ TRÁNH LỖI 404
-app.use('/api/support', (req, res, next) => {
-    console.log(`--- [DEBUG] Support API Hit: ${req.method} ${req.url} ---`);
-    next();
-}, supportRoutes);
-
+app.use('/api/support', supportRoutes);
+app.use('/api/ai-settings', aiSettingRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/marketing', marketingRoutes);
-app.use('/api/ai-settings', (req, res, next) => {
-    console.log(`--- [DEBUG] AI Settings API Hit: ${req.method} ${req.url} ---`);
-    next();
-}, aiSettingRoutes);
 app.use('/api/payment', paymentRoutes);
 app.use('/api/tracking', trackingRoutes);
 app.use('/api/ai', chatRoutes);
