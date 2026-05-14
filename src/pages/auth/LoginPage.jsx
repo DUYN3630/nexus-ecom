@@ -4,7 +4,7 @@ import { useGoogleLogin } from '@react-oauth/google';
 import authApi from '../../api/authApi';
 import { useToast } from '../../contexts/ToastContext';
 import { useDispatch, useSelector } from 'react-redux';
-import { setUser, selectIsAuthenticated } from '../../store/slices/authSlice';
+import { setUser, selectIsAuthenticated, selectCurrentUser } from '../../store/slices/authSlice';
 
 // --- ICONS ---
 const GoogleIcon = () => (
@@ -41,6 +41,7 @@ const LoginPage = () => {
   const location = useLocation();
   const dispatch = useDispatch();
   const isAuthenticated = useSelector(selectIsAuthenticated);
+  const user = useSelector(selectCurrentUser);
   const { addToast } = useToast();
 
   const [isSignIn, setIsSignIn] = useState(location.pathname !== '/register');
@@ -55,22 +56,27 @@ const LoginPage = () => {
     setError(null);
   }, [location.pathname]);
 
+  // Auto-redirect if already authenticated
   useEffect(() => {
-    if (isAuthenticated) {
-      const from = location.state?.from?.pathname || '/';
-      navigate(from, { replace: true });
+    if (isAuthenticated && user) {
+      const role = (user.role || '').trim().toLowerCase();
+      
+      let targetPath = '/';
+      if (role === 'admin' || role === 'staff') {
+        targetPath = '/admin';
+      } else if (role === 'expert') {
+        targetPath = '/admin/expert-dashboard';
+      } else {
+        targetPath = location.state?.from?.pathname || '/';
+      }
+
+      navigate(targetPath, { replace: true });
     }
-  }, [isAuthenticated, navigate, location]);
+  }, [isAuthenticated, user, navigate, location.state?.from?.pathname]);
 
   const handleLoginSuccess = (token, user) => {
     dispatch(setUser({ token, user }));
-    const role = user.role ? user.role.toLowerCase() : '';
-    if (role === 'admin' || role === 'staff') {
-        navigate('/admin', { replace: true });
-    } else {
-        const from = location.state?.from?.pathname || '/';
-        navigate(from, { replace: true });
-    }
+    // Navigation will be handled by the useEffect above
   };
 
   const handleSignIn = async () => {

@@ -3,7 +3,7 @@ import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 import {
   Smartphone, LayoutDashboard, ShoppingCart, PieChart,
   Package, Layers, Users, Megaphone, LogOut, Sparkles, Star, Shield, ChevronDown, 
-  UserCog, History, ShieldCheck, Home, Moon, Sun, Settings, User, Ticket, Wrench
+  UserCog, History, ShieldCheck, Home, Moon, Sun, Settings, User, Ticket, Wrench, Briefcase
 } from 'lucide-react';
 
 const SidebarMenuGroup = ({ group }) => {
@@ -98,44 +98,59 @@ export const AdminSidebar = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const menuGroups = [
-    {
-      title: "Hệ thống & Báo cáo",
-      items: [
-        { name: 'Bảng điều khiển', icon: LayoutDashboard, path: '/admin' },
-        { name: 'Phân tích kinh doanh', icon: PieChart, path: '/admin/analytics' },
-        { name: 'Cấu hình AI Hub', icon: Sparkles, path: '/admin/ai-hub' },
+  const userRole = (user.role || '').toLowerCase();
+  const isExpert = userRole === 'expert';
+
+  const menuGroups = isExpert 
+    ? [
+        {
+          title: "Khu vực Kỹ thuật",
+          items: [
+            { name: 'Bàn làm việc Expert', icon: Briefcase, path: '/admin/expert-dashboard' },
+            { name: 'Yêu cầu Sửa chữa', icon: Wrench, path: '/admin/repairs' },
+            { name: 'Hỗ trợ & Tickets', icon: Ticket, path: '/admin/tickets' },
+          ]
+        }
       ]
-    },
-    {
-      title: "Vận hành bán hàng",
-      items: [
-        { name: 'Quản lý Đơn hàng', icon: ShoppingCart, path: '/admin/orders', badge: 'Mới' },
-        { name: 'Yêu cầu Sửa chữa', icon: Wrench, path: '/admin/repairs' },
-        { name: 'Hỗ trợ & Tickets', icon: Ticket, path: '/admin/tickets' },
-      ]
-    },
-    {
-      title: "Danh mục & Sản phẩm",
-      items: [
-        { name: 'Kho Sản phẩm', icon: Package, path: '/admin/products' },
-        { name: 'Phân cấp Danh mục', icon: Layers, path: '/admin/categories' },
-        { name: 'Đánh giá khách hàng', icon: Star, path: '/admin/reviews' },
-      ]
-    },
-    {
-      title: "Chiến dịch Marketing",
-      items: [
-        { name: 'Quản lý Marketing', icon: Megaphone, path: '/admin/marketing' },
-      ]
-    },
-    {
-      title: "Nhân sự & Bảo mật",
-      items: [
-        { name: 'Quản lý Tài khoản', icon: Users, path: '/admin/accounts' },
-      ]
-    }
-  ];
+    : [
+        {
+          title: "Hệ thống & Báo cáo",
+          items: [
+            { name: 'Bảng điều khiển', icon: LayoutDashboard, path: '/admin' },
+            { name: 'Phân tích kinh doanh', icon: PieChart, path: '/admin/analytics' },
+            { name: 'Cấu hình AI Hub', icon: Sparkles, path: '/admin/ai-hub' },
+            { name: 'Bàn làm việc Expert', icon: Briefcase, path: '/admin/expert-dashboard' },
+          ]
+        },
+        {
+          title: "Vận hành bán hàng",
+          items: [
+            { name: 'Quản lý Đơn hàng', icon: ShoppingCart, path: '/admin/orders', badge: 'Mới' },
+            { name: 'Yêu cầu Sửa chữa', icon: Wrench, path: '/admin/repairs' },
+            { name: 'Hỗ trợ & Tickets', icon: Ticket, path: '/admin/tickets' },
+          ]
+        },
+        {
+          title: "Danh mục & Sản phẩm",
+          items: [
+            { name: 'Kho Sản phẩm', icon: Package, path: '/admin/products' },
+            { name: 'Phân cấp Danh mục', icon: Layers, path: '/admin/categories' },
+            { name: 'Đánh giá khách hàng', icon: Star, path: '/admin/reviews' },
+          ]
+        },
+        {
+          title: "Chiến dịch Marketing",
+          items: [
+            { name: 'Quản lý Marketing', icon: Megaphone, path: '/admin/marketing' },
+          ]
+        },
+        {
+          title: "Nhân sự & Bảo mật",
+          items: [
+            { name: 'Quản lý Tài khoản', icon: Users, path: '/admin/accounts' },
+          ]
+        }
+      ];
 
   return (
     <aside className="w-72 bg-white border-r border-gray-200 flex flex-col h-full hidden lg:flex relative">

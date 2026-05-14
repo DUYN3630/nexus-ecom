@@ -87,8 +87,14 @@ exports.getAIAnalytics = async (req, res) => {
 exports.getExpertPerformance = async (req, res) => {
   try {
     console.log("--- [DEBUG] Fetching Expert Performance ---");
-    // Sử dụng .lean() để lấy dữ liệu thô
-    const experts = await Expert.find().lean();
+    
+    // Tìm các hồ sơ chuyên gia và populate thông tin User
+    const experts = await Expert.find()
+      .populate({
+        path: 'user',
+        select: 'role name email'
+      })
+      .lean();
     
     if (!experts || experts.length === 0) {
       console.log("--- [DEBUG] No experts found in database ---");
@@ -99,11 +105,12 @@ exports.getExpertPerformance = async (req, res) => {
     const performanceData = await Promise.all(experts.map(async (expert) => {
       try {
         const assigned = await RepairRequest.countDocuments({ expert: expert._id });
-        const resolved = await RepairRequest.countDocuments({ expert: expert._id, status: 'Completed' });
+        const resolved = await RepairRequest.countDocuments({ expert: expert._id, status: { $in: ['Done', 'Returned'] } });
         
         return {
           _id: expert._id,
-          name: expert.name || "Chuyên gia chưa rõ tên",
+          user: expert.user?._id || expert.user, // Bổ sung ID User để frontend khớp lệnh
+          name: expert.name || expert.user?.name || "Chuyên gia chưa rõ tên",
           role: expert.role || "Technician",
           avatar: expert.avatar || null,
           specialty: expert.specialty || [],

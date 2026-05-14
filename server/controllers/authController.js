@@ -10,6 +10,7 @@ const normalizeRole = (role) => {
     const cleanRole = String(role).toLowerCase().trim();
     if (cleanRole === 'admin') return 'Admin';
     if (cleanRole === 'staff' || cleanRole === 'editor') return 'Staff';
+    if (cleanRole === 'expert') return 'Expert';
     return 'Customer';
 };
 

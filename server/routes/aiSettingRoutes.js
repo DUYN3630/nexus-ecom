@@ -1,20 +1,20 @@
 const express = require('express');
 const router = express.Router();
 const aiHubController = require('../controllers/aiHubController');
-const { protect, admin } = require('../middleware/auth');
+const { protect, admin, adminOrExpert } = require('../middleware/auth');
 
-// 1. Cấu hình (Tab Config)
-router.get('/', protect, admin, aiHubController.getAISettings);
-router.post('/update', protect, admin, aiHubController.updateAISettings);
+// 1. Cấu hình (Tab Config) - Admin và Expert có thể xem
+router.get('/', protect, adminOrExpert, aiHubController.getAISettings);
+router.post('/update', protect, adminOrExpert, aiHubController.updateAISettings);
 
-// 2. Phân tích (Tab Intelligence)
-router.get('/analytics', protect, admin, aiHubController.getAIAnalytics);
+// 2. Phân tích (Tab Intelligence) - Admin và Expert có thể xem
+router.get('/analytics', protect, adminOrExpert, aiHubController.getAIAnalytics);
 
-// 3. Hiệu suất nhân sự (Tab Experts)
-router.get('/experts-performance', protect, admin, aiHubController.getExpertPerformance);
+// 3. Hiệu suất nhân sự (Tab Experts) - Admin và Expert có thể xem
+router.get('/experts-performance', protect, adminOrExpert, aiHubController.getExpertPerformance);
 
-// 4. Giám sát hội thoại (Tab Chat Monitor)
-router.get('/tickets', protect, admin, aiHubController.getSupportTickets);
-router.post('/convert-repair', protect, admin, aiHubController.convertToRepair);
+// 4. Giám sát hội thoại (Tab Chat Monitor) - Admin và Expert có thể xem
+router.get('/tickets', protect, adminOrExpert, aiHubController.getSupportTickets);
+router.post('/convert-repair', protect, adminOrExpert, aiHubController.convertToRepair);
 
 module.exports = router;

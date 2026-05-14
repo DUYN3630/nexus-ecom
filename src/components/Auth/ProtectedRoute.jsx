@@ -25,9 +25,18 @@ const ProtectedRoute = ({ children, role }) => {
   }
 
   // If a specific role is required, check if the user has that role (case-insensitive)
-  if (role && user?.role?.toLowerCase() !== role.toLowerCase()) {
-    // Redirect them to a "not authorized" page or the home page
-    return <Navigate to="/" replace />;
+  if (role) {
+    const userRole = user?.role?.toLowerCase();
+    const requiredRole = role.toLowerCase();
+
+    // Special logic for admin routes: allow both Admin and Expert
+    if (requiredRole === 'admin') {
+      if (userRole !== 'admin' && userRole !== 'expert') {
+        return <Navigate to="/" replace />;
+      }
+    } else if (userRole !== requiredRole) {
+      return <Navigate to="/" replace />;
+    }
   }
 
   return children;

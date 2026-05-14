@@ -84,18 +84,80 @@ getAll: async (req, res) => {
     }
   },
 
+  // Lấy danh sách sửa chữa được gán cho một chuyên gia cụ thể
+  getExpertRepairs: async (req, res) => {
+    try {
+      const { expertId } = req.params;
+      
+      // Tìm xem expertId này là Expert Profile ID hay User ID
+      // Để hỗ trợ cả đơn cũ (User ID) và đơn mới (Expert Profile ID)
+      const Expert = require('../models/Expert');
+      const profile = await Expert.findById(expertId);
+      const userProfile = await Expert.findOne({ user: expertId });
+
+      let queryIds = [expertId];
+      if (profile && profile.user) queryIds.push(profile.user.toString());
+      if (userProfile) queryIds.push(userProfile._id.toString());
+
+      const requests = await RepairRequest.find({ 
+        expert: { $in: queryIds } 
+      })
+      .populate('user', 'name email phone')
+      .populate('expert', 'name role')
+      .sort({ createdAt: -1 });
+
+      console.log(`--- [DEBUG] Found ${requests.length} repairs for ID(s): ${queryIds.join(', ')} ---`);
+      res.json(requests);
+    } catch (error) {
+      console.error("getExpertRepairs Error:", error.message);
+      res.status(500).json({ message: "Không thể lấy danh sách sửa chữa của chuyên gia." });
+    }
+  },
+
   updateStatus: async (req, res) => {
     try {
       const { id } = req.params;
-      const { status, repairNotes, expertResponse } = req.body;
+      const { status, repairNotes, expertResponse, estimatedCost, progressImages, startTime, endTime } = req.body;
+      
+      const updateData = { status, repairNotes, expertResponse, estimatedCost };
+      
+      if (progressImages) updateData.progressImages = progressImages;
+      if (startTime) updateData.startTime = startTime;
+      if (endTime) updateData.endTime = endTime;
+
       const updated = await RepairRequest.findByIdAndUpdate(
         id, 
-        { status, repairNotes, expertResponse }, 
+        updateData, 
         { new: true }
-      );
+      ).populate('user', 'name email phone').populate('expert', 'name role');
+
       res.json({ success: true, data: updated });
     } catch (error) {
+      console.error("updateStatus Error:", error.message);
       res.status(500).json({ message: "Lỗi khi cập nhật yêu cầu." });
+    }
+  },
+
+  // Tra cứu sửa chữa theo số điện thoại (Public)
+  getByPhone: async (req, res) => {
+    try {
+      const { phone } = req.params;
+      const request = await RepairRequest.findOne({ 
+        $or: [
+          { 'guestInfo.phone': phone },
+          { 'user.phone': phone } // Note: this might need population or checking User model if linked
+        ]
+      })
+      .populate('expert', 'name role avatar')
+      .sort({ createdAt: -1 }); // Get the latest one
+      
+      if (!request) {
+        return res.status(404).json({ message: "Không tìm thấy yêu cầu sửa chữa cho số điện thoại này." });
+      }
+      res.json(request);
+    } catch (error) {
+      console.error("getByPhone Error:", error.message);
+      res.status(500).json({ message: "Lỗi khi tra cứu thông tin sửa chữa." });
     }
   }
 };

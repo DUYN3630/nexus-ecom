@@ -22,6 +22,9 @@ export const DashboardPage = () => {
     fetchQuickStats();
   }, []);
 
+  const userString = localStorage.getItem('user');
+  const user = userString ? JSON.parse(userString) : { name: "Quản trị viên" };
+
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4">
@@ -34,7 +37,7 @@ export const DashboardPage = () => {
   return (
     <div className="animate-in fade-in duration-500 text-left pb-12">
       <div className="mb-8">
-        <h1 className="text-2xl font-black text-slate-900 tracking-tight">Chào mừng trở lại, Admin</h1>
+        <h1 className="text-2xl font-black text-slate-900 tracking-tight">Chào mừng trở lại, {user.name}</h1>
         <p className="text-sm text-slate-500 font-medium">Đây là tóm tắt tình hình vận hành hệ thống Nexus hôm nay.</p>
       </div>
 

@@ -4,11 +4,12 @@ import {
   Send, ShieldCheck, Cpu, Smartphone, Monitor, Watch, 
   MessageSquare, Star, MapPin, CheckCircle, AlertTriangle, 
   Search, ChevronRight, HelpCircle, Info, History, Terminal,
-  User
+  User, Loader2, StarHalf
 } from 'lucide-react';
 import expertApi from '../../api/expertApi';
 import geminiApi from '../../api/geminiApi';
 import supportApi from '../../api/supportApi';
+import ticketApi from '../../api/ticketApi';
 import { useToast } from '../../contexts/ToastContext';
 
 const ExpertSupportPage = () => {
@@ -17,6 +18,11 @@ const ExpertSupportPage = () => {
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [isLoading, setIsLoading] = useState(true);
   
+  // Tracking & Ticket state
+  const [repairData, setRepairData] = useState(null);
+  const [trackingPhone, setTrackingPhone] = useState('');
+  const [hasCreatedTicket, setHasCreatedTicket] = useState(false);
+
   // Modals state
   const [activeModal, setActiveModal] = useState(null); // 'warranty' | 'repair' | null
   const [serialNumber, setSerialNumber] = useState('');
@@ -39,6 +45,38 @@ const ExpertSupportPage = () => {
   const chatEndRef = useRef(null);
   const { addToast } = useToast();
 
+  // Khôi phục hội thoại cũ khi load trang
+  useEffect(() => {
+    const restoreHistory = async () => {
+      const user = JSON.parse(localStorage.getItem('user'));
+      const storedPhone = localStorage.getItem('nexus_support_phone');
+      
+      if (user?._id || storedPhone) {
+        try {
+          const res = await ticketApi.getHistory({ 
+            userId: user?._id, 
+            phoneNumber: storedPhone 
+          });
+          
+          if (res.success && res.data) {
+            setHasCreatedTicket(true);
+            setTrackingPhone(res.data.phoneNumber);
+            if (res.data.chatHistory && res.data.chatHistory.length > 0) {
+              const formattedHistory = res.data.chatHistory.map(m => ({
+                role: m.role,
+                content: m.content
+              }));
+              setChatMessages(formattedHistory);
+            }
+          }
+        } catch (error) {
+          console.error("Restore History Error:", error);
+        }
+      }
+    };
+    restoreHistory();
+  }, []);
+
   useEffect(() => {
     const fetchExperts = async () => {
       try {
@@ -53,6 +91,25 @@ const ExpertSupportPage = () => {
     };
     fetchExperts();
   }, []);
+
+  // Real-time Tracking
+  useEffect(() => {
+    let interval;
+    if (trackingPhone) {
+      const fetchStatus = async () => {
+        try {
+          const { data } = await supportApi.getRepairByPhone(trackingPhone);
+          setRepairData(data);
+        } catch (error) {
+          console.error("Tracking Error:", error);
+        }
+      };
+      
+      fetchStatus();
+      interval = setInterval(fetchStatus, 30000); // Poll every 30s
+    }
+    return () => clearInterval(interval);
+  }, [trackingPhone]);
 
   useEffect(() => {
     if (selectedCategory === 'All') {
@@ -129,6 +186,32 @@ const ExpertSupportPage = () => {
 
   const triggerAutoSend = async (message) => {
     if (isAiTyping) return;
+
+    // Detect Phone Number (10 digits)
+    const phoneMatch = message.match(/\b\d{10}\b/);
+    if (phoneMatch && !hasCreatedTicket) {
+      const detectedPhone = phoneMatch[0];
+      setTrackingPhone(detectedPhone);
+      localStorage.setItem('nexus_support_phone', detectedPhone);
+      
+      // Auto Ticket Creation
+      try {
+        const user = JSON.parse(localStorage.getItem('user'));
+        const ticketRes = await ticketApi.create({
+          phoneNumber: detectedPhone,
+          deviceType: repairForm.deviceType,
+          subject: `Hỗ trợ kỹ thuật - ${detectedPhone}`,
+          chatHistory: chatMessages.map(m => ({ role: m.role, content: m.content })),
+          userId: user?._id || user?.id,
+          priority: 'medium'
+        });
+        setHasCreatedTicket(true);
+        addToast('Hệ thống đã tự động tạo phiếu hỗ trợ cho bạn', 'success');
+      } catch (err) {
+        console.error("Auto Ticket Error:", err);
+      }
+    }
+
     const newMessages = [...chatMessages, { role: 'user', content: message }];
     setChatMessages(newMessages);
     setIsAiTyping(true);
@@ -159,6 +242,103 @@ const ExpertSupportPage = () => {
     if (scriptMap[label]) {
       triggerAutoSend(scriptMap[label]);
     }
+  };
+
+  const RepairTrackingWidget = () => {
+    if (!repairData) return null;
+
+    const steps = ['Confirmed', 'Repairing', 'Testing', 'Done', 'Returned'];
+    
+    const getStatusText = (status) => {
+      const map = {
+        'Pending': 'Đang chờ xác nhận...',
+        'Confirmed': 'Đã xác nhận - Đang chờ xử lý',
+        'Repairing': 'Đang trong quá trình sửa chữa',
+        'Testing': 'Đang kiểm tra chất lượng cuối cùng',
+        'Done': 'Sửa chữa hoàn tất - Chờ bàn giao',
+        'Returned': 'Đã bàn giao cho khách hàng'
+      };
+      return map[status] || status;
+    };
+
+    return (
+      <motion.div 
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="mb-8 p-6 bg-slate-900 rounded-3xl border border-slate-800 shadow-2xl overflow-hidden relative"
+      >
+        <div className="absolute top-0 right-0 p-8 opacity-10">
+          <ShieldCheck size={120} className="text-white" />
+        </div>
+        
+        <div className="relative z-10 space-y-6">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+            <div>
+              <div className="flex items-center gap-2 mb-1">
+                <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
+                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-500">Live Repair Tracking</span>
+              </div>
+              <h4 className="text-white text-xl font-black uppercase tracking-tight">{repairData.ticketNumber}</h4>
+              <p className="text-slate-400 text-xs font-bold uppercase mt-1 tracking-wider">{getStatusText(repairData.status)}</p>
+            </div>
+
+            <div className="flex-1 max-w-md bg-slate-800/50 p-6 rounded-2xl border border-slate-700/50">
+              <div className="flex items-center justify-between mb-2">
+                {steps.map((step, idx) => {
+                  const isCompleted = steps.indexOf(repairData.status) >= idx;
+                  const isCurrent = repairData.status === step;
+                  
+                  return (
+                    <div key={step} className="flex flex-col items-center gap-3 relative flex-1">
+                      {idx < steps.length - 1 && (
+                        <div className={`absolute top-2.5 left-1/2 w-full h-[2px] z-0 ${
+                          steps.indexOf(repairData.status) > idx ? 'bg-emerald-500' : 'bg-slate-700'
+                        }`} />
+                      )}
+                      
+                      <div className={`w-5 h-5 rounded-full z-10 flex items-center justify-center transition-all duration-500 ${
+                        isCompleted ? 'bg-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.4)]' : 'bg-slate-700'
+                      }`}>
+                        {isCompleted && <CheckCircle size={12} className="text-white" />}
+                      </div>
+                      <span className={`text-[7px] font-black uppercase tracking-tighter text-center w-full px-1 ${
+                        isCurrent ? 'text-white' : 'text-slate-500'
+                      }`}>{step}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+
+          {/* Progress Images */}
+          {repairData.progressImages && repairData.progressImages.length > 0 && (
+            <div className="pt-4 border-t border-slate-800">
+               <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-4 flex items-center gap-2">
+                 <Terminal size={12} /> Nhật ký hình ảnh từ Chuyên gia
+               </p>
+               <div className="flex gap-4 overflow-x-auto pb-2 custom-scrollbar">
+                  {repairData.progressImages.map((img, idx) => (
+                    <div key={idx} className="w-32 h-32 rounded-xl overflow-hidden border border-slate-800 shrink-0 group relative">
+                       <img src={img.url} alt="Progress" className="w-full h-full object-cover transition-transform group-hover:scale-110" />
+                       <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-2">
+                          <p className="text-[8px] text-white font-bold truncate">{img.caption}</p>
+                       </div>
+                    </div>
+                  ))}
+               </div>
+            </div>
+          )}
+
+          {repairData.expertResponse && (
+            <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl">
+               <p className="text-[10px] font-black uppercase tracking-widest text-emerald-500 mb-2">Lời nhắn từ Chuyên gia</p>
+               <p className="text-white text-xs font-medium italic leading-relaxed">&quot;{repairData.expertResponse}&quot;</p>
+            </div>
+          )}
+        </div>
+      </motion.div>
+    );
   };
 
   return (
@@ -223,32 +403,44 @@ const ExpertSupportPage = () => {
 
           {/* Chat Messages */}
           <div className="flex-1 overflow-y-auto p-8 space-y-8 custom-scrollbar bg-white">
+            <RepairTrackingWidget />
             <AnimatePresence>
-              {chatMessages.map((msg, idx) => (
-                <motion.div
-                  key={idx}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
-                >
-                  <div className={`group flex gap-4 max-w-[85%] ${msg.role === 'user' ? 'flex-row-reverse' : ''}`}>
-                    <div className={`w-10 h-10 shrink-0 rounded-lg flex items-center justify-center border ${
-                      msg.role === 'user' ? 'bg-slate-900 border-slate-800 text-white' : 'bg-white border-slate-200 text-slate-400'
-                    }`}>
-                      {msg.role === 'user' ? <User size={18} /> : <Cpu size={18} />}
+              {chatMessages.map((msg, idx) => {
+                const isExpert = msg.content.startsWith('[Expert');
+                const isAI = msg.role === 'ai' && !isExpert;
+                
+                return (
+                  <motion.div
+                    key={idx}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                  >
+                    <div className={`group flex gap-4 max-w-[85%] ${msg.role === 'user' ? 'flex-row-reverse' : ''}`}>
+                      <div className={`w-10 h-10 shrink-0 rounded-lg flex items-center justify-center border ${
+                        msg.role === 'user' 
+                          ? 'bg-slate-900 border-slate-800 text-white' 
+                          : isExpert 
+                            ? 'bg-blue-600 border-blue-500 text-white'
+                            : 'bg-white border-slate-200 text-slate-400'
+                      }`}>
+                        {msg.role === 'user' ? <User size={18} /> : isExpert ? <ShieldCheck size={18} /> : <Cpu size={18} />}
+                      </div>
+                      <div className={`space-y-2 ${msg.role === 'user' ? 'text-right' : 'text-left'}`}>
+                         <div className={`p-5 rounded-xl text-sm leading-relaxed font-medium shadow-sm border ${
+                            msg.role === 'user' 
+                              ? 'bg-slate-900 text-white border-slate-800' 
+                              : isExpert
+                                ? 'bg-blue-600 text-white border-blue-500 shadow-blue-100'
+                                : 'bg-[#F8F9FA] text-slate-700 border-slate-100'
+                          }`}>
+                            {msg.content}
+                         </div>
+                      </div>
                     </div>
-                    <div className={`space-y-2 ${msg.role === 'user' ? 'text-right' : 'text-left'}`}>
-                       <div className={`p-5 rounded-xl text-sm leading-relaxed font-medium shadow-sm border ${
-                          msg.role === 'user' 
-                            ? 'bg-slate-900 text-white border-slate-800' 
-                            : 'bg-[#F8F9FA] text-slate-700 border-slate-100'
-                        }`}>
-                          {msg.content}
-                       </div>
-                    </div>
-                  </div>
-                </motion.div>
-              ))}
+                  </motion.div>
+                );
+              })}
             </AnimatePresence>
             {isAiTyping && (
               <div className="flex justify-start items-center gap-3 text-slate-400">

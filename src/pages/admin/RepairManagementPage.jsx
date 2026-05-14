@@ -242,17 +242,42 @@ const RepairManagementPage = () => {
                  <div className="space-y-4">
                     <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">Giai đoạn vận hành</label>
                     <div className="grid grid-cols-3 gap-2">
-                       {['Confirmed', 'Repairing', 'Completed'].map(status => (
+                       {['Pending', 'Confirmed', 'Repairing', 'Testing', 'Done', 'Returned'].map(status => (
                          <button 
                             key={status} 
                             onClick={() => setNewStatus(status)}
                             className={`py-3 rounded-xl text-[10px] font-black uppercase tracking-widest border transition-all active:scale-95 ${newStatus === status ? 'bg-slate-900 text-white border-slate-900 shadow-lg shadow-slate-200' : 'bg-white text-slate-400 border-slate-100 hover:bg-slate-50 hover:text-slate-600'}`}
                          >
-                           {status === 'Confirmed' ? 'Xác nhận' : status === 'Repairing' ? 'Đang sửa' : 'Hoàn tất'}
+                           {status}
                          </button>
                        ))}
                     </div>
                  </div>
+
+                 {/* Admin View Details */}
+                 <div className="grid grid-cols-2 gap-4 bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                    <div>
+                        <p className="text-[8px] font-black text-slate-400 uppercase mb-1">Chi phí dự kiến</p>
+                        <p className="text-xs font-black text-slate-900">{(selectedRepair.estimatedCost || 0).toLocaleString()} VNĐ</p>
+                    </div>
+                    <div>
+                        <p className="text-[8px] font-black text-slate-400 uppercase mb-1">Chuyên gia xử lý</p>
+                        <p className="text-xs font-black text-slate-900">{selectedRepair.expert?.name || 'Chưa gán'}</p>
+                    </div>
+                 </div>
+
+                 {selectedRepair.progressImages?.length > 0 && (
+                   <div className="space-y-3">
+                      <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">Hình ảnh tiến độ ({selectedRepair.progressImages.length})</label>
+                      <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
+                         {selectedRepair.progressImages.map((img, idx) => (
+                           <div key={idx} className="w-20 h-20 rounded-lg overflow-hidden border border-slate-200 shrink-0">
+                              <img src={img.url} alt="Progress" className="w-full h-full object-cover" />
+                           </div>
+                         ))}
+                      </div>
+                   </div>
+                 )}
 
                  <div className="space-y-4">
                     <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1 flex items-center gap-2">

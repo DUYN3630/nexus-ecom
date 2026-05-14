@@ -161,11 +161,12 @@ const Header = ({ cartCount, onOpenMobileMenu, topOffset = 0 }) => {
                                 <p className="text-[10px] font-medium text-slate-400 truncate mt-0.5">{user?.email}</p>
                                 <div className="mt-1.5">
                                   <span className="px-2 py-0.5 bg-black text-white text-[8px] font-black uppercase tracking-widest rounded-md">
-                                    {user?.role?.toUpperCase() === 'ADMIN' ? 'Quản trị viên' : 'Thành viên'}
-                                  </span>
-                                </div>
+                                  {user?.role?.toLowerCase() === 'admin' ? 'Quản trị viên' : 
+                                   user?.role?.toLowerCase() === 'expert' ? 'Chuyên gia' : 'Thành viên'}
+                                </span>
                               </div>
                             </div>
+                          </div>
                         </div>
 
                         {/* 2. Body: Các chức năng chính */}
@@ -220,13 +221,15 @@ const Header = ({ cartCount, onOpenMobileMenu, topOffset = 0 }) => {
                             </button>
                           </div>
 
-                          {/* 3. Phần đặc biệt (ADMIN) */}
-                          {user?.role?.toLowerCase() === 'admin' && (
+                          {/* 3. Phần đặc biệt (ADMIN & EXPERT) */}
+                          {(user?.role?.trim().toLowerCase() === 'admin' || user?.role?.trim().toLowerCase() === 'expert') && (
                             <div className="mt-2 pt-2 border-t border-slate-50 px-1">
                                <button 
                                   onClick={() => { 
                                     setShowUserDropdown(false); 
-                                    window.open('/admin', '_blank');
+                                    const role = user.role.trim().toLowerCase();
+                                    const dashboardPath = role === 'admin' ? '/admin' : '/admin/expert-dashboard';
+                                    navigate(dashboardPath); // Use navigate instead of window.open to keep session in same tab if preferred, or window.location
                                   }}
                                   className="w-full text-left px-3 py-3 text-[10px] font-black uppercase tracking-[0.1em] text-orange-600 bg-orange-50 border border-orange-100 flex items-center justify-between transition-all rounded-lg shadow-sm shadow-orange-100 group hover:bg-orange-100/50"
                               >
@@ -234,7 +237,7 @@ const Header = ({ cartCount, onOpenMobileMenu, topOffset = 0 }) => {
                                     <div className="w-7 h-7 bg-orange-500 rounded-md flex items-center justify-center text-white shadow-md shadow-orange-200 group-hover:rotate-6 transition-transform">
                                       <Settings size={14} strokeWidth={3} /> 
                                     </div>
-                                    Bảng quản trị
+                                    {user?.role?.trim().toLowerCase() === 'admin' ? 'Bảng quản trị' : 'Bàn làm việc Expert'}
                                   </div>
                                   <ChevronRight size={12} className="text-orange-300 group-hover:translate-x-1 transition-transform" />
                               </button>

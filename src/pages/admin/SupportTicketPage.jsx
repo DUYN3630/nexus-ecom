@@ -1,23 +1,34 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   Ticket, Search, Filter, MessageSquare, User, Clock, 
   CheckCircle2, AlertCircle, Trash2, MoreVertical,
-  ChevronRight, Brain, UserCheck, Shield
+  ChevronRight, Brain, UserCheck, Shield, Send, X
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useSelector } from 'react-redux';
+import { selectCurrentUser } from '../../store/slices/authSlice';
 import ticketApi from '../../api/ticketApi';
 import { useToast } from '../../contexts/ToastContext';
 
 const SupportTicketPage = () => {
   const { addToast } = useToast();
+  const currentUser = useSelector(selectCurrentUser);
   const [tickets, setTickets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filterStatus, setFilterStatus] = useState('');
   const [selectedTicket, setSelectedTicket] = useState(null);
+  const [messageInput, setMessageInput] = useState('');
+  const chatContainerRef = useRef(null);
 
   useEffect(() => {
     fetchTickets();
   }, [filterStatus]);
+
+  useEffect(() => {
+    if (chatContainerRef.current) {
+      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+    }
+  }, [selectedTicket?.chatHistory]);
 
   const fetchTickets = async () => {
     setLoading(true);
@@ -38,9 +49,63 @@ const SupportTicketPage = () => {
       await ticketApi.update(id, { status: newStatus });
       addToast('Cập nhật trạng thái thành công', 'success');
       fetchTickets();
-      if (selectedTicket?._id === id) setSelectedTicket(null);
+      if (selectedTicket?._id === id) {
+        setSelectedTicket(prev => ({ ...prev, status: newStatus }));
+      }
     } catch (error) {
       addToast('Lỗi khi cập nhật trạng thái', 'error');
+    }
+  };
+
+  const handleClaimTicket = async () => {
+    if (!selectedTicket || !currentUser) return;
+    console.log("[CLAIM DEBUG] Sending Claim Request:", {
+      ticketId: selectedTicket._id,
+      userId: currentUser._id || currentUser.id
+    });
+    try {
+      await ticketApi.claim(selectedTicket._id, currentUser._id || currentUser.id);
+      addToast('Đã nhận xử lý yêu cầu này', 'success');
+      fetchTickets();
+      setSelectedTicket(prev => ({ 
+        ...prev, 
+        expert: currentUser, 
+        status: 'in-progress' 
+      }));
+    } catch (error) {
+      console.error("[CLAIM ERROR]", error);
+      const errorMsg = error.response?.data?.message || 'Lỗi khi nhận xử lý yêu cầu';
+      addToast(errorMsg, 'error');
+    }
+  };
+
+  const handleSendMessage = async (e) => {
+    e.preventDefault();
+    if (!messageInput.trim() || !selectedTicket || !currentUser) return;
+
+    try {
+      const messageContent = `[Expert ${currentUser.name}]: ${messageInput}`;
+      // Backend expects { message, expertName } based on recent ticketController update
+      await ticketApi.sendMessage(selectedTicket._id, {
+        message: messageInput,
+        expertName: currentUser.name
+      });
+      
+      const newMessage = {
+        role: 'ai', // Match backend's storage role
+        content: messageContent,
+        timestamp: new Date().toISOString()
+      };
+      
+      setSelectedTicket(prev => ({
+        ...prev,
+        chatHistory: [...prev.chatHistory, newMessage]
+      }));
+      
+      setMessageInput('');
+      addToast('Đã gửi phản hồi', 'success');
+    } catch (error) {
+      addToast('Không thể gửi tin nhắn', 'error');
     }
   };
 
@@ -60,7 +125,8 @@ const SupportTicketPage = () => {
       case 'diagnosing': return 'bg-blue-50 text-blue-600 border-blue-100';
       case 'pending': return 'bg-amber-50 text-amber-600 border-amber-100';
       case 'in-progress': return 'bg-purple-50 text-purple-600 border-purple-100';
-      case 'resolved': return 'bg-emerald-50 text-emerald-600 border-emerald-100';
+      case 'resolved': return 'bg-emerald-100 text-emerald-700 border-emerald-200';
+      case 'converted': return 'bg-slate-100 text-slate-500 border-slate-200';
       default: return 'bg-slate-50 text-slate-600';
     }
   };
@@ -71,6 +137,7 @@ const SupportTicketPage = () => {
       case 'pending': return 'Đang chờ xử lý';
       case 'in-progress': return 'Đang xử lý';
       case 'resolved': return 'Đã hoàn thành';
+      case 'converted': return 'Đã tạo đơn sửa';
       default: return status;
     }
   };
@@ -94,6 +161,7 @@ const SupportTicketPage = () => {
             <option value="pending">Đang chờ xử lý</option>
             <option value="in-progress">Đang trong tiến trình</option>
             <option value="resolved">Đã hoàn tất</option>
+            <option value="converted">Đã chốt đơn sửa</option>
           </select>
         </div>
       </div>
@@ -181,26 +249,62 @@ const SupportTicketPage = () => {
                 </button>
               </div>
 
-              <div className="flex-1 overflow-y-auto p-8 space-y-6 bg-slate-50/20 no-scrollbar">
-                {selectedTicket.chatHistory.map((chat, idx) => (
-                  <div key={idx} className={`flex ${chat.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                    <div className={`flex gap-3 max-w-[80%] ${chat.role === 'user' ? 'flex-row-reverse' : ''}`}>
-                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 border border-transparent ${
-                        chat.role === 'user' ? 'bg-slate-900 text-white' : 'bg-brand-100 text-brand-600 border-brand-200'
-                      }`}>
-                        {chat.role === 'user' ? <User size={14} /> : <Brain size={14} />}
-                      </div>
-                      <div className={`p-4 rounded-2xl text-[13px] leading-relaxed shadow-sm ${
-                        chat.role === 'user' 
-                          ? 'bg-slate-900 text-white rounded-tr-none' 
-                          : 'bg-white text-slate-700 border border-slate-100 rounded-tl-none'
-                      }`}>
-                        {chat.content}
+              <div 
+                ref={chatContainerRef}
+                className="flex-1 overflow-y-auto p-8 space-y-6 bg-slate-50/20 no-scrollbar scroll-smooth"
+              >
+                {selectedTicket.chatHistory.map((chat, idx) => {
+                  const isExpert = chat.content.startsWith('[Expert');
+                  const isAI = chat.role === 'ai' && !isExpert; // Backend saves as 'ai'
+
+                  return (
+                    <div key={idx} className={`flex ${chat.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                      <div className={`flex gap-3 max-w-[80%] ${chat.role === 'user' ? 'flex-row-reverse' : ''}`}>
+                        <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 border border-transparent ${
+                          chat.role === 'user' 
+                            ? 'bg-slate-900 text-white' 
+                            : isExpert 
+                              ? 'bg-blue-600 text-white shadow-md shadow-blue-100' 
+                              : 'bg-brand-100 text-brand-600 border-brand-200'
+                        }`}>
+                          {chat.role === 'user' ? <User size={14} /> : isExpert ? <Shield size={14} /> : <Brain size={14} />}
+                        </div>
+                        <div className={`p-4 rounded-2xl text-[13px] leading-relaxed shadow-sm ${
+                          chat.role === 'user' 
+                            ? 'bg-slate-900 text-white rounded-tr-none' 
+                            : isExpert
+                              ? 'bg-blue-600 text-white rounded-tl-none'
+                              : 'bg-white text-slate-700 border border-slate-100 rounded-tl-none'
+                        }`}>
+                          {chat.content}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
+
+              {/* Expert Chat Input */}
+              {(selectedTicket.expert?._id === currentUser?._id || selectedTicket.expert === currentUser?._id) && selectedTicket.status !== 'resolved' && (
+                <div className="p-4 border-t border-slate-100 bg-white shadow-[0_-4px_20px_rgba(0,0,0,0.02)]">
+                  <form onSubmit={handleSendMessage} className="flex gap-2">
+                    <input
+                      type="text"
+                      value={messageInput}
+                      onChange={(e) => setMessageInput(e.target.value)}
+                      placeholder="Nhập nội dung phản hồi cho khách hàng..."
+                      className="flex-1 px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-[13px] font-medium focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 outline-none transition-all placeholder:text-slate-400"
+                    />
+                    <button
+                      type="submit"
+                      disabled={!messageInput.trim()}
+                      className="p-3 bg-brand-600 text-white rounded-xl hover:bg-brand-700 disabled:opacity-50 disabled:bg-slate-300 transition-all shadow-lg shadow-brand-100 flex items-center justify-center aspect-square"
+                    >
+                      <Send size={18} />
+                    </button>
+                  </form>
+                </div>
+              )}
 
               <div className="p-6 border-t border-slate-100 bg-white grid grid-cols-1 md:grid-cols-2 gap-6 shadow-[0_-4px_20px_rgba(0,0,0,0.02)]">
                 <div>
@@ -226,9 +330,46 @@ const SupportTicketPage = () => {
                    >
                     <Trash2 size={20} />
                    </button>
-                   <button className="flex-1 py-3.5 bg-brand-600 text-white rounded-xl font-black text-[10px] uppercase tracking-widest shadow-lg shadow-brand-200 hover:bg-brand-700 active:scale-95 transition-all flex items-center justify-center gap-2">
-                    <UserCheck size={16} /> Chỉ định Chuyên gia
-                   </button>
+                   
+                   {/* Logic hiển thị nút: 
+                       1. Nếu chưa có expert:
+                          - Nếu là Expert: Hiện nút "Nhận xử lý"
+                          - Nếu là Admin: Hiện nút "Chỉ định chuyên gia"
+                       2. Nếu đã có expert:
+                          - Nếu là Expert (người được gán): Hiện "Bạn đang xử lý"
+                          - Nếu là Admin: Hiện tên chuyên gia đang xử lý
+                    */}
+                   {!selectedTicket.expert ? (
+                      currentUser?.role?.toLowerCase() === 'expert' ? (
+                        <button 
+                          onClick={handleClaimTicket}
+                          className="flex-1 py-3.5 bg-brand-600 text-white rounded-xl font-black text-[10px] uppercase tracking-widest shadow-lg shadow-brand-200 hover:bg-brand-700 active:scale-95 transition-all flex items-center justify-center gap-2"
+                        >
+                          <UserCheck size={16} /> Nhận xử lý & Chốt đơn
+                        </button>
+                      ) : (
+                        currentUser?.role?.toLowerCase() === 'admin' && (
+                          <button className="flex-1 py-3.5 bg-brand-600 text-white rounded-xl font-black text-[10px] uppercase tracking-widest shadow-lg shadow-brand-200 hover:bg-brand-700 active:scale-95 transition-all flex items-center justify-center gap-2">
+                            <UserCheck size={16} /> Chỉ định Chuyên gia
+                          </button>
+                        )
+                      )
+                   ) : (
+                     <div className="flex-1 flex gap-2">
+                        {/* Hiển thị trạng thái cho người đang xử lý */}
+                        {(selectedTicket.expert?._id === currentUser?._id || selectedTicket.expert === currentUser?._id) ? (
+                          <div className="flex-1 px-4 py-3.5 bg-emerald-50 text-emerald-600 rounded-xl border border-emerald-100 flex items-center justify-center gap-2 text-[10px] font-black uppercase">
+                            <CheckCircle2 size={16} /> Bạn đang xử lý
+                          </div>
+                        ) : (
+                          <div className="flex-1 px-4 py-3.5 bg-slate-50 text-slate-500 rounded-xl border border-slate-100 flex items-center justify-center gap-2 text-[10px] font-black uppercase italic">
+                            <User size={16} /> {selectedTicket.expert.name || 'Đã có người gán'}
+                          </div>
+                        )}
+                        
+                        {/* Admin vẫn có quyền gỡ hoặc đổi expert nếu muốn (Tính năng mở rộng sau) */}
+                     </div>
+                   )}
                 </div>
               </div>
             </motion.div>
