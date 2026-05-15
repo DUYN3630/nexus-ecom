@@ -58,6 +58,9 @@ const paymentRoutes = require('./routes/paymentRoutes');
 const trackingRoutes = require('./routes/trackingRoutes');
 const supportRoutes = require('./routes/supportRoutes');
 const chatRoutes = require('./routes/chatRoutes');
+const appointmentRoutes = require('./routes/appointmentRoutes');
+const partRoutes = require('./routes/partRoutes');
+const logisticsRoutes = require('./routes/logisticsRoutes');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/products', productRoutes);
@@ -76,6 +79,9 @@ app.use('/api/marketing', marketingRoutes);
 app.use('/api/payment', paymentRoutes);
 app.use('/api/tracking', trackingRoutes);
 app.use('/api/ai', chatRoutes);
+app.use('/api/appointments', appointmentRoutes);
+app.use('/api/parts', partRoutes);
+app.use('/api/logistics', logisticsRoutes);
 
 // Test Route
 app.get('/', (req, res) => {

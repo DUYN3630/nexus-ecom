@@ -11,17 +11,24 @@ const generateText = async (prompt, options = {}) => {
         systemInstruction = null, 
         temperature = 0.7, 
         maxOutputTokens = 1000,
-        modelName: optionsModelName 
+        modelName: optionsModelName,
+        image = null // base64 string
     } = options;
 
     // Chuẩn hóa modelName
     let finalModelName = (optionsModelName || "gemini-flash-latest").toString().toLowerCase().trim();
     
+    // Nếu có ảnh, bắt buộc dùng model có khả năng vision (như gemini-1.5-flash hoặc gemini-1.5-pro)
+    // Để an toàn, có thể dùng gemini-1.5-flash
+    if (image && finalModelName === "gemini-pro") {
+        finalModelName = "gemini-1.5-flash";
+    }
+
     console.log(`--- [DEBUG] Final Model Name Sent to Google: "${finalModelName}" ---`);
 
     try {
-        if (!prompt) {
-            throw new Error("Prompt is required for Gemini API call.");
+        if (!prompt && !image) {
+            throw new Error("Prompt or image is required for Gemini API call.");
         }
 
         const apiKey = process.env.GEMINI_API_KEY;
@@ -36,8 +43,30 @@ const generateText = async (prompt, options = {}) => {
             systemInstruction: systemInstruction,
         });
 
+        const parts = [];
+        if (prompt) {
+            parts.push({ text: prompt });
+        }
+        if (image) {
+            // Giả định image là chuỗi base64 đã bỏ phần header 'data:image/...;base64,'
+            // Nếu frontend gửi kèm header thì cần tách ra.
+            let base64Data = image;
+            let mimeType = "image/jpeg";
+            if (image.includes("base64,")) {
+                const partsArr = image.split("base64,");
+                mimeType = partsArr[0].split(":")[1].split(";")[0];
+                base64Data = partsArr[1];
+            }
+            parts.push({
+                inlineData: {
+                    data: base64Data,
+                    mimeType: mimeType
+                }
+            });
+        }
+
         const result = await model.generateContent({
-            contents: [{ role: 'user', parts: [{ text: prompt }] }],
+            contents: [{ role: 'user', parts: parts }],
             generationConfig: {
                 maxOutputTokens: maxOutputTokens,
                 temperature: temperature,

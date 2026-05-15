@@ -3,7 +3,7 @@ import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 import {
   Smartphone, LayoutDashboard, ShoppingCart, PieChart,
   Package, Layers, Users, Megaphone, LogOut, Sparkles, Star, Shield, ChevronDown, 
-  UserCog, History, ShieldCheck, Home, Moon, Sun, Settings, User, Ticket, Wrench, Briefcase
+  UserCog, History, ShieldCheck, Home, Moon, Sun, Settings, User, Ticket, Wrench, Briefcase, Calendar as CalendarIcon, BarChart2
 } from 'lucide-react';
 
 const SidebarMenuGroup = ({ group }) => {
@@ -99,6 +99,7 @@ export const AdminSidebar = () => {
   }, []);
 
   const userRole = (user.role || '').toLowerCase();
+  const isAdmin = userRole === 'admin' || userRole === 'quản trị viên';
   const isExpert = userRole === 'expert';
 
   const menuGroups = isExpert 
@@ -107,6 +108,7 @@ export const AdminSidebar = () => {
           title: "Khu vực Kỹ thuật",
           items: [
             { name: 'Bàn làm việc Expert', icon: Briefcase, path: '/admin/expert-dashboard' },
+            { name: 'Lịch trình Weekly', icon: CalendarIcon, path: '/admin/calendar' },
             { name: 'Yêu cầu Sửa chữa', icon: Wrench, path: '/admin/repairs' },
             { name: 'Hỗ trợ & Tickets', icon: Ticket, path: '/admin/tickets' },
           ]
@@ -119,13 +121,14 @@ export const AdminSidebar = () => {
             { name: 'Bảng điều khiển', icon: LayoutDashboard, path: '/admin' },
             { name: 'Phân tích kinh doanh', icon: PieChart, path: '/admin/analytics' },
             { name: 'Cấu hình AI Hub', icon: Sparkles, path: '/admin/ai-hub' },
-            { name: 'Bàn làm việc Expert', icon: Briefcase, path: '/admin/expert-dashboard' },
+            { name: 'Hiệu suất Chuyên gia', icon: BarChart2, path: '/admin/expert-performance' },
           ]
         },
         {
           title: "Vận hành bán hàng",
           items: [
             { name: 'Quản lý Đơn hàng', icon: ShoppingCart, path: '/admin/orders', badge: 'Mới' },
+            { name: 'Quản lý Kho', icon: Package, path: '/admin/inventory' },
             { name: 'Yêu cầu Sửa chữa', icon: Wrench, path: '/admin/repairs' },
             { name: 'Hỗ trợ & Tickets', icon: Ticket, path: '/admin/tickets' },
           ]
@@ -133,7 +136,7 @@ export const AdminSidebar = () => {
         {
           title: "Danh mục & Sản phẩm",
           items: [
-            { name: 'Kho Sản phẩm', icon: Package, path: '/admin/products' },
+            { name: 'Kho Sản phẩm', icon: Layers, path: '/admin/products' },
             { name: 'Phân cấp Danh mục', icon: Layers, path: '/admin/categories' },
             { name: 'Đánh giá khách hàng', icon: Star, path: '/admin/reviews' },
           ]

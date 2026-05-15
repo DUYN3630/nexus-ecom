@@ -19,7 +19,7 @@ const AIHubPage = () => {
   // States cho cấu hình
   const [settings, setSettings] = useState({
     ai_system_instruction: '',
-    ai_model_name: 'gemini-2.0-flash',
+    ai_model_name: 'gemini-flash-latest',
     ai_temperature: 0.7,
     ai_max_tokens: 1000
   });
@@ -268,12 +268,12 @@ const AIHubPage = () => {
                        <button 
                           onClick={() => handleConvertToRepair(selectedTicket._id)}
                           className={`px-5 py-2.5 text-white rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2 shadow-lg shadow-emerald-100 ${
-                            selectedTicket.status === 'converted' ? 'bg-slate-400 cursor-not-allowed opacity-50' : 'bg-emerald-600 hover:bg-emerald-700 active:scale-95'
+                            selectedTicket.status === 'resolved' ? 'bg-slate-400 cursor-not-allowed opacity-50' : 'bg-emerald-600 hover:bg-emerald-700 active:scale-95'
                           }`}
-                          disabled={selectedTicket.status === 'converted'}
+                          disabled={selectedTicket.status === 'resolved'}
                        >
                           <ArrowRight size={14} /> 
-                          {selectedTicket.status === 'converted' ? 'Đã xử lý' : 'Tạo Đơn sửa chữa'}
+                          {selectedTicket.status === 'converted' ? 'Xử lý thêm (Sửa chữa)' : 'Tạo Đơn sửa chữa'}
                        </button>
                     </div>
                   </div>

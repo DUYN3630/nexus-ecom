@@ -182,8 +182,18 @@ exports.convertToRepair = async (req, res) => {
 
     await newRepair.save();
     
-    // Cập nhật trạng thái ticket
-    ticket.status = 'converted';
+    try {
+      const notificationService = require('../services/notificationService');
+      const userEmail = ticket.user?.email || ticket.guestInfo?.email;
+      if (userEmail) {
+        await notificationService.notifyNewRepair(userEmail, newRepair);
+      }
+    } catch (notifyErr) {
+      console.error("Lỗi gửi email xác nhận convert:", notifyErr);
+    }
+
+    // Đánh dấu là đã xử lý nhưng không khóa hoàn toàn để có thể tạo thêm đơn
+    ticket.status = 'diagnosing'; 
     await ticket.save();
 
     res.json({ success: true, message: "Đã chuyển thành đơn sửa chữa thành công!", data: newRepair });

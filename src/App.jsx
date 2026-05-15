@@ -35,6 +35,7 @@ import PurchasedProductsPage from './pages/user/PurchasedProductsPage.jsx';
 import ComingSoonPage from './pages/user/ComingSoonPage.jsx';
 import OrderSuccessPage from './pages/user/OrderSuccessPage.jsx';
 import ExpertSupportPage from './pages/user/ExpertSupportPage.jsx';
+import MedicalRecordPage from './pages/user/MedicalRecordPage.jsx';
 import ComparePage from './pages/user/ComparePage.jsx';
 import SearchPage from './pages/user/SearchPage.jsx';
 
@@ -50,11 +51,14 @@ import AdminCategoriesPage from './pages/admin/CategoriesPage.jsx';
 import AccountManagementPage from './pages/admin/AccountManagementPage.jsx';
 import AdminMarketingPage from './pages/admin/MarketingPage.jsx';
 import AdminReviewsPage from './pages/admin/ReviewsPage.jsx';
+import InventoryPage from './pages/admin/InventoryPage.jsx';
 import AIHubPage from './pages/admin/AIHubPage.jsx';
 import SupportTicketPage from './pages/admin/SupportTicketPage.jsx';
 import RepairManagementPage from './pages/admin/RepairManagementPage.jsx';
+import ExpertCalendarPage from './pages/admin/ExpertCalendarPage.jsx';
 import AdminProfilePage from './pages/admin/ProfilePage.jsx';
 import ExpertDashboard from './pages/admin/ExpertDashboard.jsx';
+import ExpertPerformancePage from './pages/admin/ExpertPerformancePage.jsx';
 
 // Helper Components
 import ProtectedRoute from './components/Auth/ProtectedRoute.jsx';
@@ -109,6 +113,7 @@ const App = () => {
           <Route path="/about" element={<AboutPage />} />
           <Route path="/iphone-experience" element={<ProductExperience />} />
           <Route path="/support" element={<ExpertSupportPage />} />
+          <Route path="/medical-record/:serialNumber" element={<MedicalRecordPage />} />
           <Route path="/search" element={<SearchPage />} />
           <Route path="/purchased-products" element={<ProtectedRoute><PurchasedProductsPage /></ProtectedRoute>} />
           
@@ -152,10 +157,13 @@ const App = () => {
           <Route path="accounts" element={<AccountManagementPage />} />
           <Route path="marketing" element={<AdminMarketingPage />} />
           <Route path="reviews" element={<AdminReviewsPage />} />
+          <Route path="inventory" element={<InventoryPage />} />
           <Route path="ai-hub" element={<AIHubPage />} />
           <Route path="expert-dashboard" element={<ExpertDashboard />} />
+          <Route path="expert-performance" element={<ExpertPerformancePage />} />
           <Route path="tickets" element={<SupportTicketPage />} />
           <Route path="repairs" element={<RepairManagementPage />} />
+          <Route path="calendar" element={<ExpertCalendarPage />} />
           <Route path="profile" element={<AdminProfilePage />} />
         </Route>
       </Routes>

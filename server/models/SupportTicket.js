@@ -17,6 +17,7 @@ const supportTicketSchema = new mongoose.Schema({
   chatHistory: [{
     role: { type: String, enum: ['user', 'ai'] },
     content: { type: String },
+    image: { type: String }, // Base64 or URL
     timestamp: { type: Date, default: Date.now }
   }],
   priority: { type: String, enum: ['low', 'medium', 'high'], default: 'medium' }

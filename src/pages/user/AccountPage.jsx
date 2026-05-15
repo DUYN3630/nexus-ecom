@@ -5,6 +5,8 @@ import { selectCurrentUser, logout as logoutAction } from '../../store/slices/au
 import { useNavigate, useParams } from 'react-router-dom';
 import orderApi from '../../api/orderApi';
 import supportApi from '../../api/supportApi';
+import appointmentApi from '../../api/appointmentApi';
+import paymentApi from '../../api/paymentApi';
 import { formatCurrency } from '../../utils/formatCurrency';
 
 const AccountPage = () => {
@@ -15,7 +17,9 @@ const AccountPage = () => {
   const [activeTab, setActiveTab] = useState(tab || 'orders');
   const [orders, setOrders] = useState([]);
   const [repairs, setRepairs] = useState([]);
+  const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [isPaying, setIsPaying] = useState(false);
 
   // Cập nhật tab khi URL thay đổi
   useEffect(() => {
@@ -29,6 +33,8 @@ const AccountPage = () => {
       fetchOrders();
     } else if (activeTab === 'support') {
       fetchRepairs();
+    } else if (activeTab === 'appointments') {
+      fetchAppointments();
     }
   }, [activeTab]);
 
@@ -60,6 +66,44 @@ const AccountPage = () => {
     }
   };
 
+  const fetchAppointments = async () => {
+    try {
+      setLoading(true);
+      const res = await appointmentApi.getMyAppointments();
+      setAppointments(res.data || []);
+    } catch (error) {
+      console.error('Failed to fetch appointments:', error);
+      setAppointments([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleApproveQuote = async (repairId) => {
+    try {
+      await supportApi.updateRepairStatus(repairId, { status: 'Approved' });
+      fetchRepairs(); // Refresh the list
+    } catch (error) {
+      console.error('Failed to approve quote:', error);
+    }
+  };
+
+  const handleMomoPayment = async (repairId) => {
+    if (isPaying) return;
+    setIsPaying(true);
+    try {
+      const res = await paymentApi.createMomoPayment({ orderId: repairId, type: 'repair' });
+      if (res.payUrl) {
+        window.location.href = res.payUrl;
+      }
+    } catch (error) {
+      console.error('Failed to create MoMo payment:', error);
+      alert('Không thể khởi tạo thanh toán MoMo lúc này.');
+    } finally {
+      setIsPaying(false);
+    }
+  };
+
   const handleLogout = () => {
     dispatch(logoutAction());
     navigate('/login');
@@ -77,7 +121,9 @@ const AccountPage = () => {
       case 'Shipping': 
       case 'Repairing': return 'bg-blue-100 text-blue-700';
       case 'Processing': 
-      case 'Confirmed': return 'bg-amber-100 text-amber-700';
+      case 'Confirmed': 
+      case 'Approved': return 'bg-amber-100 text-amber-700';
+      case 'AwaitingApproval': return 'bg-orange-100 text-orange-700';
       case 'Canceled': 
       case 'Cancelled': return 'bg-red-100 text-red-700';
       default: return 'bg-slate-100 text-slate-700';
@@ -95,6 +141,8 @@ const AccountPage = () => {
       // Repair labels
       'Pending': 'Chờ tiếp nhận',
       'Confirmed': 'Đã xác nhận',
+      'AwaitingApproval': 'Chờ duyệt báo giá',
+      'Approved': 'Đã duyệt báo giá',
       'Repairing': 'Đang sửa chữa',
       'Completed': 'Sửa xong',
       'Cancelled': 'Đã hủy'
@@ -128,6 +176,13 @@ const AccountPage = () => {
             >
               <span className="flex items-center gap-3 font-black"><Wrench size={16} /> Hỗ trợ kỹ thuật</span>
               {activeTab === 'support' && <ChevronRight size={14} />}
+            </button>
+            <button 
+              onClick={() => handleTabChange('appointments')}
+              className={`w-full text-left px-6 py-4 rounded-xl text-[11px] font-bold uppercase tracking-widest transition-all flex items-center justify-between group ${activeTab === 'appointments' ? 'bg-black text-white shadow-lg' : 'bg-white text-slate-500 hover:text-black border border-slate-100 hover:border-slate-200 shadow-sm'}`}
+            >
+              <span className="flex items-center gap-3 font-black"><Clock size={16} /> Lịch hẹn của tôi</span>
+              {activeTab === 'appointments' && <ChevronRight size={14} />}
             </button>
             <button 
               onClick={() => handleTabChange('profile')}
@@ -257,6 +312,43 @@ const AccountPage = () => {
                                  <div className="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse"></div> Verified
                               </div>
                            </div>
+                           {repair.status === 'AwaitingApproval' && (
+                             <div className="mt-6 pt-4 border-t border-white/20 flex justify-between items-center relative z-10">
+                               <div>
+                                 <p className="text-[10px] font-bold text-indigo-100">Báo giá dự kiến:</p>
+                                 <p className="text-lg font-black">{formatCurrency(repair.estimatedCost || 0)}</p>
+                               </div>
+                               <button 
+                                 onClick={() => handleApproveQuote(repair._id)}
+                                 className="px-6 py-2.5 bg-white text-indigo-600 text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-slate-50 transition-all shadow-lg"
+                               >
+                                 Duyệt báo giá
+                               </button>
+                             </div>
+                           )}
+                           {repair.status === 'Done' && !repair.isPaid && (
+                             <div className="mt-6 pt-4 border-t border-white/20 flex justify-between items-center relative z-10">
+                               <div>
+                                 <p className="text-[10px] font-bold text-indigo-100">Tổng thanh toán:</p>
+                                 <p className="text-lg font-black">{formatCurrency(repair.estimatedCost || 0)}</p>
+                               </div>
+                               <button 
+                                 onClick={() => handleMomoPayment(repair._id)}
+                                 disabled={isPaying}
+                                 className="px-6 py-2.5 bg-[#A50064] text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-[#8A0053] transition-all shadow-lg flex items-center gap-2"
+                               >
+                                 Thanh toán MoMo
+                               </button>
+                             </div>
+                           )}
+                           {repair.isPaid && (
+                             <div className="mt-6 pt-4 border-t border-white/20 flex justify-between items-center relative z-10">
+                               <div>
+                                 <p className="text-[10px] font-bold text-indigo-100">Thanh toán:</p>
+                                 <p className="text-lg font-black text-emerald-300">Đã thanh toán</p>
+                               </div>
+                             </div>
+                           )}
                         </div>
                       ) : (
                         <div className="p-6 bg-slate-50 rounded-2xl border border-dashed border-slate-200 flex items-center gap-4">
@@ -273,6 +365,63 @@ const AccountPage = () => {
                     </div>
                     <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400">Chưa có yêu cầu hỗ trợ nào</p>
                     <button onClick={() => navigate('/support')} className="px-6 py-2.5 bg-black text-white text-[9px] font-black uppercase tracking-widest rounded-xl hover:bg-slate-800 transition-all">Gửi yêu cầu ngay</button>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {activeTab === 'appointments' && (
+              <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-500">
+                <div className="bg-white p-6 rounded-2xl border border-slate-100 mb-6 flex items-center justify-between">
+                   <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-slate-400">
+                     Lịch hẹn của bạn ({appointments.length})
+                   </p>
+                </div>
+
+                {loading ? (
+                  [1, 2].map(i => (
+                    <div key={i} className="bg-white p-8 rounded-2xl border border-slate-100 animate-pulse h-32" />
+                  ))
+                ) : appointments.length > 0 ? (
+                  appointments.map(appointment => (
+                    <div key={appointment._id} className="bg-white p-6 rounded-2xl border border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-sm hover:shadow-md transition-all group">
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-3">
+                           <span className="text-sm font-black text-slate-900 group-hover:text-indigo-600 transition-colors">
+                             Chuyên gia: {appointment.expert?.name || 'Nexus Expert'}
+                           </span>
+                           <span className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider ${
+                             appointment.status === 'pending' ? 'bg-amber-100 text-amber-700' :
+                             appointment.status === 'confirmed' ? 'bg-blue-100 text-blue-700' :
+                             appointment.status === 'completed' ? 'bg-emerald-100 text-emerald-700' :
+                             'bg-red-100 text-red-700'
+                           }`}>
+                             {appointment.status === 'pending' ? 'Chờ xác nhận' :
+                              appointment.status === 'confirmed' ? 'Đã xác nhận' :
+                              appointment.status === 'completed' ? 'Hoàn thành' : 'Đã hủy'}
+                           </span>
+                        </div>
+                        <p className="text-xs text-slate-600 font-medium">
+                          Ngày: {new Date(appointment.date).toLocaleDateString('vi-VN')} | Khung giờ: {appointment.slot}
+                        </p>
+                        <p className="text-[11px] text-slate-400 font-medium tracking-tight">
+                          Thiết bị: {appointment.deviceType}
+                        </p>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="bg-white py-20 rounded-3xl border border-dashed border-slate-200 text-center space-y-4">
+                    <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto text-slate-300">
+                      <Clock size={24} />
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-black uppercase tracking-tight text-slate-900">Chưa có lịch hẹn</h3>
+                      <p className="text-[11px] font-medium text-slate-400 mt-1">Bạn chưa đặt lịch hẹn nào với chuyên gia</p>
+                    </div>
+                    <button onClick={() => navigate('/support')} className="mt-4 px-6 py-3 bg-slate-900 text-white text-[10px] font-black uppercase tracking-[0.2em] rounded-xl hover:bg-black transition-all">
+                      Đặt lịch ngay
+                    </button>
                   </div>
                 )}
               </div>

@@ -17,6 +17,7 @@ const geminiApi = {
   /**
    * @param {string} prompt - Tin nhắn của user
    * @param {Object} options - Các tùy chọn
+   * @param {string} [options.image] - Chuỗi base64 của ảnh
    * @param {string} [options.customInstruction] - Tên instruction đặc biệt (VD: 'NEXUS_EXPERT_SUPPORT_INSTRUCTION')
    * @param {string} [options.systemInstruction] - System instruction tùy chỉnh
    * @param {string} [options.userId] - ID user đã đăng nhập
@@ -29,6 +30,7 @@ const geminiApi = {
     try {
       const response = await axiosClient.post('/ai/chat', { 
         prompt,
+        image: options.image || null,
         customInstruction: options.customInstruction || null,
         systemInstruction: options.systemInstruction || null,
         userId: options.userId || null,

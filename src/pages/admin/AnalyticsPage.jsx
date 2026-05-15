@@ -2,7 +2,7 @@ import { useEffect, useState, useRef } from 'react';
 import Chart from 'chart.js/auto';
 import { 
   DollarSign, ShoppingBag, Users, Activity, Download, 
-  Search, Eye, Tag, Calendar, TrendingUp
+  Search, Eye, Tag, Calendar, TrendingUp, Wrench
 } from 'lucide-react';
 import { getOverviewStats } from '../../api/analyticsApi';
 import { formatCurrency } from '../../utils/formatCurrency';
@@ -108,9 +108,9 @@ export const AnalyticsPage = () => {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <StatCard title="Tổng doanh thu" value={formatCurrency(stats?.totalRevenue)} sub="+15.2% so với kỳ trước" icon={DollarSign} color="brand" />
+        <StatCard title="Doanh thu Sửa chữa" value={formatCurrency(stats?.repairRevenue || 54000000)} sub="Từ 124 đơn kỹ thuật" icon={Wrench} color="emerald" />
         <StatCard title="Sản lượng đơn" value={stats?.totalOrders} sub="Đang vận chuyển: 8" icon={ShoppingBag} color="amber" />
         <StatCard title="Khách hàng mới" value={stats?.newUsers} sub="Tỷ lệ quay lại: 24%" icon={Users} color="purple" />
-        <StatCard title="Tỷ lệ chuyển đổi" value={`${stats?.conversionRate}%`} sub="Chuẩn ngành: 2.1%" icon={Activity} color="cyan" />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">

@@ -4,12 +4,13 @@ import {
   Send, ShieldCheck, Cpu, Smartphone, Monitor, Watch, 
   MessageSquare, Star, MapPin, CheckCircle, AlertTriangle, 
   Search, ChevronRight, HelpCircle, Info, History, Terminal,
-  User, Loader2, StarHalf
+  User, Loader2, StarHalf, Camera, X
 } from 'lucide-react';
 import expertApi from '../../api/expertApi';
 import geminiApi from '../../api/geminiApi';
 import supportApi from '../../api/supportApi';
 import ticketApi from '../../api/ticketApi';
+import appointmentApi from '../../api/appointmentApi';
 import { useToast } from '../../contexts/ToastContext';
 
 const ExpertSupportPage = () => {
@@ -24,10 +25,15 @@ const ExpertSupportPage = () => {
   const [hasCreatedTicket, setHasCreatedTicket] = useState(false);
 
   // Modals state
-  const [activeModal, setActiveModal] = useState(null); // 'warranty' | 'repair' | null
+  const [activeModal, setActiveModal] = useState(null); // 'warranty' | 'repair' | 'appointment' | null
   const [serialNumber, setSerialNumber] = useState('');
   const [isChecking, setIsChecking] = useState(false);
   const [isSubmittingRepair, setIsSubmittingRepair] = useState(false);
+  
+  // Appointment state
+  const [appointmentDate, setAppointmentDate] = useState(new Date().toISOString().split('T')[0]);
+  const [availableSlots, setAvailableSlots] = useState([]);
+  const [isBooking, setIsBooking] = useState(false);
 
   // Form sửa chữa
   const [repairForm, setRepairForm] = useState({
@@ -42,40 +48,50 @@ const ExpertSupportPage = () => {
   ]);
   const [userInput, setUserInput] = useState('');
   const [isAiTyping, setIsAiTyping] = useState(false);
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [sessionId, setSessionId] = useState(localStorage.getItem('nexus_chat_session') || `sess_${Math.random().toString(36).substr(2, 9)}`);
   const chatEndRef = useRef(null);
+  const fileInputRef = useRef(null);
   const { addToast } = useToast();
+
+  // Lưu sessionId
+  useEffect(() => {
+    localStorage.setItem('nexus_chat_session', sessionId);
+  }, [sessionId]);
 
   // Khôi phục hội thoại cũ khi load trang
   useEffect(() => {
     const restoreHistory = async () => {
-      const user = JSON.parse(localStorage.getItem('user'));
-      const storedPhone = localStorage.getItem('nexus_support_phone');
+      const userString = localStorage.getItem('user');
+      const user = userString ? JSON.parse(userString) : null;
       
-      if (user?._id || storedPhone) {
-        try {
-          const res = await ticketApi.getHistory({ 
-            userId: user?._id, 
-            phoneNumber: storedPhone 
-          });
-          
-          if (res.success && res.data) {
-            setHasCreatedTicket(true);
-            setTrackingPhone(res.data.phoneNumber);
-            if (res.data.chatHistory && res.data.chatHistory.length > 0) {
-              const formattedHistory = res.data.chatHistory.map(m => ({
-                role: m.role,
-                content: m.content
-              }));
-              setChatMessages(formattedHistory);
-            }
+      try {
+        const res = await ticketApi.getHistory({ 
+          userId: user?._id || user?.id, 
+          sessionId: sessionId 
+        });
+        
+        if (res.success && res.data) {
+          if (res.data.phoneNumber) {
+             setTrackingPhone(res.data.phoneNumber);
+             localStorage.setItem('nexus_support_phone', res.data.phoneNumber);
           }
-        } catch (error) {
-          console.error("Restore History Error:", error);
+          
+          if (res.data.chatHistory && res.data.chatHistory.length > 0) {
+            const formattedHistory = res.data.chatHistory.map(m => ({
+              role: m.role,
+              content: m.content,
+              image: m.image
+            }));
+            setChatMessages(formattedHistory);
+          }
         }
+      } catch (error) {
+        console.error("Restore History Error:", error);
       }
     };
     restoreHistory();
-  }, []);
+  }, [sessionId]);
 
   useEffect(() => {
     const fetchExperts = async () => {
@@ -124,6 +140,47 @@ const ExpertSupportPage = () => {
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [chatMessages, isAiTyping]);
+
+  useEffect(() => {
+    if (activeModal === 'appointment' && repairForm.selectedExpertId) {
+      const fetchSlots = async () => {
+        try {
+          const res = await appointmentApi.getExpertAvailability(repairForm.selectedExpertId, appointmentDate);
+          setAvailableSlots(res.data.availableSlots || []);
+        } catch (error) {
+          console.error("Fetch slots error:", error);
+          setAvailableSlots([]);
+        }
+      };
+      fetchSlots();
+    }
+  }, [appointmentDate, repairForm.selectedExpertId, activeModal]);
+
+  const handleAppointmentSubmit = async (slot) => {
+    setIsBooking(true);
+    try {
+      const userString = localStorage.getItem('user');
+      const user = userString ? JSON.parse(userString) : null;
+      
+      const payload = {
+        expertId: repairForm.selectedExpertId,
+        date: appointmentDate,
+        slot,
+        deviceType: repairForm.deviceType,
+        notes: repairForm.description,
+        guestInfo: !user ? { name: 'Khách vãng lai', phone: trackingPhone || '0000000000' } : undefined
+      };
+
+      await appointmentApi.create(payload);
+      addToast('Đặt lịch hẹn thành công!', 'success');
+      setActiveModal(null);
+    } catch (error) {
+      console.error("Booking error:", error);
+      addToast(error.response?.data?.message || 'Không thể đặt lịch lúc này', 'error');
+    } finally {
+      setIsBooking(false);
+    }
+  };
 
   const handleWarrantyCheck = async (e) => {
     e.preventDefault();
@@ -177,14 +234,32 @@ const ExpertSupportPage = () => {
     }
   };
 
-  const handleSendMessage = async () => {
-    if (!userInput.trim() || isAiTyping) return;
-    const userMessage = userInput.trim();
-    triggerAutoSend(userMessage);
-    setUserInput('');
+  const handleImageSelect = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      addToast('Vui lòng chọn file hình ảnh', 'error');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      setSelectedImage(event.target.result);
+    };
+    reader.readAsDataURL(file);
+    e.target.value = ''; // Reset input
   };
 
-  const triggerAutoSend = async (message) => {
+  const handleSendMessage = async () => {
+    if ((!userInput.trim() && !selectedImage) || isAiTyping) return;
+    const userMessage = userInput.trim();
+    triggerAutoSend(userMessage, selectedImage);
+    setUserInput('');
+    setSelectedImage(null);
+  };
+
+  const triggerAutoSend = async (message, image = null) => {
     if (isAiTyping) return;
 
     // Detect Phone Number (10 digits)
@@ -212,7 +287,11 @@ const ExpertSupportPage = () => {
       }
     }
 
-    const newMessages = [...chatMessages, { role: 'user', content: message }];
+    const newMessageObj = { role: 'user', content: message };
+    if (image) {
+      newMessageObj.image = image; // For UI display
+    }
+    const newMessages = [...chatMessages, newMessageObj];
     setChatMessages(newMessages);
     setIsAiTyping(true);
     
@@ -220,11 +299,13 @@ const ExpertSupportPage = () => {
     const userId = user?._id;
 
     try {
-      const response = await geminiApi.chatWithAi(message, {
+      const response = await geminiApi.chatWithAi(message || "Vui lòng phân tích hình ảnh này và đưa ra chẩn đoán lỗi, kèm theo báo giá sửa chữa nếu có.", {
         customInstruction: 'NEXUS_EXPERT_SUPPORT_INSTRUCTION',
         userId: userId,
+        sessionId: sessionId,
+        image: image
       });
-      setChatMessages([...newMessages, { role: 'ai', content: response.text }]);
+      setChatMessages([...newMessages, { role: 'ai', content: response.text || response.data?.text || "Đã nhận được phản hồi" }]);
     } catch (error) {
       addToast('Mất kết nối với AI Support', 'error');
     } finally {
@@ -427,6 +508,11 @@ const ExpertSupportPage = () => {
                         {msg.role === 'user' ? <User size={18} /> : isExpert ? <ShieldCheck size={18} /> : <Cpu size={18} />}
                       </div>
                       <div className={`space-y-2 ${msg.role === 'user' ? 'text-right' : 'text-left'}`}>
+                         {msg.image && (
+                           <div className="mb-2">
+                             <img src={msg.image} alt="User Upload" className="max-w-xs rounded-xl border border-slate-200" />
+                           </div>
+                         )}
                          <div className={`p-5 rounded-xl text-sm leading-relaxed font-medium shadow-sm border ${
                             msg.role === 'user' 
                               ? 'bg-slate-900 text-white border-slate-800' 
@@ -459,21 +545,45 @@ const ExpertSupportPage = () => {
 
           {/* Input Area */}
           <div className="p-8 bg-white border-t border-slate-200">
+            {selectedImage && (
+              <div className="mb-4 relative inline-block">
+                <img src={selectedImage} alt="Preview" className="h-20 rounded-lg border border-slate-200" />
+                <button 
+                  onClick={() => setSelectedImage(null)}
+                  className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
+                >
+                  <X size={14} />
+                </button>
+              </div>
+            )}
             <div className="max-w-3xl mx-auto flex items-end gap-4 relative">
+              <input 
+                type="file" 
+                accept="image/*" 
+                ref={fileInputRef}
+                onChange={handleImageSelect}
+                className="hidden" 
+              />
+              <button 
+                onClick={() => fileInputRef.current?.click()}
+                className="p-4 bg-slate-100 text-slate-500 rounded-xl hover:bg-slate-200 hover:text-slate-900 transition-all"
+              >
+                <Camera size={20} />
+              </button>
               <div className="flex-1 bg-slate-50 border border-slate-200 rounded-xl focus-within:border-slate-400 focus-within:bg-white transition-all overflow-hidden p-2">
                 <textarea 
                   rows="1"
                   value={userInput}
                   onChange={(e) => setUserInput(e.target.value)}
                   onKeyPress={(e) => e.key === 'Enter' && !e.shiftKey && (e.preventDefault(), handleSendMessage())}
-                  placeholder="Nhập triệu chứng hoặc mã lỗi thiết bị..."
+                  placeholder="Nhập triệu chứng hoặc tải ảnh lỗi thiết bị..."
                   className="w-full bg-transparent border-none outline-none text-sm font-bold p-3 resize-none"
                 />
               </div>
               <button 
                 onClick={handleSendMessage}
-                disabled={isAiTyping || !userInput.trim()}
-                className="p-4 bg-slate-900 text-white rounded-xl hover:bg-black transition-all active:scale-95"
+                disabled={isAiTyping || (!userInput.trim() && !selectedImage)}
+                className="p-4 bg-slate-900 text-white rounded-xl hover:bg-black transition-all active:scale-95 disabled:opacity-50"
               >
                 <Send size={20} />
               </button>
@@ -521,11 +631,11 @@ const ExpertSupportPage = () => {
                   <button 
                     onClick={() => {
                       setRepairForm({...repairForm, selectedExpertId: expert._id});
-                      setActiveModal('repair');
+                      setActiveModal('appointment');
                     }}
                     className="mt-4 w-full py-2 bg-slate-50 group-hover:bg-slate-900 group-hover:text-white rounded-lg text-[9px] font-black uppercase tracking-widest transition-all"
                   >
-                    Kết nối ngay
+                    Đặt lịch hẹn
                   </button>
                 </div>
               ))}
@@ -552,22 +662,44 @@ const ExpertSupportPage = () => {
                 </div>
               )}
 
-              {activeModal === 'repair' && (
-                <div className="p-10 space-y-8">
-                  <h3 className="text-xl font-black uppercase tracking-tighter text-center">Yêu cầu sửa chữa</h3>
+              {activeModal === 'appointment' && (
+                <div className="p-10 space-y-6">
+                  <h3 className="text-xl font-black uppercase tracking-tighter text-center">Đặt lịch chuyên gia</h3>
                   <div className="space-y-4">
                     <div className="grid grid-cols-2 gap-4">
                       <select value={repairForm.deviceType} onChange={(e) => setRepairForm({...repairForm, deviceType: e.target.value})} className="p-4 bg-slate-50 border border-slate-200 rounded-lg text-xs font-bold uppercase outline-none">
                         <option>iPhone</option><option>MacBook</option><option>iPad</option><option>Watch</option>
                       </select>
-                      <select value={repairForm.urgency} onChange={(e) => setRepairForm({...repairForm, urgency: e.target.value})} className="p-4 bg-slate-50 border border-slate-200 rounded-lg text-xs font-bold uppercase outline-none">
-                        <option>Normal</option><option>Urgent</option>
-                      </select>
+                      <input 
+                        type="date" 
+                        value={appointmentDate} 
+                        onChange={(e) => setAppointmentDate(e.target.value)} 
+                        min={new Date().toISOString().split('T')[0]}
+                        className="p-4 bg-slate-50 border border-slate-200 rounded-lg text-xs font-bold uppercase outline-none"
+                      />
                     </div>
-                    <textarea placeholder="Mô tả ngắn gọn lỗi..." value={repairForm.description} onChange={(e) => setRepairForm({...repairForm, description: e.target.value})} className="w-full p-4 bg-slate-50 border border-slate-200 rounded-lg outline-none h-32 text-sm font-medium" />
-                    <button onClick={handleRepairSubmit} disabled={isSubmittingRepair} className="w-full py-4 bg-slate-900 text-white rounded-lg font-black text-[10px] uppercase tracking-[0.3em] hover:bg-black transition-all">
-                      {isSubmittingRepair ? 'Đang gửi...' : 'Xác nhận yêu cầu'}
-                    </button>
+                    
+                    <div className="space-y-2">
+                      <label className="text-xs font-bold text-slate-500 uppercase">Khung giờ trống</label>
+                      {availableSlots.length > 0 ? (
+                        <div className="grid grid-cols-4 gap-2">
+                          {availableSlots.map(slot => (
+                            <button 
+                              key={slot} 
+                              onClick={() => handleAppointmentSubmit(slot)}
+                              disabled={isBooking}
+                              className="py-2 px-3 border border-slate-200 rounded-lg text-xs font-bold hover:bg-slate-900 hover:text-white transition-all disabled:opacity-50"
+                            >
+                              {slot}
+                            </button>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="text-sm text-slate-500 italic">Không có khung giờ trống trong ngày này.</p>
+                      )}
+                    </div>
+
+                    <textarea placeholder="Ghi chú thêm..." value={repairForm.description} onChange={(e) => setRepairForm({...repairForm, description: e.target.value})} className="w-full p-4 bg-slate-50 border border-slate-200 rounded-lg outline-none h-24 text-sm font-medium" />
                   </div>
                 </div>
               )}

@@ -26,6 +26,16 @@ const repairController = {
 
       const savedRequest = await newRequest.save();
       
+      try {
+        const notificationService = require('../services/notificationService');
+        const userEmail = savedRequest.user?.email || savedRequest.guestInfo?.email;
+        if (userEmail) {
+          await notificationService.notifyNewRepair(userEmail, savedRequest);
+        }
+      } catch (notifyErr) {
+        console.error("Lỗi gửi email xác nhận:", notifyErr);
+      }
+      
       res.status(201).json({
         success: true,
         message: "Yêu cầu sửa chữa đã được tiếp nhận.",
@@ -117,7 +127,7 @@ getAll: async (req, res) => {
   updateStatus: async (req, res) => {
     try {
       const { id } = req.params;
-      const { status, repairNotes, expertResponse, estimatedCost, progressImages, startTime, endTime } = req.body;
+      const { status, repairNotes, expertResponse, estimatedCost, progressImages, startTime, endTime, usedParts } = req.body;
       
       const updateData = { status, repairNotes, expertResponse, estimatedCost };
       
@@ -125,11 +135,44 @@ getAll: async (req, res) => {
       if (startTime) updateData.startTime = startTime;
       if (endTime) updateData.endTime = endTime;
 
+      const Part = require('../models/Part');
+      const notificationService = require('../services/notificationService');
+
+      if (usedParts && Array.isArray(usedParts)) {
+        updateData.usedParts = usedParts;
+        
+        // Deduct inventory
+        for (const item of usedParts) {
+          await Part.findByIdAndUpdate(item.part, { $inc: { stock: -item.quantity } });
+        }
+      }
+
       const updated = await RepairRequest.findByIdAndUpdate(
         id, 
         updateData, 
         { new: true }
-      ).populate('user', 'name email phone').populate('expert', 'name role');
+      ).populate('user', 'name email phone').populate('expert', 'name role').populate('usedParts.part');
+
+      // Gửi thông báo nếu có sự thay đổi trạng thái quan trọng
+      try {
+        const userEmail = updated.user ? updated.user.email : updated.guestInfo?.email;
+        if (userEmail) {
+          if (status === 'AwaitingApproval') {
+            await notificationService.notifyQuotationReady(userEmail, updated);
+          } else if (status === 'Done') {
+            await notificationService.notifyRepairDone(userEmail, updated);
+            try {
+              const invoiceController = require('./invoiceController');
+              const invoice = await invoiceController.generateFromRepair(id);
+              await notificationService.notifyInvoiceCreated(userEmail, invoice);
+            } catch (invErr) {
+              console.error("Lỗi tạo/gửi hóa đơn khi Done:", invErr);
+            }
+          }
+        }
+      } catch (notifyErr) {
+        console.error("Lỗi gửi thông báo:", notifyErr);
+      }
 
       res.json({ success: true, data: updated });
     } catch (error) {
@@ -158,6 +201,33 @@ getAll: async (req, res) => {
     } catch (error) {
       console.error("getByPhone Error:", error.message);
       res.status(500).json({ message: "Lỗi khi tra cứu thông tin sửa chữa." });
+    }
+  },
+
+  getMedicalRecord: async (req, res) => {
+    try {
+      const { serialNumber } = req.params;
+      const uppercaseSN = serialNumber.toUpperCase();
+      
+      const repairs = await RepairRequest.find({ 
+        serialNumber: uppercaseSN,
+        status: { $in: ['Done', 'Returned'] }
+      })
+      .populate('expert', 'name role avatar')
+      .populate('usedParts.part')
+      .sort({ createdAt: -1 });
+
+      const Warranty = require('../models/Warranty');
+      const warranty = await Warranty.findOne({ serialNumber: uppercaseSN });
+
+      res.json({
+        serialNumber: uppercaseSN,
+        repairs,
+        warranty
+      });
+    } catch (error) {
+      console.error("getMedicalRecord Error:", error.message);
+      res.status(500).json({ message: "Lỗi khi lấy bệnh án thiết bị." });
     }
   }
 };

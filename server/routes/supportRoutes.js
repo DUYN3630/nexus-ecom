@@ -11,6 +11,8 @@ router.get('/warranty/:serialNumber', warrantyController.check);
 router.post('/repair', repairController.create);
 // Tra cứu sửa chữa theo SĐT
 router.get('/repair/track/:phone', repairController.getByPhone);
+// Tra cứu bệnh án thiết bị
+router.get('/medical-record/:serialNumber', repairController.getMedicalRecord);
 
 // --- USER ROUTES ---
 router.get('/my-repairs', protect, repairController.getMyRepairs);

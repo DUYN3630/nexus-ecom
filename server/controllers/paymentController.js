@@ -1,27 +1,50 @@
 const momoService = require('../services/momoService');
 const Order = require('../models/Order');
+const RepairRequest = require('../models/RepairRequest');
+
+const invoiceController = require('./invoiceController');
 
 // 1. Hàm tạo giao dịch MoMo
 exports.createMomoPayment = async (req, res) => {
   try {
-    const { orderId } = req.body;
+    const { orderId, type } = req.body; // type: 'order' or 'repair'
     if (!orderId) return res.status(400).json({ message: 'Thiếu orderId' });
 
-    const order = await Order.findById(orderId);
-    if (!order) return res.status(404).json({ message: 'Đơn hàng không tồn tại' });
-    if (order.paymentStatus === 'Paid') return res.status(400).json({ message: 'Đơn hàng đã thanh toán' });
+    let orderInfo = '';
+    let amount = 0;
+    let targetId = '';
 
-    const orderInfo = `Thanh toán đơn hàng ${order.orderNumber} - Nexus Store`;
+    if (type === 'repair') {
+      const repair = await RepairRequest.findById(orderId);
+      if (!repair) return res.status(404).json({ message: 'Đơn sửa chữa không tồn tại' });
+      if (repair.paymentStatus === 'Paid') return res.status(400).json({ message: 'Đơn sửa chữa đã thanh toán' });
+      
+      orderInfo = `Thanh toán sửa chữa ${repair.ticketNumber} - Nexus Store`;
+      amount = repair.estimatedCost || 0;
+      targetId = repair._id.toString();
+
+      await RepairRequest.findByIdAndUpdate(orderId, { paymentStatus: 'Pending' });
+    } else {
+      const order = await Order.findById(orderId);
+      if (!order) return res.status(404).json({ message: 'Đơn hàng không tồn tại' });
+      if (order.paymentStatus === 'Paid') return res.status(400).json({ message: 'Đơn hàng đã thanh toán' });
+      
+      orderInfo = `Thanh toán đơn hàng ${order.orderNumber} - Nexus Store`;
+      amount = order.totalAmount;
+      targetId = order._id.toString();
+
+      await Order.findByIdAndUpdate(orderId, { paymentStatus: 'Pending' });
+    }
     
-    // Gọi service để tạo link thanh toán (Sử dụng totalAmount từ Order model)
-    const result = await momoService.createPayment(order._id.toString(), order.totalAmount, orderInfo);
+    // Gọi service để tạo link thanh toán
+    const result = await momoService.createPayment(targetId, amount, orderInfo);
     
-    // Lưu các thông tin cần thiết vào Order để đối soát
-    await Order.findByIdAndUpdate(orderId, {
-      momoRequestId: result.requestId,
-      momoOrderId: result.momoOrderId,
-      paymentStatus: 'Pending'
-    });
+    // Cập nhật requestId
+    if (type === 'repair') {
+      await RepairRequest.findByIdAndUpdate(orderId, { momoRequestId: result.requestId });
+    } else {
+      await Order.findByIdAndUpdate(orderId, { momoRequestId: result.requestId, momoOrderId: result.momoOrderId });
+    }
 
     // Trả link payUrl về cho ReactJS để chuyển hướng người dùng
     res.json({ payUrl: result.payUrl });
@@ -42,9 +65,29 @@ exports.handleMomoIPN = async (req, res) => {
     // Giải mã extraData để lấy orderId gốc trong database
     const { orderId } = JSON.parse(Buffer.from(extraData, 'base64').toString());
 
+    // Check if it's a repair or order
+    const isRepair = await RepairRequest.exists({ _id: orderId });
+
     if (resultCode === 0) {
-      // Thanh toán thành công -> Cập nhật DB
-      await Order.findByIdAndUpdate(orderId, { 
+      if (isRepair) {
+        await RepairRequest.findByIdAndUpdate(orderId, { 
+          paymentStatus: 'Paid',
+          isPaid: true
+        });
+        try {
+          const invoice = await invoiceController.generateFromRepair(orderId);
+          const notificationService = require('../services/notificationService');
+          
+          const repair = await RepairRequest.findById(orderId).populate('user');
+          const userEmail = repair.user?.email || repair.guestInfo?.email;
+          if (userEmail) {
+            await notificationService.notifyInvoiceCreated(userEmail, invoice);
+          }
+        } catch (invErr) {
+          console.error("Failed to generate repair invoice:", invErr);
+        }
+      } else {
+        await Order.findByIdAndUpdate(orderId, { 
           paymentStatus: 'Paid',
           isPaid: true,
           paymentMethod: 'MoMo',
@@ -58,11 +101,14 @@ exports.handleMomoIPN = async (req, res) => {
               user: 'system'
             }
           }
-      });
-      console.log(`✅ Đơn hàng ${orderId} đã thanh toán thành công qua MoMo!`);
+        });
+      }
+      console.log(`✅ Giao dịch ${orderId} đã thanh toán thành công qua MoMo!`);
     } else {
-      // Thanh toán thất bại hoặc người dùng hủy
-      await Order.findByIdAndUpdate(orderId, { 
+      if (isRepair) {
+        await RepairRequest.findByIdAndUpdate(orderId, { paymentStatus: 'Failed' });
+      } else {
+        await Order.findByIdAndUpdate(orderId, { 
           paymentStatus: 'Failed',
           $push: {
             auditLogs: {
@@ -71,11 +117,11 @@ exports.handleMomoIPN = async (req, res) => {
               user: 'system'
             }
           }
-      });
-      console.log(`❌ Đơn hàng ${orderId} thanh toán thất bại (Code: ${resultCode})`);
+        });
+      }
+      console.log(`❌ Giao dịch ${orderId} thanh toán thất bại (Code: ${resultCode})`);
     }
 
-    // MoMo yêu cầu phản hồi 204 No Content (hoặc 200 ok) để biết Server đã nhận tin
     res.status(204).send();
   } catch (error) {
     console.error('[PaymentController] IPN Error:', error.message);
@@ -86,9 +132,13 @@ exports.handleMomoIPN = async (req, res) => {
 // 3. Hàm kiểm tra trạng thái thanh toán (Dành cho Frontend polling)
 exports.checkPaymentStatus = async (req, res) => {
   try {
-    const order = await Order.findById(req.params.orderId).select('paymentStatus isPaid');
-    if (!order) return res.status(404).json({ message: 'Không tìm thấy đơn hàng' });
-    res.json(order);
+    const orderId = req.params.orderId;
+    let doc = await Order.findById(orderId).select('paymentStatus isPaid');
+    if (!doc) {
+      doc = await RepairRequest.findById(orderId).select('paymentStatus isPaid');
+    }
+    if (!doc) return res.status(404).json({ message: 'Không tìm thấy giao dịch' });
+    res.json(doc);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

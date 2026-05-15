@@ -20,9 +20,10 @@ const ExpertDashboard = () => {
   const [experts, setExperts] = useState([]);
   const [selectedExpertId, setSelectedExpertId] = useState('');
   const [repairs, setRepairs] = useState([]);
+  const [appointments, setAppointments] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [selectedRepair, setSelectedRepair] = useState(null);
-  const [activeTab, setActiveTab] = useState('new'); // 'new', 'active', 'history'
+  const [activeTab, setActiveTab] = useState('new'); // 'new', 'active', 'history', 'schedule'
   
   // Form states for modal
   const [expertResponse, setExpertResponse] = useState('');
@@ -57,7 +58,7 @@ const ExpertDashboard = () => {
             setSelectedExpertId(myProfile._id);
           } else {
             console.warn("[WARN] Could not find Expert Profile mapping for User ID:", userId);
-            // Vẫn gán User ID để backend tự tìm profile tương ứng (tính năng mới ở backend)
+            // Vẫn gán User ID để backend tự tìm profile tương ứng
             setSelectedExpertId(userId);
           }
         } catch (error) {
@@ -81,10 +82,11 @@ const ExpertDashboard = () => {
     fetchExpertInfo();
   }, [isAdmin, currentUser]);
 
-  // 2. Tải danh sách công việc của chuyên gia được chọn
+  // 2. Tải danh sách công việc & lịch hẹn
   useEffect(() => {
     if (selectedExpertId) {
       fetchMyRepairs();
+      fetchMyAppointments();
     }
   }, [selectedExpertId]);
 
@@ -92,22 +94,20 @@ const ExpertDashboard = () => {
     setIsLoading(true);
     try {
       const data = await supportApi.getExpertRepairs(selectedExpertId);
-      console.log("[DEBUG] Received Repairs for Expert:", selectedExpertId, data);
       setRepairs(data || []);
-      
-      // Auto-switch tab if the current tab is empty but others have data
-      if (data && data.length > 0) {
-        const hasPending = data.some(r => r.status === 'Pending');
-        const hasActive = data.some(r => ['Confirmed', 'Repairing', 'Testing'].includes(r.status));
-        
-        if (!hasPending && hasActive && activeTab === 'new') {
-          setActiveTab('active');
-        }
-      }
     } catch (error) {
       addToast('Không thể tải công việc', 'error');
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const fetchMyAppointments = async () => {
+    try {
+      const data = await axiosClient.get(`/appointments/expert/${selectedExpertId}`);
+      setAppointments(data || []);
+    } catch (error) {
+      console.error("Fetch appointments error:", error);
     }
   };
 
@@ -192,6 +192,7 @@ const ExpertDashboard = () => {
   const tabs = [
     { id: 'new', label: 'Hàng chờ mới', icon: Inbox, count: repairs.filter(r => r.status === 'Pending').length },
     { id: 'active', label: 'Tiến độ thực tế', icon: Zap, count: repairs.filter(r => ['Confirmed', 'Repairing', 'Testing'].includes(r.status)).length },
+    { id: 'schedule', label: 'Lịch trình', icon: Calendar, count: appointments.length },
     { id: 'history', label: 'Lịch sử', icon: History, count: repairs.filter(r => ['Done', 'Returned'].includes(r.status)).length },
   ];
 
@@ -269,8 +270,72 @@ const ExpertDashboard = () => {
             ))}
         </div>
 
-        {/* Work List */}
-        <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
+        {/* Work List & Schedule */}
+        <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden mb-12">
+          {activeTab === 'schedule' ? (
+             <div className="p-8">
+                <div className="flex items-center justify-between mb-8">
+                   <h3 className="text-sm font-black uppercase tracking-widest text-slate-900">Lịch trình chuyên gia (Lịch hẹn & Công việc)</h3>
+                   <div className="flex gap-2">
+                      <div className="flex items-center gap-2 px-3 py-1 bg-blue-50 text-blue-600 rounded-lg text-[9px] font-bold uppercase">
+                         <div className="w-1.5 h-1.5 rounded-full bg-blue-500"></div> Lịch hẹn khách
+                      </div>
+                      <div className="flex items-center gap-2 px-3 py-1 bg-indigo-50 text-indigo-600 rounded-lg text-[9px] font-bold uppercase">
+                         <div className="w-1.5 h-1.5 rounded-full bg-indigo-500"></div> Công việc sửa chữa
+                      </div>
+                   </div>
+                </div>
+
+                <div className="space-y-6 relative before:absolute before:left-[11px] before:top-2 before:bottom-2 before:w-0.5 before:bg-slate-100">
+                   {[...appointments.map(a => ({ ...a, type: 'appointment', time: a.slot, date: a.date })),
+                     ...repairs.filter(r => r.endTime).map(r => ({ ...r, type: 'repair', time: new Date(r.endTime).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }), date: r.endTime }))]
+                     .sort((a, b) => new Date(a.date) - new Date(b.date))
+                     .map((item, idx) => (
+                      <div key={idx} className="relative pl-10 group">
+                         <div className={`absolute left-0 top-1.5 w-6 h-6 rounded-full border-4 border-white shadow-sm z-10 transition-transform group-hover:scale-125 ${item.type === 'appointment' ? 'bg-blue-500' : 'bg-indigo-500'}`}></div>
+                         <div className="bg-slate-50 rounded-2xl p-5 border border-slate-100 hover:border-slate-300 transition-all flex flex-col md:flex-row md:items-center justify-between gap-4">
+                            <div className="flex items-center gap-4">
+                               <div className="text-center min-w-[60px]">
+                                  <p className="text-[10px] font-black uppercase text-slate-400">{new Date(item.date).toLocaleDateString('vi-VN', { weekday: 'short' })}</p>
+                                  <p className="text-lg font-black text-slate-900 leading-none">{item.time}</p>
+                                  <p className="text-[9px] font-bold text-slate-400 mt-1">{new Date(item.date).toLocaleDateString('vi-VN')}</p>
+                               </div>
+                               <div className="h-10 w-px bg-slate-200 hidden md:block"></div>
+                               <div>
+                                  <p className={`text-[9px] font-black uppercase tracking-widest mb-1 ${item.type === 'appointment' ? 'text-blue-600' : 'text-indigo-600'}`}>
+                                     {item.type === 'appointment' ? 'Lịch hẹn trực tiếp' : 'Dự kiến hoàn thành sửa'}
+                                  </p>
+                                  <h4 className="text-sm font-black text-slate-800 uppercase tracking-tight">
+                                     {item.deviceType} · {item.notes || item.description?.substring(0, 50) || 'Không có mô tả'}
+                                  </h4>
+                                  <p className="text-[10px] text-slate-500 font-medium mt-1">
+                                     Khách hàng: {item.user?.name || item.guestInfo?.name || 'Nexus Client'}
+                                  </p>
+                               </div>
+                            </div>
+                            <div className="flex items-center gap-3">
+                               <span className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest ${item.status === 'completed' || item.status === 'Done' ? 'bg-emerald-100 text-emerald-700' : 'bg-white border border-slate-200 text-slate-400'}`}>
+                                  {item.status}
+                               </span>
+                               <button 
+                                 onClick={() => item.type === 'repair' ? openUpdateModal(item) : addToast('Chức năng đang phát triển', 'info')}
+                                 className="p-2.5 bg-white border border-slate-200 rounded-xl hover:bg-slate-900 hover:text-white transition-all shadow-sm"
+                               >
+                                 <ChevronRight size={16} />
+                               </button>
+                            </div>
+                         </div>
+                      </div>
+                   ))}
+                   {appointments.length === 0 && repairs.filter(r => r.endTime).length === 0 && (
+                      <div className="py-20 text-center text-slate-400">
+                         <Calendar size={48} className="mx-auto mb-4 opacity-20" />
+                         <p className="text-xs font-black uppercase tracking-widest">Chưa có lịch trình cụ thể nào</p>
+                      </div>
+                   )}
+                </div>
+             </div>
+          ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left">
               <thead className="bg-slate-50 text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-200">
@@ -346,6 +411,7 @@ const ExpertDashboard = () => {
               </tbody>
             </table>
           </div>
+          )}
         </div>
       </div>
 

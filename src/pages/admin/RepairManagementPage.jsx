@@ -3,9 +3,11 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Wrench, CheckCircle, Clock, AlertCircle, 
   ChevronRight, Search, Filter, MoreHorizontal,
-  User, Smartphone, Shield, X, MessageSquare, Send
+  User, Smartphone, Shield, X, MessageSquare, Send, Plus, Trash2, Truck
 } from 'lucide-react';
 import supportApi from '../../api/supportApi';
+import partApi from '../../api/partApi';
+import logisticsApi from '../../api/logisticsApi';
 import { useToast } from '../../contexts/ToastContext';
 
 const RepairManagementPage = () => {
@@ -16,11 +18,31 @@ const RepairManagementPage = () => {
   const [selectedRepair, setSelectedRepair] = useState(null);
   const [expertResponse, setExpertResponse] = useState('');
   const [newStatus, setNewStatus] = useState('');
+  const [serialNumber, setSerialNumber] = useState('');
+  
+  // Inventory state
+  const [inventory, setInventory] = useState([]);
+  const [selectedParts, setSelectedParts] = useState([]);
+  const [partCost, setPartCost] = useState(0);
+
+  // Shipper State
+  const [shipperInfo, setShipperInfo] = useState(null);
+
   const { addToast } = useToast();
 
   useEffect(() => {
     fetchRepairs(pagination.page);
+    fetchInventory();
   }, [pagination.page]);
+
+  const fetchInventory = async () => {
+    try {
+      const res = await partApi.getAll();
+      setInventory(res.data || []);
+    } catch (error) {
+      console.error("Failed to fetch inventory:", error);
+    }
+  };
 
   const fetchRepairs = async (page = 1) => {
     setIsLoading(true);
@@ -47,19 +69,58 @@ const RepairManagementPage = () => {
     setSelectedRepair(repair);
     setExpertResponse(repair.expertResponse || '');
     setNewStatus(repair.status);
+    setSerialNumber(repair.serialNumber || '');
+    setSelectedParts(repair.usedParts ? repair.usedParts.map(up => ({
+      part: up.part?._id || up.part,
+      quantity: up.quantity,
+      price: up.part?.price || 0
+    })) : []);
+    setPartCost(repair.estimatedCost || 0);
   };
 
   const handleUpdate = async () => {
     try {
+      const formattedParts = selectedParts.map(sp => ({
+        part: sp.part,
+        quantity: sp.quantity
+      }));
+      const totalCost = selectedParts.reduce((acc, curr) => acc + (curr.price * curr.quantity), 0);
+
+      // Nếu đang báo giá và thêm linh kiện, tự động đổi status thành AwaitingApproval nếu chưa được khách duyệt
+      let finalStatus = newStatus;
+      if (formattedParts.length > 0 && newStatus === 'Pending') {
+        finalStatus = 'AwaitingApproval';
+      }
+
       await supportApi.updateRepairStatus(selectedRepair._id, {
-        status: newStatus, // Gửi trạng thái mới chọn
-        expertResponse: expertResponse 
+        status: finalStatus,
+        expertResponse: expertResponse,
+        serialNumber: serialNumber.toUpperCase(),
+        usedParts: formattedParts,
+        estimatedCost: totalCost
       });
-      addToast('Đã cập nhật trạng thái và gửi phản hồi', 'success');
+      addToast('Đã cập nhật trạng thái và gửi báo giá', 'success');
       setSelectedRepair(null);
-      fetchRepairs();
+      fetchRepairs(pagination.page);
     } catch (error) {
       addToast('Cập nhật thất bại', 'error');
+    }
+  };
+
+  const handleCallShipper = async () => {
+    if (!selectedRepair) return;
+    try {
+      const response = await logisticsApi.createShippingOrder({
+        type: 'repair',
+        id: selectedRepair._id,
+        serviceType: 'BIKE'
+      });
+      if (response.success) {
+        addToast(response.message, 'success');
+        setShipperInfo(response.data);
+      }
+    } catch (error) {
+      addToast(error.response?.data?.message || 'Lỗi gọi Shipper', 'error');
     }
   };
 
@@ -254,11 +315,71 @@ const RepairManagementPage = () => {
                     </div>
                  </div>
 
+                 <div className="space-y-4">
+                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">Serial Number / IMEI</label>
+                    <input 
+                      type="text" 
+                      value={serialNumber} 
+                      onChange={(e) => setSerialNumber(e.target.value.toUpperCase())}
+                      placeholder="Nhập Serial Number để lưu bệnh án..."
+                      className="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-1 focus:ring-brand-500 font-mono text-sm tracking-widest"
+                    />
+                 </div>
+
+                 {/* Inventory Parts Selection */}
+                 <div className="space-y-4">
+                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">Linh kiện thay thế</label>
+                    <div className="flex gap-2">
+                       <select 
+                         id="partSelect" 
+                         className="flex-1 p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold outline-none"
+                       >
+                          <option value="">-- Chọn linh kiện --</option>
+                          {inventory.map(part => (
+                             <option key={part._id} value={part._id} disabled={part.stock <= 0}>{part.name} - {part.price.toLocaleString()}đ (Kho: {part.stock})</option>
+                          ))}
+                       </select>
+                       <button 
+                         onClick={() => {
+                           const select = document.getElementById('partSelect');
+                           const partId = select.value;
+                           if (!partId) return;
+                           const part = inventory.find(p => p._id === partId);
+                           const existing = selectedParts.find(p => p.part === partId);
+                           if (existing) {
+                             setSelectedParts(selectedParts.map(p => p.part === partId ? { ...p, quantity: p.quantity + 1 } : p));
+                           } else {
+                             setSelectedParts([...selectedParts, { part: partId, quantity: 1, name: part.name, price: part.price }]);
+                           }
+                         }}
+                         className="p-3 bg-brand-600 text-white rounded-xl hover:bg-brand-700"
+                       >
+                         <Plus size={16} />
+                       </button>
+                    </div>
+                    {selectedParts.map((sp, idx) => (
+                       <div key={idx} className="flex justify-between items-center p-3 bg-white border border-slate-200 rounded-xl">
+                          <div>
+                            <p className="text-xs font-bold">{sp.name || 'Linh kiện (Lưu ID)'}</p>
+                            <p className="text-[10px] text-slate-500">Số lượng: {sp.quantity} x {sp.price?.toLocaleString()}đ</p>
+                          </div>
+                          <button onClick={() => setSelectedParts(selectedParts.filter((_, i) => i !== idx))} className="text-red-500 hover:text-red-700 p-2">
+                            <Trash2 size={14} />
+                          </button>
+                       </div>
+                    ))}
+                 </div>
+
                  {/* Admin View Details */}
                  <div className="grid grid-cols-2 gap-4 bg-slate-50 p-4 rounded-2xl border border-slate-100">
                     <div>
                         <p className="text-[8px] font-black text-slate-400 uppercase mb-1">Chi phí dự kiến</p>
-                        <p className="text-xs font-black text-slate-900">{(selectedRepair.estimatedCost || 0).toLocaleString()} VNĐ</p>
+                        <p className="text-xs font-black text-slate-900">
+                           {selectedParts.length > 0 
+                             ? selectedParts.reduce((a,c) => a + c.price * c.quantity, 0).toLocaleString()
+                             : (selectedRepair.estimatedCost || 0).toLocaleString()
+                           } VNĐ
+                        </p>
                     </div>
                     <div>
                         <p className="text-[8px] font-black text-slate-400 uppercase mb-1">Chuyên gia xử lý</p>
@@ -290,6 +411,37 @@ const RepairManagementPage = () => {
                       className="w-full p-5 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-1 focus:ring-brand-500 focus:border-brand-500 h-36 text-sm font-medium transition-all shadow-inner resize-none"
                     />
                  </div>
+
+                 {/* Logistics Block */}
+                 {newStatus === 'Done' && (
+                   <div className="p-5 bg-blue-50/50 border border-blue-100 rounded-2xl space-y-4">
+                      <div className="flex items-center justify-between">
+                         <h4 className="text-xs font-black text-blue-900 uppercase tracking-tight flex items-center gap-2"><Truck size={14} /> Vận chuyển</h4>
+                         {shipperInfo ? (
+                           <span className="px-2 py-1 bg-blue-100 text-blue-700 text-[10px] font-black uppercase rounded-lg">Đã điều phối</span>
+                         ) : (
+                           <button 
+                             onClick={handleCallShipper}
+                             className="px-4 py-2 bg-blue-600 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-blue-700 transition-all"
+                           >
+                             Điều phối Shipper
+                           </button>
+                         )}
+                      </div>
+                      {shipperInfo && (
+                        <div className="grid grid-cols-2 gap-4 text-xs">
+                           <div>
+                             <p className="text-[9px] font-bold text-blue-400 uppercase tracking-widest mb-0.5">Mã vận đơn</p>
+                             <p className="font-black text-blue-900">{shipperInfo.tracking_number}</p>
+                           </div>
+                           <div>
+                             <p className="text-[9px] font-bold text-blue-400 uppercase tracking-widest mb-0.5">Tài xế</p>
+                             <p className="font-black text-blue-900">{shipperInfo.shipper_name} - {shipperInfo.shipper_phone}</p>
+                           </div>
+                        </div>
+                      )}
+                   </div>
+                 )}
 
                  <button 
                     onClick={handleUpdate}

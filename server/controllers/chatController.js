@@ -6,10 +6,10 @@ const { NEXUS_SYSTEM_INSTRUCTION, NEXUS_EXPERT_SUPPORT_INSTRUCTION } = require('
 
 const handleChat = async (req, res) => {
     console.log("--- [DEBUG] AI Chat Request Received ---");
-    const { prompt, userId, sessionId, customInstruction, systemInstruction, modelName, temperature, maxOutputTokens } = req.body;
+    const { prompt, image, userId, sessionId, customInstruction, systemInstruction, modelName, temperature, maxOutputTokens } = req.body;
 
     try {
-        if (!prompt) return res.status(400).json({ message: "Prompt is required" });
+        if (!prompt && !image) return res.status(400).json({ message: "Prompt or image is required" });
 
         // Ưu tiên lấy User ID từ Token (req.user) nếu có, nếu không mới lấy từ body
         const effectiveUserId = req.user?._id || userId;
@@ -28,10 +28,11 @@ const handleChat = async (req, res) => {
             systemInstruction: finalSystemInstruction,
             modelName: modelName || configMap.ai_model_name || "gemini-flash-latest",
             temperature: temperature || parseFloat(configMap.ai_temperature) || 0.4,
-            maxOutputTokens: maxOutputTokens || parseInt(configMap.ai_max_tokens) || 1000
+            maxOutputTokens: maxOutputTokens || parseInt(configMap.ai_max_tokens) || 1000,
+            image: image || null
         };
 
-        let text = await generateText(prompt, options);
+        let text = await generateText(prompt || "Please analyze this image.", options);
         console.log("--- [DEBUG] Gemini Response Received ---");
 
         if (text) {
@@ -51,33 +52,43 @@ const handleChat = async (req, res) => {
         const userIdentifier = cleanUserId ? { user: cleanUserId } : { sessionId: cleanSessionId };
 
         try {
-            let ticket = await SupportTicket.findOne({ ...userIdentifier, status: { $nin: ['resolved', 'converted'] } });
+            // Tìm ticket đang hoạt động (chưa resolved) của user/session
+            let ticket = await SupportTicket.findOne({ 
+                ...userIdentifier, 
+                status: { $ne: 'resolved' } 
+            }).sort({ updatedAt: -1 });
             
             if (!ticket) {
                 ticket = new SupportTicket({ 
                     ...userIdentifier, 
-                    subject: prompt.substring(0, 50), 
+                    subject: prompt ? prompt.substring(0, 50) : "Chẩn đoán hình ảnh", 
                     status: 'diagnosing' 
                 });
+            } else if (ticket.status === 'converted') {
+                // Nếu khách quay lại chat, đánh dấu là diagnosing để admin/expert thấy tin nhắn mới
+                ticket.status = 'diagnosing';
             }
             
-            ticket.chatHistory.push({ role: 'user', content: prompt });
-            ticket.chatHistory.push({ role: 'ai', content: text });
+            // Lưu tin nhắn vào lịch sử (có ảnh nếu có)
+            ticket.chatHistory.push({ 
+                role: 'user', 
+                content: prompt || "Đã gửi một hình ảnh", 
+                image: image || null 
+            });
+            ticket.chatHistory.push({ 
+                role: 'ai', 
+                content: text 
+            });
 
-            const phoneMatch = prompt.match(/(0[3|5|7|8|9][0-9]{8})\b/);
+            // Cập nhật SĐT nếu phát hiện trong tin nhắn
+            const phoneMatch = prompt?.match(/(0[3|5|7|8|9][0-9]{8})\b/);
             if (phoneMatch) {
                 ticket.phoneNumber = phoneMatch[0];
             }
 
-            if (prompt.toLowerCase().includes('sửa') || prompt.toLowerCase().includes('hỏng') || prompt.toLowerCase().includes('lỗi')) {
-                ticket.intent = 'repair_request';
-            } else if (prompt.toLowerCase().includes('bảo hành')) {
-                ticket.intent = 'warranty_check';
-            }
-
             await ticket.save();
         } catch (err) {
-            console.error("--- [ERROR] Save Ticket Failed:", err.message);
+            console.error("--- [ERROR] Persistence Logic Failed:", err.message);
         }
 
         return res.json({ text, sessionId: cleanSessionId });
