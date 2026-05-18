@@ -23,6 +23,7 @@ const ProductSchema = new mongoose.Schema({
   stock: { type: Number, default: 0 },
   description: String,
   images: [String], // Mảng chứa link ảnh
+  mainImage: { type: String }, // Ảnh đại diện chính
   specifications: { type: Map, of: String }, // Thông số kỹ thuật (Ram, CPU...)
   status: { type: String, enum: ['active', 'inactive', 'draft'], default: 'active' },
   isFeatured: { type: Boolean, default: false },

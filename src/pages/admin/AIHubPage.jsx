@@ -343,50 +343,52 @@ const AIHubPage = () => {
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
               <div className="lg:col-span-2 space-y-6">
-                <div className="bg-slate-900 rounded-2xl p-8 text-white relative overflow-hidden shadow-2xl">
-                  <div className="relative z-10">
-                    <div className="flex items-center gap-3 mb-8">
-                      <div className="px-3 py-1 bg-brand-500 text-[10px] font-black uppercase tracking-widest rounded-lg">AI Analysis</div>
-                      <h2 className="text-xl font-bold uppercase tracking-tight">Xu hướng & Insight</h2>
+                <div className="bg-white rounded-[32px] p-10 border-2 border-slate-100 relative overflow-hidden shadow-xl">
+                  <div className="relative z-10 text-left">
+                    <div className="flex items-center gap-4 mb-10">
+                      <div className="px-4 py-1.5 bg-brand-600 text-[10px] font-black uppercase tracking-[0.2em] rounded-xl text-white shadow-lg shadow-brand-200">AI Intelligence</div>
+                      <h2 className="text-2xl font-black uppercase tracking-tighter text-slate-900">Xu hướng & Insight</h2>
                     </div>
                     
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                      <div className="space-y-4">
-                        <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">3 Vấn đề phổ biến nhất:</p>
-                        <ul className="space-y-3">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+                      <div className="space-y-6">
+                        <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">Vấn đề phổ biến tiêu biểu:</p>
+                        <ul className="space-y-4">
                           {analytics?.aiAnalysis?.topIssues?.map((issue, idx) => (
-                            <li key={idx} className="flex items-center gap-4 bg-white/5 p-4 rounded-xl border border-white/10 hover:bg-white/10 transition-colors">
-                              <span className="w-6 h-6 flex items-center justify-center bg-brand-600 rounded-lg text-xs font-black">{idx+1}</span>
-                              <span className="text-sm font-bold text-slate-200">{issue}</span>
+                            <li key={idx} className="flex items-center gap-5 bg-slate-50 p-5 rounded-2xl border-2 border-slate-100 hover:border-brand-200 transition-all group">
+                              <span className="w-8 h-8 flex items-center justify-center bg-white border-2 border-slate-200 group-hover:border-brand-600 group-hover:text-brand-600 rounded-xl text-xs font-black transition-colors">{idx+1}</span>
+                              <span className="text-sm font-bold text-slate-700 uppercase tracking-tight">{issue}</span>
                             </li>
                           ))}
                         </ul>
                       </div>
-                      <div className="space-y-8 text-right">
+                      <div className="space-y-10 text-right">
                         <div>
-                          <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-3">Chỉ số hài lòng (CSAT)</p>
-                          <div className="flex items-end justify-end gap-2">
-                            <span className="text-6xl font-black text-brand-400 leading-none">{analytics?.aiAnalysis?.satisfactionScore || 0}</span>
-                            <span className="text-lg font-bold text-slate-500 mb-1">/10</span>
+                          <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-4">Chỉ số hài lòng hệ thống (CSAT)</p>
+                          <div className="flex items-end justify-end gap-3">
+                            <span className="text-7xl font-black text-brand-600 leading-none tracking-tighter">{analytics?.aiAnalysis?.satisfactionScore || 0}</span>
+                            <span className="text-2xl font-black text-slate-300 mb-2">/10</span>
                           </div>
-                          <div className="w-full bg-white/10 h-2 rounded-full mt-6 overflow-hidden">
+                          <div className="w-full bg-slate-100 h-3 rounded-full mt-8 overflow-hidden shadow-inner border border-slate-200">
                             <motion.div 
                               initial={{ width: 0 }}
                               animate={{ width: `${(analytics?.aiAnalysis?.satisfactionScore || 0) * 10}%` }}
-                              className="h-full bg-brand-500 rounded-full shadow-[0_0_12px_rgba(99,102,241,0.6)]"
+                              className="h-full bg-brand-600 rounded-full shadow-[0_0_15px_rgba(79,70,229,0.4)]"
                             />
                           </div>
                         </div>
-                        <div className="bg-white/5 p-4 rounded-xl border border-white/10 text-left">
-                          <p className="text-[10px] font-black text-amber-400 uppercase tracking-widest flex items-center gap-2 mb-2">
-                            <Sparkles size={14} /> Chiến lược đề xuất:
+                        <div className="bg-brand-50 p-6 rounded-2xl border-2 border-brand-100 text-left relative overflow-hidden">
+                          <div className="absolute top-0 right-0 p-4 opacity-5">
+                             <Sparkles size={60} className="text-brand-600" />
+                          </div>
+                          <p className="text-[10px] font-black text-brand-600 uppercase tracking-widest flex items-center gap-2 mb-3">
+                            <Sparkles size={16} /> Chiến lược đề xuất vận hành:
                           </p>
-                          <p className="text-xs italic text-slate-300 leading-relaxed">&quot;{analytics?.aiAnalysis?.advice}&quot;</p>
+                          <p className="text-[13px] italic text-brand-800 font-bold leading-relaxed">&quot;{analytics?.aiAnalysis?.advice}&quot;</p>
                         </div>
                       </div>
                     </div>
                   </div>
-                  <div className="absolute top-[-100px] right-[-100px] w-80 h-80 bg-brand-600/20 rounded-full blur-[100px]"></div>
                 </div>
 
                 <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">

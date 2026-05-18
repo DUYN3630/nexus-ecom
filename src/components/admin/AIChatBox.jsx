@@ -55,37 +55,37 @@ export const AIChatBox = ({ currentSettings }) => {
   return (
     <div className="flex flex-col h-full bg-white">
       {/* Header */}
-      <div className="p-4 border-b bg-slate-900 flex justify-between items-center text-white">
+      <div className="p-4 border-b bg-brand-600 flex justify-between items-center text-white">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 bg-brand-500 rounded-lg flex items-center justify-center shadow-lg">
-            <Sparkles size={18} className="text-white" />
+          <div className="w-9 h-9 bg-white/20 backdrop-blur-md rounded-xl flex items-center justify-center shadow-lg border border-white/10">
+            <Sparkles size={20} className="text-white" />
           </div>
           <div>
-            <h2 className="text-sm font-black uppercase tracking-tighter italic">AI Playground</h2>
-            <div className="flex items-center gap-1">
-              <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></span>
-              <span className="text-[9px] text-slate-400 font-bold uppercase tracking-widest">Live Testing</span>
+            <h2 className="text-[13px] font-black uppercase tracking-widest italic">AI Playground</h2>
+            <div className="flex items-center gap-1.5">
+              <span className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse shadow-[0_0_8px_rgba(52,211,153,0.5)]"></span>
+              <span className="text-[10px] text-white/70 font-black uppercase tracking-widest">Protocol Active</span>
             </div>
           </div>
         </div>
-        <button onClick={clearChat} className="p-2 hover:bg-white/10 rounded-lg text-slate-400 transition-colors"><Eraser size={18} /></button>
+        <button onClick={clearChat} className="p-2.5 hover:bg-white/10 rounded-xl text-white/80 transition-all active:scale-90"><Eraser size={20} /></button>
       </div>
 
       {/* Messages area */}
-      <div className="flex-1 p-6 overflow-y-auto space-y-4 bg-slate-50 custom-scrollbar">
+      <div className="flex-1 p-6 overflow-y-auto space-y-6 bg-slate-50 custom-scrollbar">
         {messages.map((msg, index) => (
           <div key={index} className={`flex ${msg.isUser ? 'justify-end' : 'justify-start'}`}>
-            <div className={`flex gap-3 max-w-[85%] ${msg.isUser ? 'flex-row-reverse' : 'flex-row'}`}>
-              <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${
-                msg.isUser ? 'bg-slate-900' : 'bg-white border border-slate-200'
+            <div className={`flex gap-4 max-w-[90%] ${msg.isUser ? 'flex-row-reverse' : 'flex-row'}`}>
+              <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 shadow-sm border-2 ${
+                msg.isUser ? 'bg-brand-600 border-brand-500' : 'bg-white border-slate-100'
               }`}>
-                {msg.isUser ? <User size={16} className="text-white" /> : <Bot size={16} className="text-brand-600" />}
+                {msg.isUser ? <User size={18} className="text-white" /> : <Bot size={18} className="text-brand-600" />}
               </div>
-              <div className={`space-y-1 ${msg.isUser ? 'text-right' : 'text-left'}`}>
-                <div className={`p-4 rounded-2xl text-sm font-medium shadow-sm ${
+              <div className={`space-y-1.5 ${msg.isUser ? 'text-right' : 'text-left'}`}>
+                <div className={`p-4 rounded-2xl text-[13px] font-bold shadow-sm leading-relaxed ${
                   msg.isUser 
-                    ? 'bg-slate-900 text-white rounded-tr-none' 
-                    : 'bg-white text-slate-700 border border-slate-100 rounded-tl-none'
+                    ? 'bg-brand-600 text-white rounded-tr-none shadow-brand-100' 
+                    : 'bg-white text-slate-700 border-2 border-slate-100 rounded-tl-none shadow-slate-100'
                 }`}>
                   {msg.text}
                 </div>

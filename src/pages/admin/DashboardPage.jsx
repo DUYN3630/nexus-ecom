@@ -1,12 +1,15 @@
-import { useEffect, useState } from 'react';
-import { ShoppingBag, Users, Star, Box, ArrowRight } from 'lucide-react';
+import { useEffect, useState, useRef } from 'react';
+import { ShoppingBag, Users, Star, Box, ArrowRight, TrendingUp, AlertTriangle, Clock, ChevronRight } from 'lucide-react';
 import { getOverviewStats } from '../../api/analyticsApi';
 import { formatCurrency } from '../../utils/formatCurrency';
 import { Link } from 'react-router-dom';
+import Chart from 'chart.js/auto';
 
 export const DashboardPage = () => {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
+  const chartRef = useRef(null);
+  const chartInstanceRef = useRef(null);
 
   useEffect(() => {
     const fetchQuickStats = async () => {
@@ -22,6 +25,41 @@ export const DashboardPage = () => {
     fetchQuickStats();
   }, []);
 
+  // Biểu đồ doanh thu
+  useEffect(() => {
+    if (stats?.revenueByDay && chartRef.current) {
+        if (chartInstanceRef.current) chartInstanceRef.current.destroy();
+        
+        const ctx = chartRef.current.getContext('2d');
+        chartInstanceRef.current = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: stats.revenueByDay.map(d => d.date),
+                datasets: [{
+                    label: 'Doanh thu (VND)',
+                    data: stats.revenueByDay.map(d => d.amount),
+                    borderColor: '#4f46e5',
+                    backgroundColor: 'rgba(79, 70, 229, 0.1)',
+                    fill: true,
+                    tension: 0.4,
+                    borderWidth: 3,
+                    pointRadius: 0,
+                    pointHoverRadius: 6
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: { display: false },
+                    x: { grid: { display: false }, ticks: { font: { weight: 'bold', size: 10 } } }
+                }
+            }
+        });
+    }
+  }, [stats]);
+
   const userString = localStorage.getItem('user');
   const user = userString ? JSON.parse(userString) : { name: "Quản trị viên" };
 
@@ -36,49 +74,106 @@ export const DashboardPage = () => {
 
   return (
     <div className="animate-in fade-in duration-500 text-left pb-12">
-      <div className="mb-8">
-        <h1 className="text-2xl font-black text-slate-900 tracking-tight">Chào mừng trở lại, {user.name}</h1>
-        <p className="text-sm text-slate-500 font-medium">Đây là tóm tắt tình hình vận hành hệ thống Nexus hôm nay.</p>
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-10">
+        <div>
+            <h1 className="text-3xl font-black text-slate-900 tracking-tight uppercase tracking-tighter">Bảng điều khiển Nexus</h1>
+            <p className="text-[13px] text-slate-500 font-medium mt-1 italic">Chào mừng trở lại, {user.name} | Phiên làm việc: {new Date().toLocaleDateString('vi-VN')}</p>
+        </div>
+        <div className="flex items-center gap-2 px-4 py-2 bg-emerald-50 text-emerald-600 rounded-full border border-emerald-100 animate-pulse">
+            <div className="w-2 h-2 bg-emerald-500 rounded-full"></div>
+            <span className="text-[10px] font-black uppercase tracking-widest">Hệ thống Trực tuyến</span>
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <SummaryCard title="Doanh thu" value={formatCurrency(stats?.totalRevenue)} sub="+8% so với hôm qua" icon={ShoppingBag} color="brand" />
-        <SummaryCard title="Đơn hàng" value={stats?.totalOrders} sub="Đang chờ xử lý: 12" icon={Box} color="amber" />
-        <SummaryCard title="Khách hàng" value={stats?.newUsers} sub="Đang trực tuyến: 45" icon={Users} color="purple" />
-        <SummaryCard title="Đánh giá" value="4.8/5" sub="Phản hồi tích cực: 92%" icon={Star} color="emerald" />
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+        <SummaryCard title="Doanh thu" value={formatCurrency(stats?.totalRevenue || 0)} sub="+12% so với tháng trước" icon={ShoppingBag} color="brand" />
+        <SummaryCard title="Đơn hàng" value={stats?.totalOrders || 0} sub={`${stats?.pendingOrders || 0} đơn chờ xử lý`} icon={Box} color="amber" />
+        <SummaryCard title="Khách hàng" value={stats?.newUsers || 0} sub="+5 tài khoản mới" icon={Users} color="purple" />
+        <SummaryCard title="Tỷ lệ Review" value="4.9/5" sub="Dựa trên 128 đánh giá" icon={Star} color="emerald" />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Recent Orders Preview */}
-        <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
-          <div className="flex justify-between items-center mb-8 border-b border-slate-50 pb-4">
-            <h3 className="text-sm font-black uppercase tracking-widest text-slate-800">Sản phẩm bán chạy</h3>
-            <Link to="/admin/analytics" className="text-[10px] font-black text-brand-600 uppercase tracking-widest flex items-center gap-1.5 hover:underline decoration-2 underline-offset-4">
-                Phân tích sâu <ArrowRight size={14} />
-            </Link>
-          </div>
-          <div className="space-y-4">
-            {stats?.topSellingProducts?.slice(0, 5).map((p, i) => (
-              <div key={i} className="flex items-center justify-between p-3 rounded-xl hover:bg-slate-50 transition-colors border border-transparent hover:border-slate-100">
-                <div className="flex items-center gap-4">
-                    <div className="w-8 h-8 rounded-lg bg-slate-50 border border-slate-200 flex items-center justify-center text-[10px] font-black text-slate-400">{i+1}</div>
-                    <span className="text-sm font-bold text-slate-700 truncate max-w-[200px]">{p.name}</span>
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
+        {/* Doanh thu Card */}
+        <div className="xl:col-span-2 bg-white p-8 rounded-[40px] border-4 border-slate-100 shadow-sm flex flex-col">
+            <div className="flex justify-between items-center mb-10">
+                <div>
+                    <h3 className="text-xs font-black uppercase tracking-[0.2em] text-slate-800 flex items-center gap-2">
+                        <TrendingUp size={16} className="text-brand-600" /> Tăng trưởng doanh thu
+                    </h3>
+                    <p className="text-[10px] text-slate-400 font-bold uppercase mt-1">7 ngày gần nhất</p>
                 </div>
-                <span className="text-sm font-black text-slate-900 tabular-nums">{p.totalSold} <span className="text-[10px] font-bold text-slate-400 uppercase ml-1">đã bán</span></span>
-              </div>
-            ))}
-          </div>
+                <select className="bg-slate-50 border-none text-[10px] font-black uppercase tracking-widest p-2 rounded-xl outline-none">
+                    <option>Theo Tuần</option>
+                    <option>Theo Tháng</option>
+                </select>
+            </div>
+            <div className="flex-1 min-h-[300px]">
+                <canvas ref={chartRef}></canvas>
+            </div>
         </div>
 
-        {/* Quick Actions */}
-        <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
-          <h3 className="text-sm font-black uppercase tracking-widest text-slate-800 mb-8 border-b border-slate-50 pb-4">Lối tắt tác vụ</h3>
-          <div className="grid grid-cols-2 gap-4">
-            <QuickAction title="Quản lý Kho" link="/admin/products" desc="Cập nhật tồn kho & giá" />
-            <QuickAction title="Xử lý Đơn" link="/admin/orders" desc="Phê duyệt hóa đơn mới" />
-            <QuickAction title="Chiến dịch" link="/admin/marketing" desc="Tạo Banner & SEO" />
-            <QuickAction title="Dịch vụ" link="/admin/repairs" desc="Tiếp nhận bảo trì" />
-          </div>
+        {/* Inventory & Actions */}
+        <div className="space-y-8">
+            {/* Low Stock Alert */}
+            <div className="bg-rose-50 p-8 rounded-[40px] border-4 border-rose-100">
+                <h3 className="text-xs font-black uppercase tracking-[0.2em] text-rose-600 mb-6 flex items-center gap-2">
+                    <AlertTriangle size={16} /> Cảnh báo tồn kho
+                </h3>
+                <div className="space-y-3">
+                    {stats?.lowStockProducts?.length > 0 ? stats.lowStockProducts.slice(0, 3).map((p, i) => (
+                        <div key={i} className="bg-white p-4 rounded-2xl flex items-center justify-between border border-rose-100 shadow-sm">
+                            <div className="min-w-0 flex-1">
+                                <p className="text-[11px] font-black text-slate-800 truncate uppercase">{p.name}</p>
+                                <p className="text-[9px] text-rose-500 font-bold uppercase mt-0.5">Còn lại: {p.stock}</p>
+                            </div>
+                            <Link to="/admin/products" className="p-2 hover:bg-rose-50 rounded-lg transition-colors text-rose-600">
+                                <ArrowRight size={14} />
+                            </Link>
+                        </div>
+                    )) : (
+                        <p className="text-[10px] text-rose-400 font-bold uppercase text-center py-4">Hàng hóa đang ổn định</p>
+                    )}
+                </div>
+                <Link to="/admin/products" className="w-full mt-6 py-3 bg-rose-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-rose-700 transition-all">
+                    Nhập hàng ngay
+                </Link>
+            </div>
+
+            {/* Quick Actions */}
+            <div className="bg-slate-900 p-8 rounded-[40px] border-4 border-slate-800 shadow-2xl">
+                <h3 className="text-xs font-black uppercase tracking-[0.2em] text-white/50 mb-8 flex items-center gap-2">
+                    <Clock size={16} /> Lối tắt tác vụ
+                </h3>
+                <div className="grid grid-cols-1 gap-3">
+                    <DashboardAction title="Duyệt đơn hàng" link="/admin/orders" icon={ChevronRight} />
+                    <DashboardAction title="Cấu hình AI Hub" link="/admin/ai-hub" icon={ChevronRight} />
+                    <DashboardAction title="Thêm Sản phẩm" link="/admin/products" icon={Plus} />
+                </div>
+            </div>
+        </div>
+
+        {/* Best Sellers */}
+        <div className="xl:col-span-3 bg-white p-8 rounded-[40px] border-4 border-slate-100 shadow-sm">
+            <div className="flex justify-between items-center mb-8 border-b-2 border-slate-50 pb-6">
+                <h3 className="text-xs font-black uppercase tracking-[0.2em] text-slate-800">Hiệu suất Sản phẩm (Bán chạy)</h3>
+                <Link to="/admin/analytics" className="text-[11px] font-black text-brand-600 uppercase tracking-widest hover:bg-brand-50 px-4 py-2 rounded-xl transition-all">
+                    Xem báo cáo đầy đủ
+                </Link>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                {stats?.topSellingProducts?.slice(0, 4).map((p, i) => (
+                    <div key={i} className="p-6 rounded-3xl bg-slate-50 border-2 border-slate-100 group hover:border-brand-300 hover:bg-white transition-all">
+                        <div className="w-12 h-12 rounded-2xl bg-white border-2 border-slate-100 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                            <span className="text-sm font-black text-brand-600">{i+1}</span>
+                        </div>
+                        <h4 className="text-[11px] font-black text-slate-800 uppercase line-clamp-1 mb-1">{p.name}</h4>
+                        <div className="flex items-center justify-between mt-4">
+                            <span className="text-[9px] font-bold text-slate-400 uppercase">Doanh số</span>
+                            <span className="text-sm font-black text-slate-900">{p.totalSold} <span className="text-[8px] text-slate-400 ml-0.5">đv</span></span>
+                        </div>
+                    </div>
+                ))}
+            </div>
         </div>
       </div>
     </div>
@@ -93,22 +188,27 @@ const SummaryCard = ({ title, value, sub, icon: Icon, color }) => {
         emerald: 'bg-emerald-50 text-emerald-600 border-emerald-100' 
     };
     return (
-        <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-5 group hover:shadow-md transition-all">
-            <div className={`w-14 h-14 rounded-xl flex items-center justify-center border border-transparent group-hover:scale-110 transition-transform shadow-sm ${colors[color]}`}>
-                <Icon className="w-7 h-7" />
+        <div className="bg-white p-8 rounded-[32px] border-4 border-slate-100 shadow-sm flex items-center gap-6 group hover:border-brand-500 transition-all">
+            <div className={`w-16 h-16 rounded-2xl flex items-center justify-center border-2 border-transparent group-hover:rotate-12 transition-all shadow-sm ${colors[color]}`}>
+                <Icon className="w-8 h-8" />
             </div>
             <div className="min-w-0">
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">{title}</p>
-                <h3 className="text-2xl font-black text-slate-800 tabular-nums truncate">{value}</h3>
-                <p className="text-[10px] text-slate-400 mt-0.5 font-bold">{sub}</p>
+                <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-1">{title}</p>
+                <h3 className="text-2xl font-black text-slate-800 tabular-nums tracking-tighter">{value}</h3>
+                <p className="text-[10px] text-slate-400 mt-1 font-bold uppercase tracking-tight">{sub}</p>
             </div>
         </div>
     );
 };
 
-const QuickAction = ({ title, link, desc }) => (
-    <Link to={link} className="p-5 rounded-2xl bg-slate-50 hover:bg-white border border-slate-100 hover:border-brand-500 hover:shadow-lg hover:shadow-brand-50 transition-all group">
-        <h4 className="text-sm font-black text-slate-800 group-hover:text-brand-600 uppercase tracking-tight">{title}</h4>
-        <p className="text-[10px] text-slate-400 font-bold mt-1 uppercase tracking-tighter">{desc}</p>
+const DashboardAction = ({ title, link, icon: Icon }) => (
+    <Link to={link} className="p-5 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 transition-all flex items-center justify-between group">
+        <span className="text-[11px] font-black text-white uppercase tracking-widest">{title}</span>
+        <div className="w-8 h-8 rounded-xl bg-white/10 flex items-center justify-center text-white group-hover:bg-brand-600 transition-colors">
+            <Icon size={14} />
+        </div>
     </Link>
 );
+
+const Plus = ({size}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>;
+

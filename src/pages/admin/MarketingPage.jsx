@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import Chart from 'chart.js/auto';
+import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Plus, Bell, PlayCircle, MousePointer2, Lock, Search, 
   List, LayoutGrid, RotateCcw, Activity, TrendingUp, AlertCircle
@@ -279,7 +280,17 @@ const MarketingPage = () => {
           }
       </div>
 
-      <QuickEditDrawer banner={currentBanner} mode={drawerMode} isOpen={isDrawerOpen} onClose={handleCloseDrawer} onSave={handleSaveBanner} />
+      <AnimatePresence>
+        {isDrawerOpen && (
+          <QuickEditDrawer 
+            banner={currentBanner} 
+            mode={drawerMode} 
+            isOpen={isDrawerOpen} 
+            onClose={handleCloseDrawer} 
+            onSave={handleSaveBanner} 
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 };

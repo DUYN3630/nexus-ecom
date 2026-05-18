@@ -106,18 +106,18 @@ const HeroSlider = () => {
                     </p>
                   </div>
                   
-                  <h1 className={`text-6xl md:text-8xl font-black text-slate-900 tracking-[-0.04em] leading-[0.9] whitespace-pre-line italic transition-all duration-1000 delay-[450ms] ease-out ${idx === current ? 'translate-y-0 opacity-100' : 'translate-y-12 opacity-0'}`}>
+                  <h1 className={`text-[clamp(2.5rem,6vw,5rem)] font-bold text-slate-900 tracking-tight leading-[1.1] whitespace-pre-line transition-all duration-1000 delay-[450ms] ease-out ${idx === current ? 'translate-y-0 opacity-100' : 'translate-y-12 opacity-0'}`}>
                     {slide.content?.title || slide.name}
                   </h1>
                   
-                  <p className={`text-sm md:text-base font-medium text-slate-500 max-w-md leading-relaxed transition-all duration-1000 delay-[600ms] ease-out ${idx === current ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'}`}>
+                  <p className={`text-[clamp(0.875rem,1.5vw,1.125rem)] font-normal text-slate-600 max-w-lg leading-relaxed line-clamp-3 transition-all duration-1000 delay-[600ms] ease-out ${idx === current ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'}`}>
                     {slide.content?.subtitle}
                   </p>
                   
                   <div className={`pt-4 transition-all duration-1000 delay-[750ms] ease-out ${idx === current ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'}`}>
                     <button
                       onClick={() => String(slide._id).startsWith('fallback') ? (window.location.href = '/iphone') : handleBannerClick(slide)}
-                      className="group relative bg-slate-900 text-white px-10 py-5 rounded-2xl text-[11px] font-black uppercase tracking-[0.2em] overflow-hidden transition-all hover:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.3)] active:scale-95"
+                      className="group relative bg-slate-900 text-white px-10 py-5 rounded-2xl text-[11px] font-bold uppercase tracking-[0.2em] overflow-hidden transition-all hover:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.3)] active:scale-95"
                     >
                       <span className="relative z-10 flex items-center gap-3">
                         {slide.content?.ctaText || 'Khám phá ngay'} <ArrowRight size={16} className="transition-transform group-hover:translate-x-1" />

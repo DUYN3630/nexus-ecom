@@ -17,21 +17,23 @@ const PromoBanner = () => {
           >
             <img
               src="/products/macbookprom4.jpg"
-              className="w-full h-full object-cover opacity-60 group-hover:scale-105 transition-transform duration-[2000ms]"
+              className="w-full h-full object-cover opacity-80 group-hover:scale-105 transition-transform duration-[2000ms]"
               alt="MacBook Pro"
-            />            <div className="absolute inset-0 p-12 flex flex-col justify-end">
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
+            <div className="relative h-full p-12 flex flex-col justify-end">
                <div className="max-w-md space-y-4 translate-y-4 group-hover:translate-y-0 transition-transform duration-700">
-                  <span className="text-[10px] font-black uppercase tracking-[0.4em] text-white/60 bg-white/10 backdrop-blur-md px-4 py-2 rounded-full border border-white/10 w-fit">
+                  <span className="text-[10px] font-bold uppercase tracking-[0.4em] text-white/80 bg-white/10 backdrop-blur-md px-4 py-2 rounded-full border border-white/10 w-fit">
                     MacBook Pro M3
                   </span>
-                  <h2 className="text-4xl md:text-6xl font-black text-white uppercase tracking-tighter italic leading-[0.9]">
+                  <h2 className="text-[clamp(2rem,5vw,3.5rem)] font-bold text-white tracking-tight leading-[1.1]">
                     Sức mạnh <br/>thay đổi cuộc chơi
                   </h2>
-                  <p className="text-sm font-medium text-white/70 leading-relaxed">
+                  <p className="text-[clamp(0.875rem,1.2vw,1rem)] font-normal text-white/80 leading-relaxed line-clamp-2">
                     Xử lý mọi tác vụ đồ họa nặng nề nhất với chip M3 Pro mới nhất.
                   </p>
                   <div className="pt-4 flex items-center gap-4">
-                    <button className="px-8 py-4 bg-white text-black text-[11px] font-black uppercase tracking-[0.2em] rounded-2xl hover:bg-indigo-600 hover:text-white transition-all">
+                    <button className="px-8 py-4 bg-white text-black text-[11px] font-bold uppercase tracking-[0.2em] rounded-2xl hover:bg-indigo-600 hover:text-white transition-all shadow-lg">
                       Mua ngay
                     </button>
                     <span className="text-white text-[11px] font-bold uppercase tracking-widest flex items-center gap-2 group-hover:underline underline-offset-4">
@@ -55,10 +57,11 @@ const PromoBanner = () => {
                 className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-[1500ms]" 
                 alt="iPad Air" 
               />
-              <div className="absolute inset-0 p-10 flex flex-col justify-end bg-gradient-to-t from-black/20 to-transparent">
+              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
+              <div className="relative h-full p-10 flex flex-col justify-end">
                 <div className="space-y-2">
-                  <h3 className="text-2xl font-black text-white uppercase tracking-tighter italic drop-shadow-md">iPad Air</h3>
-                  <p className="text-[11px] font-bold text-white/90 uppercase tracking-widest">Sáng tạo không giới hạn</p>
+                  <h3 className="text-2xl font-bold text-white tracking-tight">iPad Air</h3>
+                  <p className="text-[11px] font-semibold text-white/90 uppercase tracking-widest">Sáng tạo không giới hạn</p>
                 </div>
               </div>
             </div>
@@ -73,15 +76,16 @@ const PromoBanner = () => {
                 className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-[1500ms]" 
                 alt="Apple Watch" 
               />
-              <div className="absolute inset-0 p-10 flex flex-col justify-between">
+              <div className="absolute inset-0 bg-gradient-to-t from-white/20 via-transparent to-transparent"></div>
+              <div className="relative h-full p-10 flex flex-col justify-between">
                 <div className="flex justify-end">
-                   <div className="w-10 h-10 bg-white/80 backdrop-blur-md rounded-full flex items-center justify-center text-slate-900 border border-white">
+                   <div className="w-10 h-10 bg-white/80 backdrop-blur-md rounded-full flex items-center justify-center text-slate-900 border border-white shadow-sm">
                       <ArrowUpRight size={20} />
                    </div>
                 </div>
                 <div className="space-y-2">
-                  <h3 className="text-2xl font-black text-slate-900 uppercase tracking-tighter italic">Watch S9</h3>
-                  <p className="text-[11px] font-bold text-slate-500 uppercase tracking-widest">Thông minh hơn, sáng hơn</p>
+                  <h3 className="text-2xl font-bold text-slate-900 tracking-tight">Watch S9</h3>
+                  <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-widest">Thông minh hơn, sáng hơn</p>
                 </div>
               </div>
             </div>

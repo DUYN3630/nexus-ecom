@@ -43,16 +43,16 @@ const ReplyReviewModal = ({ review, onClose, onSubmit }) => {
             <button 
               type="button" 
               onClick={onClose}
-              className="px-6 py-3 rounded-xl font-bold text-xs uppercase tracking-widest text-slate-500 hover:bg-slate-50 transition-colors"
+              className="px-6 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest text-slate-500 hover:bg-slate-100 transition-all active:scale-95"
             >
               Hủy bỏ
             </button>
             <button 
               type="submit" 
               disabled={isSubmitting || !text.trim()}
-              className="px-6 py-3 bg-black text-white rounded-xl font-black text-xs uppercase tracking-widest hover:bg-indigo-600 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-8 py-3 bg-brand-600 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-brand-700 shadow-xl shadow-brand-200 transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed active:scale-95"
             >
-              {isSubmitting ? 'Đang gửi...' : <><Send size={14} /> Gửi phản hồi</>}
+              {isSubmitting ? 'Đang truyền tải...' : <><Send size={16} /> Gửi phản hồi</>}
             </button>
           </div>
         </form>

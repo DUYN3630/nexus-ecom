@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
-import { X, Upload, Link as LinkIcon, Calendar, Type, Image as ImageIcon, ChevronRight, Save } from 'lucide-react';
+import { createPortal } from 'react-dom';
+import { motion } from 'framer-motion';
+import { X, Upload, Link as LinkIcon, Calendar, Type, Image as ImageIcon, Save } from 'lucide-react';
 import productApi from '../../../api/productApi';
 import categoryApi from '../../../api/categoryApi';
 
@@ -81,17 +83,32 @@ const QuickEditDrawer = ({ banner, mode, isOpen, onClose, onSave }) => {
     onClose();
   };
 
-  return (
-    <>
-      <div className={`fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[60] transition-opacity ${isOpen ? 'opacity-100 visible' : 'opacity-0 invisible'}`} onClick={onClose}></div>
-      <div className={`fixed inset-y-0 right-0 w-full max-w-xl bg-white shadow-2xl z-[70] transform transition-transform duration-500 ${isOpen ? 'translate-x-0' : 'translate-x-full'} flex flex-col`}>
-        {/* Header */}
-        <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+  const drawerContent = (
+    <div className="fixed inset-0 z-[9999] flex justify-end text-left">
+      <motion.div 
+        initial={{ opacity: 0 }} 
+        animate={{ opacity: 1 }} 
+        exit={{ opacity: 0 }} 
+        className="absolute inset-0 bg-slate-900/60 backdrop-blur-md" 
+        onClick={onClose}
+      ></motion.div>
+      <motion.div 
+        initial={{ x: '100%' }}
+        animate={{ x: 0 }}
+        exit={{ x: '100%' }}
+        transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+        className="relative h-full w-full sm:w-[600px] bg-white shadow-2xl flex flex-col z-[10000]"
+      >
+        <div className="p-6 border-b-2 border-slate-100 flex justify-between items-center bg-white sticky top-0 z-10">
           <div>
-            <h3 className="text-xl font-black text-slate-800 uppercase tracking-tight">{mode === 'create' ? 'Khởi tạo Banner' : 'Cập nhật Banner'}</h3>
-            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">Cấu hình hiển thị & SEO Marketing</p>
+            <h2 className="text-2xl font-black text-slate-800 tracking-tight uppercase tracking-tighter">
+                {mode === 'create' ? 'Khởi tạo Banner' : 'Cập nhật Banner'}
+            </h2>
+            <p className="text-[10px] text-slate-400 font-bold uppercase mt-1 tracking-widest flex items-center gap-2">
+              <Calendar size={12}/> Vận hành chiến dịch Marketing
+            </p>
           </div>
-          <button onClick={onClose} className="p-2 hover:bg-white hover:shadow-sm rounded-xl transition-all text-slate-400 hover:text-slate-900 border border-transparent hover:border-slate-100"><X size={24} /></button>
+          <button onClick={onClose} className="p-3 hover:bg-slate-100 rounded-2xl text-slate-400 transition-all active:scale-90"><X size={24} /></button>
         </div>
 
         {/* Tabs */}
@@ -265,15 +282,19 @@ const QuickEditDrawer = ({ banner, mode, isOpen, onClose, onSave }) => {
         </div>
 
         {/* Footer */}
-        <div className="p-6 border-t border-slate-100 bg-white flex gap-4 shadow-[0_-4px_20px_rgba(0,0,0,0.02)]">
-          <button onClick={onClose} className="flex-1 py-3.5 rounded-xl font-bold text-xs uppercase tracking-widest text-slate-500 hover:bg-slate-50 transition-all border border-transparent hover:border-slate-200 active:scale-95">Hủy bỏ</button>
-          <button onClick={handleSubmit} className="flex-[2] py-3.5 rounded-xl bg-brand-600 text-white font-bold text-xs uppercase tracking-widest shadow-lg shadow-brand-200 hover:bg-brand-700 active:scale-[0.98] transition-all flex items-center justify-center gap-3">
-            <Save size={18} /> Xác nhận & Lưu
-          </button>
+        <div className="p-6 border-t-2 bg-slate-50/80 backdrop-blur-xl sticky bottom-0 flex justify-center z-20 shadow-[0_-10px_40px_rgba(0,0,0,0.05)]">
+          <div className="w-full flex gap-4">
+            <button onClick={onClose} className="flex-1 py-4 bg-white border-2 border-slate-200 text-slate-600 font-black text-[10px] uppercase tracking-widest rounded-2xl hover:bg-slate-50 transition-all active:scale-95">Hủy bỏ</button>
+            <button onClick={handleSubmit} className="flex-[2] py-4 bg-brand-600 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-2xl shadow-brand-500/20 hover:bg-brand-700 transition-all flex items-center justify-center gap-3 active:scale-95">
+              <Save size={18} /> Xác nhận & Lưu
+            </button>
+          </div>
         </div>
-      </div>
-    </>
+      </motion.div>
+    </div>
   );
+
+  return createPortal(drawerContent, document.body);
 };
 
 export default QuickEditDrawer;

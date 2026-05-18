@@ -96,7 +96,7 @@ const getProducts = async (req, res) => {
 const createProduct = async (req, res) => {
     try {
         // Data is now sanitized and type-converted by express-validator middleware
-        const { name, sku, category, price, discountPrice, stock, description, specifications, status, isFeatured } = req.body;
+        const { name, sku, category, price, discountPrice, stock, description, specifications, status, isFeatured, keyBenefit, featuredReason } = req.body;
 
         if (!req.files || req.files.length === 0) {
             return res.status(400).json({ message: 'Bạn phải tải lên ít nhất một hình ảnh.' });
@@ -116,10 +116,13 @@ const createProduct = async (req, res) => {
             stock,
             description,
             images,
+            mainImage: req.body.mainImage || images[0] || null,
             // JSON parsing for specifications is still needed here as it's complex data
             specifications: typeof specifications === 'string' ? JSON.parse(specifications || '{}') : specifications,
             status,
-            isFeatured, // This is now a clean boolean from the middleware
+            isFeatured: isFeatured === 'true' || isFeatured === true,
+            keyBenefit,
+            featuredReason
         }).save();
 
         res.status(201).json(createdProduct);
@@ -136,7 +139,7 @@ const createProduct = async (req, res) => {
 const updateProduct = async (req, res) => {
     try {
         const { id: productId } = req.params;
-        let { name, sku, category, price, discountPrice, stock, description, specifications, status, isFeatured } = req.body;
+        let { name, sku, category, price, discountPrice, stock, description, specifications, status, isFeatured, keyBenefit, featuredReason } = req.body;
 
         const product = await Product.findById(productId);
 
@@ -186,7 +189,10 @@ const updateProduct = async (req, res) => {
         }
         product.status = status;
         product.isFeatured = isFeatured === 'true' || isFeatured === true; // Handle boolean from string
+        product.keyBenefit = keyBenefit;
+        product.featuredReason = featuredReason;
         product.images = allImages;
+        product.mainImage = req.body.mainImage || (allImages.length > 0 ? allImages[0] : null);
 
         const updatedProduct = await product.save();
         res.status(200).json(updatedProduct);
