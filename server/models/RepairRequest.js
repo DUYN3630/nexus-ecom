@@ -18,6 +18,7 @@ const repairRequestSchema = new mongoose.Schema({
     enum: ['Pending', 'Confirmed', 'AwaitingApproval', 'Approved', 'Repairing', 'Testing', 'Done', 'Returned'],
     default: 'Pending'
   },
+  serviceFee: { type: Number, default: 0 },
   estimatedCost: { type: Number, default: 0 },
   expertResponse: { type: String, default: "" },
   repairNotes: { type: String, default: "" },
@@ -31,6 +32,7 @@ const repairRequestSchema = new mongoose.Schema({
   }],
   startTime: { type: Date }, // Thời gian bắt đầu thực tế
   endTime: { type: Date },    // Thời gian hoàn thành dự kiến/thực tế
+  receptionTime: { type: Date, default: Date.now }, // Thời gian tiếp nhận đơn
   
   // Payment fields
   paymentStatus: { type: String, enum: ['Pending', 'Paid', 'Failed'], default: 'Pending' },

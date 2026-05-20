@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Search, ShoppingBag, Scale, ArrowRight, ChevronRight, Plus, Cpu } from 'lucide-react';
+import { Search, ShoppingBag, Scale, ArrowRight, ChevronRight, Plus, Cpu, MessageSquare, Layers, Zap } from 'lucide-react';
 import axiosClient from '../../api/axiosClient';
 import { formatCurrency } from '../../utils/formatCurrency';
 import { Link, useNavigate } from 'react-router-dom';
@@ -284,51 +284,73 @@ const StorePage = () => {
         )}
       </main>
 
-      {/* MATERIAL STORY SECTION */}
-      <section className="py-32 bg-slate-900 text-white overflow-hidden">
-        <div className="max-w-6xl mx-auto px-6 md:px-10 grid grid-cols-1 lg:grid-cols-2 gap-20 items-center">
-          <div className="space-y-6">
-            <span className="text-xs uppercase tracking-widest text-slate-500 font-bold">Materials</span>
-            <h2 className="text-5xl font-black tracking-tighter leading-tight">
-              The Touch of<br />Titanium.
-            </h2>
-            <p className="text-slate-400 text-sm leading-relaxed max-w-xs">
-              Sự tinh tế không nằm ở vẻ hào nhoáng, mà ở cảm giác chắc chắn và nhẹ bẫng của Titanium cấp độ 5.
-            </p>
-            <div className="flex gap-12 border-t border-slate-800 pt-6">
-              <div>
-                <p className="text-xl font-black">0.01mm</p>
-                <p className="text-xs text-slate-600 uppercase tracking-widest mt-1">Precision</p>
+      {/* ELITE SERVICES SECTION */}
+      <section className="py-24 bg-white border-t border-slate-100">
+        <div className="max-w-7xl mx-auto px-6 md:px-10">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="p-10 bg-slate-50 rounded-[32px] border border-slate-100 group hover:bg-slate-900 transition-all duration-500">
+              <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center mb-8 shadow-sm group-hover:bg-brand-600 group-hover:text-white transition-colors">
+                <MessageSquare size={24} strokeWidth={1.5} />
               </div>
-              <div>
-                <p className="text-xl font-black">High-Grade</p>
-                <p className="text-xs text-slate-600 uppercase tracking-widest mt-1">Material</p>
-              </div>
+              <h3 className="text-xl font-bold text-slate-900 mb-3 group-hover:text-white transition-colors">Trợ giúp chuyên gia</h3>
+              <p className="text-sm text-slate-500 mb-8 leading-relaxed group-hover:text-slate-400 transition-colors">Đội ngũ kỹ thuật viên am hiểu sản phẩm luôn sẵn sàng tư vấn trực tiếp 24/7.</p>
+              <Link to="/support" className="inline-flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.2em] text-brand-600 group-hover:text-white">
+                Bắt đầu trò chuyện <ArrowRight size={14} />
+              </Link>
             </div>
-          </div>
-          <div className="relative aspect-square rounded-3xl overflow-hidden grayscale contrast-125">
-            <img
-              src="https://images.unsplash.com/photo-1695663135590-4e8c179836e5?auto=format&fit=crop&q=80&w=1200"
-              className="w-full h-full object-cover scale-110 hover:scale-100 transition-transform duration-[3000ms]"
-              alt=""
-            />
+
+            <div className="p-10 bg-slate-50 rounded-[32px] border border-slate-100 group hover:bg-slate-900 transition-all duration-500">
+              <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center mb-8 shadow-sm group-hover:bg-brand-600 group-hover:text-white transition-colors">
+                <Layers size={24} strokeWidth={1.5} />
+              </div>
+              <h3 className="text-xl font-bold text-slate-900 mb-3 group-hover:text-white transition-colors">So sánh thiết bị</h3>
+              <p className="text-sm text-slate-500 mb-8 leading-relaxed group-hover:text-slate-400 transition-colors">Xem sự khác biệt về cấu hình và tính năng để đưa ra quyết định chính xác nhất.</p>
+              <Link to="/compare" className="inline-flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.2em] text-brand-600 group-hover:text-white">
+                So sánh ngay <ArrowRight size={14} />
+              </Link>
+            </div>
+
+            <div className="p-10 bg-slate-50 rounded-[32px] border border-slate-100 group hover:bg-slate-900 transition-all duration-500">
+              <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center mb-8 shadow-sm group-hover:bg-brand-600 group-hover:text-white transition-colors">
+                <Zap size={24} strokeWidth={1.5} />
+              </div>
+              <h3 className="text-xl font-bold text-slate-900 mb-3 group-hover:text-white transition-colors">Trade-in lên đời</h3>
+              <p className="text-sm text-slate-500 mb-8 leading-relaxed group-hover:text-slate-400 transition-colors">Thu cũ đổi mới với mức giá hỗ trợ tốt nhất thị trường, thủ tục trong 15 phút.</p>
+              <Link to="/store" className="inline-flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.2em] text-brand-600 group-hover:text-white">
+                Định giá máy cũ <ArrowRight size={14} />
+              </Link>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* INSIDER SECTION */}
-      <section className="py-20 bg-white text-center">
-        <div className="max-w-lg mx-auto px-6 space-y-6">
-          <h2 className="text-3xl font-black tracking-tighter text-slate-900">Join the Insider.</h2>
-          <div className="space-y-4">
-            <input
-              type="email"
-              placeholder="Email của bạn"
-              className="w-full border-b border-slate-200 py-3 outline-none text-center text-slate-700 placeholder:text-slate-300 focus:border-slate-900 transition-colors"
-            />
-            <button className="text-xs uppercase tracking-[0.3em] font-black border border-slate-900 px-10 py-3 rounded-full hover:bg-slate-900 hover:text-white transition-all duration-300">
-              Đăng ký
-            </button>
+      {/* NEXUS ELITE NEWSLETTER */}
+      <section className="pb-32 bg-white">
+        <div className="max-w-7xl mx-auto px-6 md:px-10">
+          <div className="relative bg-slate-50 border border-slate-100 rounded-[48px] p-12 md:p-24 overflow-hidden text-center shadow-sm">
+            <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-brand-600/5 rounded-full blur-[120px] -translate-y-1/2 translate-x-1/2"></div>
+            <div className="absolute bottom-0 left-0 w-[300px] h-[300px] bg-indigo-600/5 rounded-full blur-[100px] translate-y-1/2 -translate-x-1/2"></div>
+            
+            <div className="relative z-10 space-y-10">
+              <div className="space-y-4">
+                <span className="text-[10px] font-bold uppercase tracking-[0.4em] text-brand-600">Nexus Community</span>
+                <h2 className="text-4xl md:text-6xl font-bold text-slate-900 tracking-tighter leading-tight">Gia nhập cộng đồng <br/> Nexus Elite.</h2>
+                <p className="text-slate-500 text-sm md:text-base max-w-lg mx-auto leading-relaxed font-medium">
+                  Nhận đặc quyền sớm nhất về các dòng sản phẩm Apple mới và các ưu đãi kỹ thuật giới hạn hàng tháng.
+                </p>
+              </div>
+              
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-4 max-w-md mx-auto pt-4">
+                <input
+                  type="email"
+                  placeholder="Địa chỉ Email của bạn"
+                  className="w-full h-14 px-8 bg-white border border-slate-200 rounded-2xl text-slate-900 placeholder:text-slate-400 focus:border-brand-500 focus:ring-4 focus:ring-brand-500/5 outline-none transition-all shadow-sm"
+                />
+                <button className="w-full sm:w-auto h-14 px-10 bg-slate-900 text-white text-[10px] font-bold uppercase tracking-widest rounded-2xl hover:bg-black transition-all shadow-xl shadow-slate-900/10 active:scale-95">
+                  Đăng ký
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       </section>

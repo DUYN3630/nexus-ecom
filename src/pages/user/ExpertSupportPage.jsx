@@ -4,7 +4,7 @@ import {
   Send, ShieldCheck, Cpu, Smartphone, Monitor, Watch, 
   MessageSquare, Star, MapPin, CheckCircle, AlertTriangle, 
   Search, ChevronRight, HelpCircle, Info, History, Terminal,
-  User, Loader2, StarHalf, Camera, X
+  User, Loader2, StarHalf, Camera, X, AlertCircle, DollarSign
 } from 'lucide-react';
 import expertApi from '../../api/expertApi';
 import geminiApi from '../../api/geminiApi';
@@ -23,6 +23,7 @@ const ExpertSupportPage = () => {
   const [repairData, setRepairData] = useState(null);
   const [trackingPhone, setTrackingPhone] = useState('');
   const [hasCreatedTicket, setHasCreatedTicket] = useState(false);
+  const [isCreatingTicket, setIsCreatingTicket] = useState(false);
 
   // Modals state
   const [activeModal, setActiveModal] = useState(null); // 'warranty' | 'repair' | 'appointment' | null
@@ -111,18 +112,31 @@ const ExpertSupportPage = () => {
   // Real-time Tracking
   useEffect(() => {
     let interval;
-    if (trackingPhone) {
+    const cleanPhone = trackingPhone?.trim();
+    
+    if (cleanPhone && cleanPhone.length >= 10) {
       const fetchStatus = async () => {
         try {
-          const { data } = await supportApi.getRepairByPhone(trackingPhone);
+          console.log('Attempting to track phone:', cleanPhone);
+          const response = await supportApi.getRepairByPhone(cleanPhone);
+          // supportApi uses axiosClient which returns data directly due to interceptors
+          // but sometimes we might get the full response depending on how it's handled
+          const data = response?.data !== undefined ? response.data : response;
+          console.log('Tracking response:', data);
           setRepairData(data);
         } catch (error) {
-          console.error("Tracking Error:", error);
+          console.error("Tracking Error Detail:", {
+            status: error.response?.status,
+            url: error.config?.url,
+            message: error.message
+          });
         }
       };
       
       fetchStatus();
       interval = setInterval(fetchStatus, 30000); // Poll every 30s
+    } else {
+      setRepairData(null);
     }
     return () => clearInterval(interval);
   }, [trackingPhone]);
@@ -264,15 +278,16 @@ const ExpertSupportPage = () => {
 
     // Detect Phone Number (10 digits)
     const phoneMatch = message.match(/\b\d{10}\b/);
-    if (phoneMatch && !hasCreatedTicket) {
+    if (phoneMatch && !hasCreatedTicket && !isCreatingTicket) {
       const detectedPhone = phoneMatch[0];
       setTrackingPhone(detectedPhone);
       localStorage.setItem('nexus_support_phone', detectedPhone);
       
       // Auto Ticket Creation
+      setIsCreatingTicket(true);
       try {
         const user = JSON.parse(localStorage.getItem('user'));
-        const ticketRes = await ticketApi.create({
+        await ticketApi.create({
           phoneNumber: detectedPhone,
           deviceType: repairForm.deviceType,
           subject: `Hỗ trợ kỹ thuật - ${detectedPhone}`,
@@ -284,6 +299,8 @@ const ExpertSupportPage = () => {
         addToast('Hệ thống đã tự động tạo phiếu hỗ trợ cho bạn', 'success');
       } catch (err) {
         console.error("Auto Ticket Error:", err);
+      } finally {
+        setIsCreatingTicket(false);
       }
     }
 
@@ -326,30 +343,58 @@ const ExpertSupportPage = () => {
   };
 
   const RepairTrackingWidget = () => {
+    if (trackingPhone && !repairData && !isAiTyping) {
+       return (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mb-8 p-4 bg-amber-50 border border-amber-200 rounded-2xl flex items-center gap-3 text-amber-700 text-xs font-bold">
+             <AlertTriangle size={16} />
+             Hệ thống không tìm thấy đơn hàng nào khớp với SĐT: {trackingPhone}. Vui lòng kiểm tra lại.
+          </motion.div>
+       );
+    }
+
     if (!repairData) return null;
 
-    const steps = ['Confirmed', 'Repairing', 'Testing', 'Done', 'Returned'];
+    const steps = [
+      { key: 'Confirmed', label: 'Xác nhận' },
+      { key: 'Repairing', label: 'Sửa chữa' },
+      { key: 'Testing', label: 'Kiểm tra' },
+      { key: 'Done', label: 'Hoàn tất' },
+      { key: 'Returned', label: 'Trả máy' }
+    ];
+
+    const getStatusIndex = (status) => {
+      return steps.findIndex(s => s.key === status);
+    };
     
     const getStatusText = (status) => {
       const map = {
-        'Pending': 'Đang chờ xác nhận...',
+        'Pending': 'Đang chờ tiếp nhận...',
         'Confirmed': 'Đã xác nhận - Đang chờ xử lý',
         'Repairing': 'Đang trong quá trình sửa chữa',
         'Testing': 'Đang kiểm tra chất lượng cuối cùng',
         'Done': 'Sửa chữa hoàn tất - Chờ bàn giao',
-        'Returned': 'Đã bàn giao cho khách hàng'
+        'Returned': 'Đã bàn giao cho khách hàng',
+        'AwaitingApproval': 'Chờ khách duyệt báo giá'
       };
       return map[status] || status;
+    };
+
+    const handleApproveRepair = async () => {
+      // ... (rest of methods)
+    };
+
+    const handlePayment = async () => {
+      // ... (rest of methods)
     };
 
     return (
       <motion.div 
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="mb-8 p-6 bg-slate-900 rounded-3xl border border-slate-800 shadow-2xl overflow-hidden relative"
+        className="mb-8 p-6 bg-white rounded-3xl border border-slate-200 shadow-xl overflow-hidden relative"
       >
-        <div className="absolute top-0 right-0 p-8 opacity-10">
-          <ShieldCheck size={120} className="text-white" />
+        <div className="absolute top-0 right-0 p-8 opacity-5">
+          <ShieldCheck size={120} className="text-slate-900" />
         </div>
         
         <div className="relative z-10 space-y-6">
@@ -357,34 +402,35 @@ const ExpertSupportPage = () => {
             <div>
               <div className="flex items-center gap-2 mb-1">
                 <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
-                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-500">Live Repair Tracking</span>
+                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-600">Live Repair Tracking</span>
               </div>
-              <h4 className="text-white text-xl font-black uppercase tracking-tight">{repairData.ticketNumber}</h4>
-              <p className="text-slate-400 text-xs font-bold uppercase mt-1 tracking-wider">{getStatusText(repairData.status)}</p>
+              <h4 className="text-slate-900 text-xl font-black uppercase tracking-tight">{repairData.ticketNumber}</h4>
+              <p className="text-slate-500 text-xs font-bold uppercase mt-1 tracking-wider">{getStatusText(repairData.status)}</p>
             </div>
 
-            <div className="flex-1 max-w-md bg-slate-800/50 p-6 rounded-2xl border border-slate-700/50">
+            <div className="flex-1 max-w-md bg-slate-50 p-6 rounded-2xl border border-slate-100">
               <div className="flex items-center justify-between mb-2">
                 {steps.map((step, idx) => {
-                  const isCompleted = steps.indexOf(repairData.status) >= idx;
-                  const isCurrent = repairData.status === step;
+                  const currentIdx = getStatusIndex(repairData.status);
+                  const isCompleted = currentIdx >= idx;
+                  const isCurrent = repairData.status === step.key;
                   
                   return (
-                    <div key={step} className="flex flex-col items-center gap-3 relative flex-1">
+                    <div key={step.key} className="flex flex-col items-center gap-3 relative flex-1">
                       {idx < steps.length - 1 && (
                         <div className={`absolute top-2.5 left-1/2 w-full h-[2px] z-0 ${
-                          steps.indexOf(repairData.status) > idx ? 'bg-emerald-500' : 'bg-slate-700'
+                          currentIdx > idx ? 'bg-emerald-500' : 'bg-slate-200'
                         }`} />
                       )}
                       
                       <div className={`w-5 h-5 rounded-full z-10 flex items-center justify-center transition-all duration-500 ${
-                        isCompleted ? 'bg-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.4)]' : 'bg-slate-700'
+                        isCompleted ? 'bg-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.2)]' : 'bg-slate-200'
                       }`}>
                         {isCompleted && <CheckCircle size={12} className="text-white" />}
                       </div>
                       <span className={`text-[7px] font-black uppercase tracking-tighter text-center w-full px-1 ${
-                        isCurrent ? 'text-white' : 'text-slate-500'
-                      }`}>{step}</span>
+                        isCurrent ? 'text-slate-900' : 'text-slate-400'
+                      }`}>{step.label}</span>
                     </div>
                   );
                 })}
@@ -392,15 +438,39 @@ const ExpertSupportPage = () => {
             </div>
           </div>
 
+          {/* Action Buttons for Customer */}
+          <div className="flex flex-wrap gap-4 pt-4 border-t border-slate-100">
+             {repairData.status === 'AwaitingApproval' && (
+               <button 
+                 onClick={handleApproveRepair}
+                 className="px-6 py-3 bg-brand-500 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-brand-600 transition-all flex items-center gap-2 shadow-lg shadow-brand-500/10"
+               >
+                 <CheckCircle size={14} /> Xác nhận báo giá & Sửa ngay
+               </button>
+             )}
+             {repairData.status === 'Done' && (
+               <button 
+                 onClick={handlePayment}
+                 className="px-6 py-3 bg-blue-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-blue-700 transition-all flex items-center gap-2 shadow-lg shadow-blue-500/10"
+               >
+                 <DollarSign size={14} /> Thanh toán chi phí sửa chữa
+               </button>
+             )}
+             <div className="bg-slate-50 px-4 py-3 rounded-xl border border-slate-100">
+                <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest block mb-1">Tổng chi phí dự kiến</span>
+                <span className="text-sm font-black text-brand-600">{(repairData.estimatedCost || 0).toLocaleString()}đ</span>
+             </div>
+          </div>
+
           {/* Progress Images */}
           {repairData.progressImages && repairData.progressImages.length > 0 && (
-            <div className="pt-4 border-t border-slate-800">
-               <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-4 flex items-center gap-2">
+            <div className="pt-4 border-t border-slate-100">
+               <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-4 flex items-center gap-2">
                  <Terminal size={12} /> Nhật ký hình ảnh từ Chuyên gia
                </p>
                <div className="flex gap-4 overflow-x-auto pb-2 custom-scrollbar">
                   {repairData.progressImages.map((img, idx) => (
-                    <div key={idx} className="w-32 h-32 rounded-xl overflow-hidden border border-slate-800 shrink-0 group relative">
+                    <div key={idx} className="w-32 h-32 rounded-xl overflow-hidden border border-slate-200 shrink-0 group relative">
                        <img src={img.url} alt="Progress" className="w-full h-full object-cover transition-transform group-hover:scale-110" />
                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-2">
                           <p className="text-[8px] text-white font-bold truncate">{img.caption}</p>
@@ -412,9 +482,9 @@ const ExpertSupportPage = () => {
           )}
 
           {repairData.expertResponse && (
-            <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl">
-               <p className="text-[10px] font-black uppercase tracking-widest text-emerald-500 mb-2">Lời nhắn từ Chuyên gia</p>
-               <p className="text-white text-xs font-medium italic leading-relaxed">&quot;{repairData.expertResponse}&quot;</p>
+            <div className="p-4 bg-emerald-50 border border-emerald-100 rounded-2xl">
+               <p className="text-[10px] font-black uppercase tracking-widest text-emerald-600 mb-2">Lời nhắn từ Chuyên gia</p>
+               <p className="text-slate-700 text-xs font-medium italic leading-relaxed">&quot;{repairData.expertResponse}&quot;</p>
             </div>
           )}
         </div>
@@ -592,7 +662,36 @@ const ExpertSupportPage = () => {
         </div>
 
         {/* Right Column: Expert Intelligence */}
-        <div className="w-full md:w-[450px] bg-slate-50/50 overflow-y-auto custom-scrollbar flex flex-col p-8 space-y-8">
+        <div className="w-full md:w-[450px] bg-slate-50/50 overflow-y-auto custom-scrollbar flex flex-col p-8 space-y-8 text-left">
+          {/* Tracking Search Area */}
+          <div>
+            <h3 className="text-[11px] font-black uppercase tracking-[0.3em] text-slate-400 mb-6">Theo dõi đơn hàng</h3>
+            <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm space-y-3">
+               <p className="text-[10px] font-bold text-slate-500 uppercase tracking-tight leading-relaxed">Nhập số điện thoại để xem tiến độ sửa chữa thời gian thực</p>
+               <div className="flex gap-2">
+                  <input 
+                    type="text" 
+                    placeholder="09xx..." 
+                    value={trackingPhone}
+                    onChange={(e) => setTrackingPhone(e.target.value)}
+                    className="flex-1 px-4 py-2 bg-slate-50 border border-slate-100 rounded-lg text-xs font-bold outline-none focus:border-slate-900 transition-all"
+                  />
+                  <button 
+                    onClick={() => addToast('Đang đồng bộ dữ liệu...', 'info')}
+                    className="p-2 bg-slate-900 text-white rounded-lg hover:bg-black transition-all"
+                  >
+                    <Search size={16} />
+                  </button>
+               </div>
+               {repairData && (
+                 <div className="pt-2 flex items-center gap-2 text-emerald-600">
+                    <CheckCircle size={12} />
+                    <span className="text-[9px] font-black uppercase">Đang kết nối: {repairData.ticketNumber}</span>
+                 </div>
+               )}
+            </div>
+          </div>
+
           <div>
             <h3 className="text-[11px] font-black uppercase tracking-[0.3em] text-slate-400 mb-6">Kịch bản nhanh</h3>
             <div className="grid grid-cols-2 gap-3">

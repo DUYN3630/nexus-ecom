@@ -21,7 +21,8 @@ const repairController = {
         description,
         urgency: urgency || 'Normal',
         expert: cleanExpertId,
-        status: 'Pending'
+        status: 'Pending',
+        receptionTime: new Date()
       });
 
       const savedRequest = await newRequest.save();
@@ -114,6 +115,7 @@ getAll: async (req, res) => {
       })
       .populate('user', 'name email phone')
       .populate('expert', 'name role')
+      .populate('usedParts.part') // Thêm populate ở đây
       .sort({ createdAt: -1 });
 
       console.log(`--- [DEBUG] Found ${requests.length} repairs for ID(s): ${queryIds.join(', ')} ---`);
@@ -127,24 +129,42 @@ getAll: async (req, res) => {
   updateStatus: async (req, res) => {
     try {
       const { id } = req.params;
-      const { status, repairNotes, expertResponse, estimatedCost, progressImages, startTime, endTime, usedParts } = req.body;
+      const { status, repairNotes, expertResponse, estimatedCost, serviceFee, progressImages, startTime, endTime, usedParts, customerPhone } = req.body;
       
-      const updateData = { status, repairNotes, expertResponse, estimatedCost };
+      const updateData = { status, repairNotes, expertResponse, estimatedCost, serviceFee };
       
       if (progressImages) updateData.progressImages = progressImages;
       if (startTime) updateData.startTime = startTime;
       if (endTime) updateData.endTime = endTime;
 
+      // Cập nhật SĐT vào guestInfo nếu có (để phục vụ tra cứu sau này)
+      if (customerPhone) {
+        updateData['guestInfo.phone'] = customerPhone;
+      }
+
       const Part = require('../models/Part');
       const notificationService = require('../services/notificationService');
 
+      // --- LOGIC TRỪ KHO CHÍNH XÁC ---
       if (usedParts && Array.isArray(usedParts)) {
-        updateData.usedParts = usedParts;
+        const existingRepair = await RepairRequest.findById(id);
         
-        // Deduct inventory
-        for (const item of usedParts) {
-          await Part.findByIdAndUpdate(item.part, { $inc: { stock: -item.quantity } });
+        // 1. Hoàn lại kho cho các linh kiện cũ (nếu có) để tránh trừ trùng lặp
+        if (existingRepair && existingRepair.usedParts && existingRepair.usedParts.length > 0) {
+          for (const oldItem of existingRepair.usedParts) {
+            if (oldItem.part) {
+              await Part.findByIdAndUpdate(oldItem.part, { $inc: { stock: oldItem.quantity } });
+            }
+          }
         }
+
+        // 2. Trừ kho theo danh sách linh kiện mới
+        for (const item of usedParts) {
+          if (item.part && mongoose.Types.ObjectId.isValid(item.part)) {
+            await Part.findByIdAndUpdate(item.part, { $inc: { stock: -item.quantity } });
+          }
+        }
+        updateData.usedParts = usedParts;
       }
 
       const updated = await RepairRequest.findByIdAndUpdate(
@@ -181,21 +201,70 @@ getAll: async (req, res) => {
     }
   },
 
+  // Khách hàng xác nhận báo giá (Công khai hoặc User)
+  confirmRepair: async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { phone } = req.body; // Dùng SĐT để bảo mật nhẹ
+
+      const repair = await RepairRequest.findById(id);
+      
+      if (!repair) {
+        return res.status(404).json({ message: "Không tìm thấy yêu cầu sửa chữa." });
+      }
+
+      // Kiểm tra xem SĐT gửi lên có khớp với SĐT trong đơn không
+      const repairPhone = repair.guestInfo?.phone || (repair.user && (await mongoose.model('User').findById(repair.user))?.phone);
+      
+      if (phone && repairPhone && phone !== repairPhone) {
+        return res.status(403).json({ message: "Số điện thoại không khớp với thông tin đơn hàng." });
+      }
+
+      // Chỉ cho phép xác nhận khi đang ở trạng thái Chờ duyệt
+      if (repair.status !== 'AwaitingApproval') {
+        return res.status(400).json({ message: "Đơn hàng hiện không ở trạng thái chờ xác nhận báo giá." });
+      }
+
+      repair.status = 'Confirmed';
+      await repair.save();
+
+      res.json({ success: true, message: "Đã xác nhận báo giá thành công.", data: repair });
+    } catch (error) {
+      console.error("confirmRepair Error:", error.message);
+      res.status(500).json({ message: "Lỗi khi xác nhận báo giá." });
+    }
+  },
+
   // Tra cứu sửa chữa theo số điện thoại (Public)
   getByPhone: async (req, res) => {
     try {
       const { phone } = req.params;
-      const request = await RepairRequest.findOne({ 
+      console.log(`[REPAIR CONTROLLER] Searching for phone: ${phone}`);
+
+      // 1. Tìm User có SĐT này trước
+
+      const User = require('../models/User');
+      const targetUser = await User.findOne({ phone });
+
+      // 2. Query tìm đơn: hoặc là Guest có SĐT này, hoặc là User đã tìm thấy
+      const query = {
         $or: [
-          { 'guestInfo.phone': phone },
-          { 'user.phone': phone } // Note: this might need population or checking User model if linked
+          { 'guestInfo.phone': phone }
         ]
-      })
+      };
+      
+      if (targetUser) {
+        query.$or.push({ user: targetUser._id });
+      }
+
+      const request = await RepairRequest.findOne(query)
       .populate('expert', 'name role avatar')
-      .sort({ createdAt: -1 }); // Get the latest one
+      .populate('user', 'name email phone')
+      .populate('usedParts.part')
+      .sort({ createdAt: -1 }); // Lấy đơn mới nhất
       
       if (!request) {
-        return res.status(404).json({ message: "Không tìm thấy yêu cầu sửa chữa cho số điện thoại này." });
+        return res.json(null);
       }
       res.json(request);
     } catch (error) {
@@ -233,3 +302,4 @@ getAll: async (req, res) => {
 };
 
 module.exports = repairController;
+;

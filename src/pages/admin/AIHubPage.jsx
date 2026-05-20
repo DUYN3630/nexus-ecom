@@ -143,9 +143,9 @@ const AIHubPage = () => {
     <div className="animate-in fade-in duration-500 text-left pb-12">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
         <div>
-          <h1 className="text-2xl font-black text-slate-900 tracking-tight flex items-center gap-3">
-            AI Hub Dashboard
-          </h1>
+          <h1 className="text-2xl font-bold text-slate-900 tracking-tight flex items-center gap-3">
+  AI Hub Dashboard
+</h1>
           <p className="text-sm text-slate-500 font-medium">
             Hệ thống phân tích và quản trị AI hỗ trợ khách hàng thông minh
           </p>
@@ -212,7 +212,7 @@ const AIHubPage = () => {
                     className={`p-4 border-b border-slate-50 cursor-pointer transition-all hover:bg-slate-50/50 ${selectedTicket?._id === ticket._id ? 'bg-brand-50/50 border-r-4 border-r-brand-500' : ''}`}
                   >
                     <div className="flex justify-between items-start mb-2">
-                      <span className={`px-2 py-0.5 rounded-full text-[8px] font-black uppercase tracking-widest border ${
+                      <span className={`px-2 py-0.5 rounded-full text-[8px] font-bold uppercase tracking-widest border ${
                         ticket.intent === 'repair_request' ? 'bg-rose-50 text-rose-600 border-rose-100' : 
                         ticket.intent === 'warranty_check' ? 'bg-blue-50 text-blue-600 border-blue-100' : 
                         'bg-slate-50 text-slate-500 border-slate-100'
@@ -221,13 +221,13 @@ const AIHubPage = () => {
                       </span>
                       <span className="text-[8px] font-bold text-slate-400">{new Date(ticket.updatedAt).toLocaleTimeString()}</span>
                     </div>
-                    <h4 className="text-xs font-black text-slate-900 truncate uppercase tracking-tight">
+                    <h4 className="text-xs font-bold text-slate-900 truncate uppercase tracking-tight">
                       {ticket.user?.name || ticket.guestInfo?.name || 'Khách vãng lai'}
                     </h4>
                     {ticket.phoneNumber && (
                       <div className="flex items-center gap-1.5 mt-1.5">
                         <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></div>
-                        <span className="text-[10px] font-black text-emerald-600 tracking-tight">{ticket.phoneNumber}</span>
+                        <span className="text-[10px] font-bold text-emerald-600 tracking-tight">{ticket.phoneNumber}</span>
                       </div>
                     )}
                     <p className="text-[10px] text-slate-400 line-clamp-1 mt-1 font-medium italic">&quot;{ticket.subject}&quot;</p>
@@ -250,15 +250,15 @@ const AIHubPage = () => {
                           <Bot size={22} />
                        </div>
                        <div>
-                          <h3 className="text-sm font-black uppercase tracking-tight text-slate-800">Dòng thời gian hội thoại</h3>
-                          <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">ID: {selectedTicket._id.substring(selectedTicket._id.length - 12)}</p>
+                          <h3 className="text-sm font-bold uppercase tracking-tight text-slate-800">Dòng thời gian hội thoại</h3>
+                          <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">ID: {selectedTicket._id.substring(selectedTicket._id.length - 12)}</p>
                        </div>
                     </div>
                     <div className="flex gap-3 items-center">
                        <select 
                           value={selectedExpertForAssign}
                           onChange={(e) => setSelectedExpertForAssign(e.target.value)}
-                          className="px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-[10px] font-black uppercase tracking-tight outline-none focus:ring-1 focus:ring-brand-500 cursor-pointer shadow-sm"
+                          className="px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-[10px] font-bold uppercase tracking-tight outline-none focus:ring-1 focus:ring-brand-500 cursor-pointer shadow-sm"
                        >
                           <option value="">-- Chỉ định Chuyên gia --</option>
                           {experts.map(exp => (
@@ -267,7 +267,7 @@ const AIHubPage = () => {
                        </select>
                        <button 
                           onClick={() => handleConvertToRepair(selectedTicket._id)}
-                          className={`px-5 py-2.5 text-white rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2 shadow-lg shadow-emerald-100 ${
+                          className={`px-5 py-2.5 text-white rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all flex items-center gap-2 shadow-lg shadow-emerald-100 ${
                             selectedTicket.status === 'resolved' ? 'bg-slate-400 cursor-not-allowed opacity-50' : 'bg-emerald-600 hover:bg-emerald-700 active:scale-95'
                           }`}
                           disabled={selectedTicket.status === 'resolved'}
@@ -309,7 +309,7 @@ const AIHubPage = () => {
                    <div className="w-24 h-24 bg-slate-50 rounded-full flex items-center justify-center mb-6 shadow-inner">
                         <MessageSquare size={40} strokeWidth={1} className="opacity-20" />
                    </div>
-                   <p className="text-[11px] font-black uppercase tracking-widest">Chọn một hội thoại để giám sát trực tiếp</p>
+                   <p className="text-[11px] font-bold uppercase tracking-widest">Chọn một hội thoại để giám sát trực tiếp</p>
                 </div>
               )}
             </div>
@@ -336,7 +336,7 @@ const AIHubPage = () => {
                     <stat.icon className={`text-slate-600`} size={22} />
                   </div>
                   <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{stat.label}</p>
-                  <h3 className="text-2xl font-black text-slate-900 mt-1">{stat.value}</h3>
+                  <h3 className="text-2xl font-bold text-slate-900 mt-1">{stat.value}</h3>
                 </div>
               ))}
             </div>
@@ -346,17 +346,17 @@ const AIHubPage = () => {
                 <div className="bg-white rounded-[32px] p-10 border-2 border-slate-100 relative overflow-hidden shadow-xl">
                   <div className="relative z-10 text-left">
                     <div className="flex items-center gap-4 mb-10">
-                      <div className="px-4 py-1.5 bg-brand-600 text-[10px] font-black uppercase tracking-[0.2em] rounded-xl text-white shadow-lg shadow-brand-200">AI Intelligence</div>
-                      <h2 className="text-2xl font-black uppercase tracking-tighter text-slate-900">Xu hướng & Insight</h2>
+                      <div className="px-4 py-1.5 bg-brand-600 text-[10px] font-bold uppercase tracking-[0.2em] rounded-xl text-white shadow-lg shadow-brand-200">AI Intelligence</div>
+                      <h2 className="text-2xl font-bold uppercase tracking-tighter text-slate-900">Xu hướng & Insight</h2>
                     </div>
                     
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
                       <div className="space-y-6">
-                        <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">Vấn đề phổ biến tiêu biểu:</p>
+                        <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest ml-1">Vấn đề phổ biến tiêu biểu:</p>
                         <ul className="space-y-4">
                           {analytics?.aiAnalysis?.topIssues?.map((issue, idx) => (
                             <li key={idx} className="flex items-center gap-5 bg-slate-50 p-5 rounded-2xl border-2 border-slate-100 hover:border-brand-200 transition-all group">
-                              <span className="w-8 h-8 flex items-center justify-center bg-white border-2 border-slate-200 group-hover:border-brand-600 group-hover:text-brand-600 rounded-xl text-xs font-black transition-colors">{idx+1}</span>
+                              <span className="w-8 h-8 flex items-center justify-center bg-white border-2 border-slate-200 group-hover:border-brand-600 group-hover:text-brand-600 rounded-xl text-xs font-bold transition-colors">{idx+1}</span>
                               <span className="text-sm font-bold text-slate-700 uppercase tracking-tight">{issue}</span>
                             </li>
                           ))}
@@ -364,10 +364,10 @@ const AIHubPage = () => {
                       </div>
                       <div className="space-y-10 text-right">
                         <div>
-                          <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-4">Chỉ số hài lòng hệ thống (CSAT)</p>
+                          <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-4">Chỉ số hài lòng hệ thống (CSAT)</p>
                           <div className="flex items-end justify-end gap-3">
-                            <span className="text-7xl font-black text-brand-600 leading-none tracking-tighter">{analytics?.aiAnalysis?.satisfactionScore || 0}</span>
-                            <span className="text-2xl font-black text-slate-300 mb-2">/10</span>
+                            <span className="text-7xl font-bold text-brand-600 leading-none tracking-tighter">{analytics?.aiAnalysis?.satisfactionScore || 0}</span>
+                            <span className="text-2xl font-bold text-slate-300 mb-2">/10</span>
                           </div>
                           <div className="w-full bg-slate-100 h-3 rounded-full mt-8 overflow-hidden shadow-inner border border-slate-200">
                             <motion.div 
@@ -381,7 +381,7 @@ const AIHubPage = () => {
                           <div className="absolute top-0 right-0 p-4 opacity-5">
                              <Sparkles size={60} className="text-brand-600" />
                           </div>
-                          <p className="text-[10px] font-black text-brand-600 uppercase tracking-widest flex items-center gap-2 mb-3">
+                          <p className="text-[10px] font-bold text-brand-600 uppercase tracking-widest flex items-center gap-2 mb-3">
                             <Sparkles size={16} /> Chiến lược đề xuất vận hành:
                           </p>
                           <p className="text-[13px] italic text-brand-800 font-bold leading-relaxed">&quot;{analytics?.aiAnalysis?.advice}&quot;</p>
@@ -393,12 +393,12 @@ const AIHubPage = () => {
 
                 <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
                   <div className="p-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/30">
-                    <h3 className="text-sm font-black uppercase tracking-widest text-slate-800">Yêu cầu hỗ trợ gần đây</h3>
+                    <h3 className="text-sm font-bold uppercase tracking-widest text-slate-800">Yêu cầu hỗ trợ gần đây</h3>
                     <button className="text-[10px] font-bold text-brand-600 uppercase tracking-widest hover:underline">Toàn bộ hồ sơ</button>
                   </div>
                   <div className="overflow-x-auto">
                     <table className="w-full text-left">
-                      <thead className="bg-slate-50/50 text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                      <thead className="bg-slate-50/50 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
                         <tr>
                           <th className="px-6 py-4">Mã số / Thiết bị</th>
                           <th className="px-6 py-4">Nội dung tóm tắt</th>
@@ -417,7 +417,7 @@ const AIHubPage = () => {
                               <p className="text-xs text-slate-500 font-medium line-clamp-1 italic max-w-xs">&quot;{ticket.description}&quot;</p>
                             </td>
                             <td className="px-6 py-4">
-                              <span className={`px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-wider border ${
+                              <span className={`px-2.5 py-1 rounded-full text-[9px] font-bold uppercase tracking-wider border ${
                                 ticket.status === 'Completed' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-amber-50 text-amber-600 border-amber-100'
                               }`}>
                                 {ticket.status}
@@ -438,7 +438,7 @@ const AIHubPage = () => {
 
               <div className="space-y-6">
                 <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
-                  <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest mb-6 flex items-center gap-2">
+                  <h3 className="text-sm font-bold text-slate-800 uppercase tracking-widest mb-6 flex items-center gap-2">
                     <Activity size={18} className="text-emerald-500" />
                     Hạ tầng Hệ thống
                   </h3>
@@ -450,7 +450,7 @@ const AIHubPage = () => {
                     ].map((sys, idx) => (
                         <div key={idx} className="flex items-center justify-between p-4 bg-slate-50 rounded-xl border border-slate-100">
                             <span className="text-xs font-bold text-slate-500">{sys.label}</span>
-                            <span className={`text-[10px] font-black text-${sys.color}-600 uppercase tracking-widest`}>{sys.status}</span>
+                            <span className={`text-[10px] font-bold text-${sys.color}-600 uppercase tracking-widest`}>{sys.status}</span>
                         </div>
                     ))}
                   </div>
@@ -461,7 +461,7 @@ const AIHubPage = () => {
                       <div className="w-10 h-10 bg-brand-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-brand-200">
                         <ThumbsUp size={20} />
                       </div>
-                      <h4 className="text-sm font-black text-brand-900 uppercase tracking-tight">Tối ưu CSAT</h4>
+                      <h4 className="text-sm font-bold text-brand-900 uppercase tracking-tight">Tối ưu CSAT</h4>
                    </div>
                    <p className="text-xs text-brand-700 leading-relaxed font-bold italic">
                       &quot;Dữ liệu mới nhất cho thấy khách hàng đánh giá cao tốc độ phản hồi của AI. Hãy duy trì độ trễ dưới 2.5s để bảo vệ điểm CSAT.&quot;
@@ -487,7 +487,7 @@ const AIHubPage = () => {
                       {expert.avatar ? (
                         <img src={expert.avatar} alt={expert.name} className="w-full h-full object-cover" />
                       ) : (
-                        <div className="w-full h-full bg-gradient-to-br from-brand-500 to-indigo-600 flex items-center justify-center text-white text-2xl font-black uppercase tracking-tighter">
+                        <div className="w-full h-full bg-gradient-to-br from-brand-500 to-indigo-600 flex items-center justify-center text-white text-2xl font-bold uppercase tracking-tighter">
                           {expert.name?.charAt(0) || 'E'}
                         </div>
                       )}
@@ -496,8 +496,8 @@ const AIHubPage = () => {
                   </div>
                   <div className="min-w-0">
                     <div className="flex items-center gap-2 mb-1">
-                      <h3 className="font-black text-slate-900 uppercase tracking-tight truncate">{expert.name}</h3>
-                      <span className="px-1.5 py-0.5 bg-brand-50 text-brand-600 text-[8px] font-black rounded-md border border-brand-100 uppercase tracking-tighter">Expert</span>
+                      <h3 className="font-bold text-slate-900 uppercase tracking-tight truncate">{expert.name}</h3>
+                      <span className="px-1.5 py-0.5 bg-brand-50 text-brand-600 text-[8px] font-bold rounded-md border border-brand-100 uppercase tracking-tighter">Expert</span>
                     </div>
                     <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{expert.role || 'Apple Certified Specialist'}</p>
                     <p className="text-[10px] font-bold text-brand-600 uppercase tracking-widest mt-1.5">{expert.specialty?.join(' • ')}</p>
@@ -507,16 +507,16 @@ const AIHubPage = () => {
                 <div className="grid grid-cols-2 gap-4 mb-8">
                    <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100 shadow-inner text-center">
                       <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Đang xử lý</p>
-                      <h4 className="text-xl font-black text-slate-800 tabular-nums">{expert.stats?.assigned || 0}</h4>
+                      <h4 className="text-xl font-bold text-slate-800 tabular-nums">{expert.stats?.assigned || 0}</h4>
                    </div>
                    <div className="p-4 bg-brand-50 rounded-2xl border border-brand-100 shadow-inner text-center">
                       <p className="text-[10px] font-bold text-brand-400 uppercase tracking-widest mb-1">Đã hoàn tất</p>
-                      <h4 className="text-xl font-black text-brand-600 tabular-nums">{expert.stats?.resolved || 0}</h4>
+                      <h4 className="text-xl font-bold text-brand-600 tabular-nums">{expert.stats?.resolved || 0}</h4>
                    </div>
                 </div>
 
                 <div className="space-y-4 flex-1">
-                  <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest">
+                  <div className="flex justify-between items-center text-[10px] font-bold uppercase tracking-widest">
                     <span className="text-slate-500">Hiệu suất vận hành</span>
                     <span className="text-slate-900">{expert.stats?.efficiency || 0}%</span>
                   </div>
@@ -531,7 +531,7 @@ const AIHubPage = () => {
 
                 <button 
                   onClick={() => setSelectedExpert(expert)}
-                  className="w-full mt-10 py-3.5 bg-white border border-slate-200 rounded-xl text-[11px] font-black uppercase tracking-widest hover:bg-slate-900 hover:text-white hover:border-slate-900 transition-all flex items-center justify-center gap-2 shadow-sm active:scale-95"
+                  className="w-full mt-10 py-3.5 bg-white border border-slate-200 rounded-xl text-[11px] font-bold uppercase tracking-widest hover:bg-slate-900 hover:text-white hover:border-slate-900 transition-all flex items-center justify-center gap-2 shadow-sm active:scale-95"
                 >
                   <UserCheck size={16} /> Hồ sơ chi tiết
                 </button>
@@ -545,7 +545,7 @@ const AIHubPage = () => {
              <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
                 <div className="lg:col-span-2 space-y-8">
                   <div className="space-y-4">
-                    <label className="block text-[11px] font-black text-slate-500 uppercase tracking-widest ml-1 flex items-center gap-2">
+                    <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-widest ml-1 flex items-center gap-2">
                       <Sparkles size={16} className="text-brand-600" />
                       Hệ tư tưởng AI (System Instruction)
                     </label>
@@ -562,17 +562,17 @@ const AIHubPage = () => {
 
                 <div className="space-y-8">
                   <div className="bg-slate-50 p-8 rounded-2xl border border-slate-100 shadow-inner">
-                    <h3 className="text-xs font-black text-slate-800 mb-8 flex items-center gap-2 uppercase tracking-widest">
+                    <h3 className="text-xs font-bold text-slate-800 mb-8 flex items-center gap-2 uppercase tracking-widest">
                       <BrainCircuit size={18} className="text-brand-600" /> Tham số Kỹ thuật
                     </h3>
                     
                     <div className="space-y-8">
                       <div className="space-y-3">
-                        <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest">Engine Model</label>
+                        <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest">Engine Model</label>
                         <select 
                           value={settings.ai_model_name}
                           onChange={(e) => setSettings({...settings, ai_model_name: e.target.value})}
-                          className="w-full p-3.5 bg-white border border-slate-200 rounded-xl text-xs font-black uppercase tracking-tight focus:ring-1 focus:ring-brand-500 outline-none transition-all cursor-pointer"
+                          className="w-full p-3.5 bg-white border border-slate-200 rounded-xl text-xs font-bold uppercase tracking-tight focus:ring-1 focus:ring-brand-500 outline-none transition-all cursor-pointer"
                         >
                           <option value="gemini-1.5-flash">Gemini 1.5 Flash (Turbo)</option>
                           <option value="gemini-1.5-pro">Gemini 1.5 Pro (Ultra)</option>
@@ -583,7 +583,7 @@ const AIHubPage = () => {
 
                       <div className="space-y-4">
                         <div className="flex justify-between items-center">
-                          <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest">Độ linh hoạt (Temp: {settings.ai_temperature})</label>
+                          <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest">Độ linh hoạt (Temp: {settings.ai_temperature})</label>
                         </div>
                         <input 
                           type="range" min="0" max="2" step="0.1"
@@ -594,19 +594,19 @@ const AIHubPage = () => {
                       </div>
 
                       <div className="space-y-3">
-                        <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest">Giới hạn hồi đáp (Tokens)</label>
+                        <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest">Giới hạn hồi đáp (Tokens)</label>
                         <input 
                           type="number"
                           value={settings.ai_max_tokens}
                           onChange={(e) => setSettings({...settings, ai_max_tokens: parseInt(e.target.value)})}
-                          className="w-full p-3.5 bg-white border border-slate-200 rounded-xl text-sm font-black focus:ring-1 focus:ring-brand-500 outline-none transition-all"
+                          className="w-full p-3.5 bg-white border border-slate-200 rounded-xl text-sm font-bold focus:ring-1 focus:ring-brand-500 outline-none transition-all"
                         />
                       </div>
                     </div>
                   </div>
                   
                   <div className="bg-rose-50 p-6 rounded-2xl border border-rose-100 shadow-sm">
-                    <p className="text-[10px] font-black text-rose-600 uppercase tracking-widest flex items-center gap-2 mb-2">
+                    <p className="text-[10px] font-bold text-rose-600 uppercase tracking-widest flex items-center gap-2 mb-2">
                       <ShieldAlert size={14} /> Chú ý vận hành
                     </p>
                     <p className="text-[11px] text-rose-700 leading-relaxed font-bold italic">
@@ -658,26 +658,26 @@ const AIHubPage = () => {
                     {selectedExpert.avatar ? (
                       <img src={selectedExpert.avatar} alt={selectedExpert.name} className="w-full h-full object-cover" />
                     ) : (
-                      <div className="w-full h-full bg-gradient-to-br from-brand-500 to-indigo-600 flex items-center justify-center text-white text-4xl font-black uppercase tracking-tighter">
+                      <div className="w-full h-full bg-gradient-to-br from-brand-500 to-indigo-600 flex items-center justify-center text-white text-4xl font-bold uppercase tracking-tighter">
                         {selectedExpert.name?.charAt(0) || 'E'}
                       </div>
                     )}
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-3 mb-2">
-                      <h2 className="text-3xl font-black text-slate-900 uppercase tracking-tight">{selectedExpert.name}</h2>
+                      <h2 className="text-3xl font-bold text-slate-900 uppercase tracking-tight">{selectedExpert.name}</h2>
                       <div className={`w-3 h-3 rounded-full ${selectedExpert.isOnline ? 'bg-emerald-500' : 'bg-slate-300'} shadow-sm shadow-emerald-200`}></div>
-                      <span className="px-2 py-0.5 bg-brand-600 text-white text-[10px] font-black rounded-lg uppercase tracking-widest">Expert Account</span>
+                      <span className="px-2 py-0.5 bg-brand-600 text-white text-[10px] font-bold rounded-lg uppercase tracking-widest">Expert Account</span>
                     </div>
-                    <p className="text-sm font-black text-brand-600 uppercase tracking-[0.2em]">{selectedExpert.role && selectedExpert.role !== 'Admin' ? selectedExpert.role : 'Senior Technician Specialist'}</p>
+                    <p className="text-sm font-bold text-brand-600 uppercase tracking-[0.2em]">{selectedExpert.role && selectedExpert.role !== 'Admin' ? selectedExpert.role : 'Senior Technician Specialist'}</p>
                     <div className="flex items-center gap-6 mt-6">
                       <div className="flex items-center gap-1.5 bg-amber-50 px-3 py-1.5 rounded-full">
                         <ThumbsUp size={14} className="text-amber-500 fill-amber-500" />
-                        <span className="text-xs font-black text-amber-700">{selectedExpert.rating || 4.9}</span>
+                        <span className="text-xs font-bold text-amber-700">{selectedExpert.rating || 4.9}</span>
                       </div>
                       <div className="flex items-center gap-1.5 bg-slate-50 px-3 py-1.5 rounded-full">
                         <Clock size={14} className="text-slate-500" />
-                        <span className="text-xs font-black text-slate-700">{selectedExpert.experience || '3 năm kinh nghiệm'}</span>
+                        <span className="text-xs font-bold text-slate-700">{selectedExpert.experience || '3 năm kinh nghiệm'}</span>
                       </div>
                     </div>
                   </div>
@@ -686,12 +686,12 @@ const AIHubPage = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
                   <div className="space-y-8">
                     <div>
-                      <h4 className="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+                      <h4 className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
                         <Activity size={14} /> Hiệu suất vận hành
                       </h4>
                       <div className="bg-slate-50 p-6 rounded-3xl border border-slate-100 shadow-inner relative overflow-hidden">
                         <div className="flex items-end gap-3 mb-4">
-                          <span className="text-4xl font-black text-slate-900 tabular-nums">{selectedExpert.stats?.efficiency || 0}</span>
+                          <span className="text-4xl font-bold text-slate-900 tabular-nums">{selectedExpert.stats?.efficiency || 0}</span>
                           <span className="text-lg font-bold text-slate-400 mb-1">%</span>
                         </div>
                         <div className="w-full bg-slate-200 h-2.5 rounded-full overflow-hidden shadow-inner">
@@ -707,14 +707,14 @@ const AIHubPage = () => {
                     </div>
 
                     <div>
-                      <h4 className="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+                      <h4 className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
                         <CheckCircle2 size={14} /> Thống kê xử lý
                       </h4>
                       <div className="bg-brand-50 p-6 rounded-3xl border border-brand-100 shadow-inner">
                         <div className="flex justify-between items-center">
                           <div>
-                             <p className="text-[10px] font-black text-brand-400 uppercase tracking-widest mb-1">Tổng đơn hoàn tất</p>
-                             <h4 className="text-3xl font-black text-brand-600 tabular-nums">{selectedExpert.stats?.resolved || 0}</h4>
+                             <p className="text-[10px] font-bold text-brand-400 uppercase tracking-widest mb-1">Tổng đơn hoàn tất</p>
+                             <h4 className="text-3xl font-bold text-brand-600 tabular-nums">{selectedExpert.stats?.resolved || 0}</h4>
                           </div>
                           <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-brand-600 shadow-sm">
                             <TrendingUp size={24} />
@@ -726,12 +726,12 @@ const AIHubPage = () => {
 
                   <div className="space-y-8">
                     <div>
-                      <h4 className="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+                      <h4 className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
                         <BrainCircuit size={14} /> Chuyên môn nghiệp vụ
                       </h4>
                       <div className="flex flex-wrap gap-2">
                         {(selectedExpert.specialty || ['iPhone', 'MacBook', 'iPad', 'Watch']).map((spec, i) => (
-                          <span key={i} className="px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-[10px] font-black text-slate-600 uppercase tracking-widest">
+                          <span key={i} className="px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-[10px] font-bold text-slate-600 uppercase tracking-widest">
                             {spec}
                           </span>
                         ))}
@@ -739,7 +739,7 @@ const AIHubPage = () => {
                     </div>
 
                     <div>
-                      <h4 className="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+                      <h4 className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
                         <CreditCard size={14} /> Công cụ & Thiết bị
                       </h4>
                       <p className="text-xs text-slate-500 font-medium leading-relaxed italic">
@@ -748,7 +748,7 @@ const AIHubPage = () => {
                     </div>
 
                     <div className="pt-4">
-                      <button className="w-full py-4 bg-slate-900 text-white rounded-2xl text-[11px] font-black uppercase tracking-widest hover:bg-brand-600 transition-all shadow-xl shadow-slate-200">
+                      <button className="w-full py-4 bg-slate-900 text-white rounded-2xl text-[11px] font-bold uppercase tracking-widest hover:bg-brand-600 transition-all shadow-xl shadow-slate-200">
                         Phân công nhiệm vụ mới
                       </button>
                     </div>

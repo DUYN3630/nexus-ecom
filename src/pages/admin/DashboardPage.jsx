@@ -155,7 +155,7 @@ export const DashboardPage = () => {
         {/* Best Sellers */}
         <div className="xl:col-span-3 bg-white p-8 rounded-[40px] border-4 border-slate-100 shadow-sm">
             <div className="flex justify-between items-center mb-8 border-b-2 border-slate-50 pb-6">
-                <h3 className="text-xs font-black uppercase tracking-[0.2em] text-slate-800">Hiệu suất Sản phẩm (Bán chạy)</h3>
+                <h3 className="text-xs font-black uppercase tracking-[0.15em] text-slate-800">Hiệu suất Sản phẩm (Bán chạy)</h3>
                 <Link to="/admin/analytics" className="text-[11px] font-black text-brand-600 uppercase tracking-widest hover:bg-brand-50 px-4 py-2 rounded-xl transition-all">
                     Xem báo cáo đầy đủ
                 </Link>
@@ -166,10 +166,10 @@ export const DashboardPage = () => {
                         <div className="w-12 h-12 rounded-2xl bg-white border-2 border-slate-100 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                             <span className="text-sm font-black text-brand-600">{i+1}</span>
                         </div>
-                        <h4 className="text-[11px] font-black text-slate-800 uppercase line-clamp-1 mb-1">{p.name}</h4>
+                        <h4 className="text-xs font-black text-slate-800 uppercase line-clamp-1 mb-1">{p.name}</h4>
                         <div className="flex items-center justify-between mt-4">
-                            <span className="text-[9px] font-bold text-slate-400 uppercase">Doanh số</span>
-                            <span className="text-sm font-black text-slate-900">{p.totalSold} <span className="text-[8px] text-slate-400 ml-0.5">đv</span></span>
+                            <span className="text-[10px] font-bold text-slate-400 uppercase">Doanh số</span>
+                            <span className="text-sm font-black text-slate-900">{p.totalSold} <span className="text-[10px] text-slate-400 ml-0.5 font-bold">đv</span></span>
                         </div>
                     </div>
                 ))}
@@ -195,7 +195,7 @@ const SummaryCard = ({ title, value, sub, icon: Icon, color }) => {
             <div className="min-w-0">
                 <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-1">{title}</p>
                 <h3 className="text-2xl font-black text-slate-800 tabular-nums tracking-tighter">{value}</h3>
-                <p className="text-[10px] text-slate-400 mt-1 font-bold uppercase tracking-tight">{sub}</p>
+                <p className="text-[11px] text-slate-400 mt-1 font-bold uppercase tracking-tight">{sub}</p>
             </div>
         </div>
     );

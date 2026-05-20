@@ -49,20 +49,23 @@ const invoiceController = {
 
       const invoiceNumber = `INV-REP-${Date.now()}`;
       
+      // Sử dụng serviceFee làm giá gốc của dịch vụ, không dùng estimatedCost vì 
+      // estimatedCost thường đã bao gồm cả linh kiện ở frontend
       const items = [{
         description: `Dịch vụ sửa chữa: ${repair.deviceType} - ${repair.description}`,
         quantity: 1,
-        price: repair.estimatedCost,
-        amount: repair.estimatedCost
+        price: repair.serviceFee || 0,
+        amount: repair.serviceFee || 0
       }];
 
       if (repair.usedParts && repair.usedParts.length > 0) {
         repair.usedParts.forEach(up => {
+          const partPrice = up.part?.price || 0;
           items.push({
             description: `Linh kiện: ${up.part?.name || 'Không xác định'}`,
             quantity: up.quantity,
-            price: up.part?.price || 0,
-            amount: (up.part?.price || 0) * up.quantity
+            price: partPrice,
+            amount: partPrice * up.quantity
           });
         });
       }
@@ -74,15 +77,15 @@ const invoiceController = {
         relatedType: 'Repair',
         relatedId: repair._id,
         customer: {
-          name: repair.user ? repair.user.name : repair.guestInfo.name,
-          email: repair.user ? repair.user.email : repair.guestInfo.email,
-          phone: repair.user ? repair.user.phone : repair.guestInfo.phone,
+          name: repair.user ? repair.user.name : (repair.guestInfo?.name || "Khách hàng"),
+          email: repair.user ? repair.user.email : (repair.guestInfo?.email || ""),
+          phone: repair.user ? repair.user.phone : (repair.guestInfo?.phone || ""),
           address: "Tại cửa hàng"
         },
         items,
         subTotal: totalAmount,
         totalAmount: totalAmount,
-        paymentMethod: repair.paymentMethod || 'MoMo'
+        paymentMethod: repair.paymentMethod || 'Tại cửa hàng'
       });
 
       return await newInvoice.save();

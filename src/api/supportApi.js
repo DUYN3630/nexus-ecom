@@ -3,7 +3,8 @@ import axiosClient from './axiosClient';
 const supportApi = {
   checkWarranty: (serialNumber) => axiosClient.get(`/support/warranty/${serialNumber}`),
   submitRepair: (data) => axiosClient.post('/support/repair', data),
-  getRepairByPhone: (phone) => axiosClient.get(`/support/repair/track/${phone}`),
+  confirmRepair: (id, phone) => axiosClient.post(`/support/repair/${id}/confirm`, { phone }),
+  getRepairByPhone: (phone) => axiosClient.get(`/support/repair-tracking/${phone}`),
   getMedicalRecord: (serialNumber) => axiosClient.get(`/support/medical-record/${serialNumber}`),
   getMyRepairs: () => axiosClient.get('/support/my-repairs'),
   

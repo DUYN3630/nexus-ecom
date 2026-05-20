@@ -162,6 +162,24 @@ const MedicalRecordPage = () => {
                               </div>
                            </div>
 
+                           {repair.progressImages?.length > 0 && (
+                              <div className="space-y-3">
+                                 <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Hình ảnh tư liệu sửa chữa</p>
+                                 <div className="flex flex-wrap gap-3">
+                                    {repair.progressImages.map((img, i) => (
+                                       <div key={i} className="group relative w-24 h-24 rounded-xl overflow-hidden border border-slate-200 shadow-sm">
+                                          <img src={img.url} alt={img.caption} className="w-full h-full object-cover transition-transform group-hover:scale-110" />
+                                          {img.caption && (
+                                             <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center p-2">
+                                                <p className="text-[8px] text-white font-bold text-center leading-tight">{img.caption}</p>
+                                             </div>
+                                          )}
+                                       </div>
+                                    ))}
+                                 </div>
+                              </div>
+                           )}
+
                            {repair.usedParts?.length > 0 && (
                               <div className="space-y-2">
                                  <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Linh kiện đã thay thế</p>

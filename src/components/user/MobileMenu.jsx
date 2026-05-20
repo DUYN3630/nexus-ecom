@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
-  X, ChevronDown, Home, LogOut, ShieldCheck, MapPin, Newspaper, Phone, Sparkles
+  X, ChevronDown, Home, LogOut, ShieldCheck, MapPin, Newspaper, Phone, Sparkles,
+  Layers, MessageSquare
 } from 'lucide-react';
 import { NAV_CATEGORIES } from '../../constants/userContent';
 import { useSelector, useDispatch } from 'react-redux';
@@ -163,6 +164,14 @@ const MobileMenu = ({ isOpen, onClose }) => {
           <div className="space-y-6">
             <p className="text-[9px] font-black uppercase tracking-[0.4em] text-slate-300 border-b border-slate-50 pb-2">Dịch vụ & Tiện ích</p>
             <div className="grid grid-cols-1 gap-2">
+               <button onClick={() => handleLinkClick('/compare')} className="flex items-center gap-4 px-4 py-3 rounded-xl hover:bg-slate-50 transition-all group text-left">
+                  <Layers size={18} className="text-slate-300 group-hover:text-indigo-500 transition-colors" />
+                  <span className="text-[10px] font-black uppercase tracking-widest text-slate-600">So sánh thiết bị</span>
+               </button>
+               <button onClick={() => handleLinkClick('/support')} className="flex items-center gap-4 px-4 py-3 rounded-xl hover:bg-slate-50 transition-all group text-left">
+                  <MessageSquare size={18} className="text-slate-300 group-hover:text-brand-600 transition-colors" />
+                  <span className="text-[10px] font-black uppercase tracking-widest text-slate-600">Trợ giúp chuyên gia</span>
+               </button>
                <button onClick={() => handleLinkClick('/about')} className="flex items-center gap-4 px-4 py-3 rounded-xl hover:bg-slate-50 transition-all group text-left">
                   <ShieldCheck size={18} className="text-slate-300 group-hover:text-emerald-500 transition-colors" />
                   <span className="text-[10px] font-black uppercase tracking-widest text-slate-600">Về TechStore</span>

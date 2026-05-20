@@ -27,7 +27,7 @@ const trackEvent = (eventType, payload) => {
     
     // Fire-and-forget: we send the event but don't need to wait for the response
     // or handle errors, as tracking should not interrupt the user experience.
-    axiosClient.post('/track', {
+    axiosClient.post('/tracking', {
         eventType,
         payload,
         sessionId

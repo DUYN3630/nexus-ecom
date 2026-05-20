@@ -5,7 +5,7 @@ import {
   Wrench, CheckCircle, Clock, AlertCircle, 
   ChevronRight, Search, Filter, MoreHorizontal,
   User, Smartphone, Shield, X, MessageSquare, Send, Plus, Trash2, Truck,
-  Save, History, Smartphone as DeviceIcon, UserCheck
+  Save, History, Smartphone as DeviceIcon, UserCheck, DollarSign
 } from 'lucide-react';
 import supportApi from '../../api/supportApi';
 import partApi from '../../api/partApi';
@@ -40,7 +40,7 @@ const RepairManagementPage = () => {
   const fetchInventory = async () => {
     try {
       const res = await partApi.getAll();
-      setInventory(res.data || []);
+      setInventory(Array.isArray(res) ? res : res.data || []);
     } catch (error) {
       console.error("Failed to fetch inventory:", error);
     }
@@ -132,10 +132,37 @@ const RepairManagementPage = () => {
       'Pending': 'bg-amber-50 text-amber-600 border-amber-100',
       'Confirmed': 'bg-blue-50 text-blue-600 border-blue-100',
       'Repairing': 'bg-indigo-50 text-indigo-600 border-indigo-100',
-      'Completed': 'bg-emerald-50 text-emerald-600 border-emerald-100',
-      'Cancelled': 'bg-slate-50 text-slate-400 border-slate-100'
+      'Testing': 'bg-purple-50 text-purple-600 border-purple-100',
+      'Done': 'bg-emerald-50 text-emerald-600 border-emerald-100',
+      'Returned': 'bg-slate-50 text-slate-400 border-slate-100',
+      'AwaitingApproval': 'bg-rose-50 text-rose-600 border-rose-100'
     };
-    return `px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border ${styles[status] || styles['Pending']}`;
+    const labels = {
+      'Pending': 'Chờ tiếp nhận',
+      'Confirmed': 'Đã xác nhận',
+      'Repairing': 'Đang sửa chữa',
+      'Testing': 'Đang kiểm tra',
+      'Done': 'Đã hoàn thành',
+      'Returned': 'Đã trả máy',
+      'AwaitingApproval': 'Chờ khách duyệt'
+    };
+    return (
+      <span className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border ${styles[status] || styles['Pending']}`}>
+        {labels[status] || status}
+      </span>
+    );
+  };
+
+  const formatDateTime = (dateString) => {
+    if (!dateString) return '---';
+    const date = new Date(dateString);
+    return date.toLocaleString('vi-VN', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
   };
 
   return (
@@ -193,20 +220,21 @@ const RepairManagementPage = () => {
                 <th className="px-8 py-6 text-[10px] font-black uppercase tracking-widest text-slate-400">Thiết bị / Ticket</th>
                 <th className="px-8 py-6 text-[10px] font-black uppercase tracking-widest text-slate-400">Khách hàng</th>
                 <th className="px-8 py-6 text-[10px] font-black uppercase tracking-widest text-slate-400">Nội dung yêu cầu</th>
+                <th className="px-8 py-6 text-[10px] font-black uppercase tracking-widest text-slate-400">Thời gian nhận</th>
                 <th className="px-8 py-6 text-[10px] font-black uppercase tracking-widest text-slate-400 text-center">Trạng thái</th>
                 <th className="px-8 py-6 text-right text-[10px] font-black uppercase tracking-widest text-slate-400 w-[120px]">Thao tác</th>
               </tr>
             </thead>
             <tbody className="divide-y-2 divide-slate-50">
               {isLoading ? (
-                 <tr><td colSpan="5" className="py-20 text-center">
+                 <tr><td colSpan="6" className="py-20 text-center">
                     <div className="flex flex-col items-center gap-3">
                         <div className="w-10 h-10 border-4 border-brand-100 border-t-brand-600 rounded-full animate-spin"></div>
                         <p className="text-sm font-bold text-slate-400 uppercase tracking-widest">Đang đồng bộ Atlas...</p>
                     </div>
                  </td></tr>
               ) : repairs.length === 0 ? (
-                 <tr><td colSpan="5" className="py-20 text-center text-slate-300 font-bold uppercase text-[10px] tracking-widest">Không tìm thấy yêu cầu</td></tr>
+                 <tr><td colSpan="6" className="py-20 text-center text-slate-300 font-bold uppercase text-[10px] tracking-widest">Không tìm thấy yêu cầu</td></tr>
               ) : (
                 repairs.filter(r => r.ticketNumber.includes(searchTerm)).map((repair) => (
                   <tr key={repair._id} className="hover:bg-slate-50/50 transition-colors group">
@@ -230,10 +258,16 @@ const RepairManagementPage = () => {
                           &quot;{repair.description}&quot;
                        </p>
                     </td>
+                    <td className="px-8 py-6">
+                       <div className="flex items-center gap-2 text-slate-600">
+                          <Clock size={12} className="text-brand-500" />
+                          <span className="text-[10px] font-black font-mono">
+                             {formatDateTime(repair.receptionTime || repair.createdAt)}
+                          </span>
+                       </div>
+                    </td>
                     <td className="px-8 py-6 text-center">
-                      <span className={getStatusBadge(repair.status)}>
-                        {repair.status}
-                      </span>
+                      {getStatusBadge(repair.status)}
                     </td>
                     <td className="px-8 py-6 text-right">
                       <button 
@@ -329,13 +363,20 @@ const RepairUpdateDrawer = ({
                  <div className="space-y-4">
                     <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">Giai đoạn vận hành</label>
                     <div className="grid grid-cols-3 gap-2">
-                       {['Pending', 'Confirmed', 'Repairing', 'Testing', 'Done', 'Returned'].map(status => (
+                       {[
+                         { value: 'Pending', label: 'Tiếp nhận' },
+                         { value: 'Confirmed', label: 'Xác nhận' },
+                         { value: 'Repairing', label: 'Đang sửa' },
+                         { value: 'Testing', label: 'Kiểm tra' },
+                         { value: 'Done', label: 'Hoàn thành' },
+                         { value: 'Returned', label: 'Đã trả máy' }
+                       ].map(step => (
                          <button 
-                            key={status} 
-                            onClick={() => setNewStatus(status)}
-                            className={`py-3 rounded-xl text-[10px] font-black uppercase tracking-widest border-2 transition-all active:scale-95 ${newStatus === status ? 'bg-slate-900 text-white border-slate-900 shadow-lg' : 'bg-white text-slate-400 border-slate-100 hover:bg-slate-50'}`}
+                            key={step.value} 
+                            onClick={() => setNewStatus(step.value)}
+                            className={`py-3 rounded-xl text-[10px] font-black uppercase tracking-widest border-2 transition-all active:scale-95 ${newStatus === step.value ? 'bg-slate-900 text-white border-slate-900 shadow-lg' : 'bg-white text-slate-400 border-slate-100 hover:bg-slate-50'}`}
                          >
-                           {status}
+                           {step.label}
                          </button>
                        ))}
                     </div>

@@ -4,30 +4,48 @@ const warrantyController = require('../controllers/warrantyController');
 const repairController = require('../controllers/repairController');
 const { protect, adminOrExpert } = require('../middleware/auth');
 
-// --- PUBLIC ROUTES ---
-// Tra cứu bảo hành
+/**
+ * PUBLIC ROUTES
+ */
+
+// Diagnostic Ping
+router.get('/ping', (req, res) => res.json({ message: "Support API is reachable" }));
+
+// Repair Tracking by Phone
+router.get('/repair-tracking/:phone', repairController.getByPhone);
+
+// Warranty Check by Serial Number
 router.get('/warranty/:serialNumber', warrantyController.check);
-// Gửi yêu cầu sửa chữa
+
+// Create Repair Request
 router.post('/repair', repairController.create);
-// Tra cứu sửa chữa theo SĐT
-router.get('/repair/track/:phone', repairController.getByPhone);
-// Tra cứu bệnh án thiết bị
+
+// Confirm Repair (Customer Approval)
+router.post('/repair/:id/confirm', repairController.confirmRepair);
+
+// Get Medical Record by Serial Number
 router.get('/medical-record/:serialNumber', repairController.getMedicalRecord);
 
-// --- USER ROUTES ---
+
+/**
+ * USER ROUTES (Protected)
+ */
+
+// Get My Repairs
 router.get('/my-repairs', protect, repairController.getMyRepairs);
 
-// --- ADMIN/STAFF ROUTES ---
-// Route test công khai (Xóa sau khi test)
-router.get('/test-repairs', (req, res) => res.json({ message: "Route repairs is visible!" }));
 
-// Lấy toàn bộ danh sách yêu cầu
+/**
+ * ADMIN/STAFF ROUTES (Protected)
+ */
+
+// Get All Repair Requests
 router.get('/repairs', protect, adminOrExpert, repairController.getAll);
 
-// Lấy danh sách sửa chữa cho chuyên gia cụ thể
+// Get Repairs assigned to an Expert
 router.get('/repairs/expert/:expertId', protect, adminOrExpert, repairController.getExpertRepairs);
 
-// Cập nhật trạng thái yêu cầu
+// Update Repair Status
 router.patch('/repair/:id', protect, adminOrExpert, repairController.updateStatus);
 
 module.exports = router;

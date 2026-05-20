@@ -90,15 +90,15 @@ export const AnalyticsPage = () => {
     <div className="animate-in fade-in duration-500 text-left pb-12">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-10">
         <div>
-          <h1 className="text-2xl font-black text-slate-900 tracking-tight uppercase tracking-tighter">Trung tâm Phân tích</h1>
-          <p className="text-[13px] text-slate-500 font-medium mt-1">Báo cáo hiệu suất kinh doanh và hành vi khách hàng thời gian thực</p>
+          <h1 className="text-2xl font-black text-slate-900 tracking-tight uppercase">Trung tâm Phân tích</h1>
+          <p className="text-sm text-slate-500 font-medium mt-1">Báo cáo hiệu suất kinh doanh và hành vi khách hàng thời gian thực</p>
         </div>
         <div className="flex gap-2 bg-slate-100 p-1.5 rounded-2xl border-2 border-slate-100 shadow-inner">
           {['7', '30', '90'].map(r => (
             <button 
                 key={r} 
                 onClick={() => setTimeRange(r)} 
-                className={`px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${timeRange === r ? 'bg-white text-brand-600 shadow-md border-2 border-slate-50' : 'text-slate-400 hover:text-slate-600'}`}
+                className={`px-6 py-2.5 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all ${timeRange === r ? 'bg-white text-brand-600 shadow-md border-2 border-slate-50' : 'text-slate-400 hover:text-slate-600'}`}
             >
                 {r} ngày
             </button>
@@ -116,20 +116,20 @@ export const AnalyticsPage = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
         <div className="lg:col-span-2 bg-white p-8 rounded-[32px] border-2 border-slate-100 shadow-sm h-[500px] flex flex-col">
             <div className="flex items-center justify-between mb-8 border-b-2 border-slate-50 pb-6">
-                <h3 className="text-xs font-black uppercase tracking-[0.2em] text-slate-800 flex items-center gap-3">
+                <h3 className="text-xs font-black uppercase tracking-[0.15em] text-slate-800 flex items-center gap-3">
                     <TrendingUp size={20} className="text-brand-600" /> Xu hướng Doanh thu
                 </h3>
-                <div className="flex items-center gap-2 text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                <div className="flex items-center gap-2 text-[11px] font-black text-slate-400 uppercase tracking-widest">
                     <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div> Real-time
                 </div>
             </div>
             <div className="flex-1 min-h-0"><canvas ref={chartRef}></canvas></div>
         </div>
         <div className="bg-white p-8 rounded-[32px] border-2 border-slate-100 shadow-sm h-[500px] flex flex-col">
-            <h3 className="text-xs font-black uppercase tracking-[0.2em] text-slate-800 mb-8 border-b-2 border-slate-50 pb-6">Cơ cấu Ngành hàng</h3>
+            <h3 className="text-xs font-black uppercase tracking-[0.15em] text-slate-800 mb-8 border-b-2 border-slate-50 pb-6">Cơ cấu Ngành hàng</h3>
             <div className="flex-1 min-h-0 flex items-center justify-center relative">
                 <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Top 1</span>
+                    <span className="text-[11px] font-black text-slate-400 uppercase tracking-widest">Top 1</span>
                     <span className="text-xl font-black text-slate-800 uppercase tracking-tighter">{stats?.categoryRevenue?.[0]?._id || 'N/A'}</span>
                 </div>
                 <canvas ref={pieChartRef}></canvas>
@@ -139,7 +139,7 @@ export const AnalyticsPage = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           <div className="bg-white p-8 rounded-[32px] border-2 border-slate-100 shadow-sm">
-            <h3 className="text-xs font-black uppercase tracking-[0.2em] text-slate-800 mb-8 border-b-2 border-slate-50 pb-6">Top Sản phẩm hiệu suất cao</h3>
+            <h3 className="text-xs font-black uppercase tracking-[0.15em] text-slate-800 mb-8 border-b-2 border-slate-50 pb-6">Top Sản phẩm hiệu suất cao</h3>
             <div className="space-y-4">
                 {stats?.topSellingProducts?.map((p, i) => (
                     <div key={i} className="flex justify-between items-center p-4 hover:bg-slate-50 rounded-2xl transition-all border-2 border-transparent hover:border-slate-100 group">
@@ -153,12 +153,12 @@ export const AnalyticsPage = () => {
             </div>
           </div>
           <div className="bg-white p-8 rounded-[32px] border-2 border-slate-100 shadow-sm">
-            <h3 className="text-xs font-black uppercase tracking-[0.2em] text-slate-800 mb-8 border-b-2 border-slate-50 pb-6">Phân tích Từ khóa tiềm năng</h3>
+            <h3 className="text-xs font-black uppercase tracking-[0.15em] text-slate-800 mb-8 border-b-2 border-slate-50 pb-6">Phân tích Từ khóa tiềm năng</h3>
             <div className="flex flex-wrap gap-3">
                 {stats?.topKeywords?.map((k, i) => (
                     <div key={i} className="px-5 py-3 bg-slate-50 border-2 border-slate-100 rounded-2xl flex items-center gap-4 hover:bg-white hover:border-brand-500 hover:shadow-xl hover:shadow-brand-500/10 transition-all group cursor-default">
                         <span className="text-xs font-black text-slate-600 group-hover:text-brand-600 uppercase tracking-tight">{k._id}</span>
-                        <span className="px-2 py-0.5 bg-white border-2 border-slate-100 rounded-lg text-[10px] font-black text-slate-400 group-hover:text-brand-600 group-hover:border-brand-200 transition-colors tabular-nums">{k.count}</span>
+                        <span className="px-2 py-0.5 bg-white border-2 border-slate-100 rounded-lg text-[11px] font-black text-slate-400 group-hover:text-brand-600 group-hover:border-brand-200 transition-colors tabular-nums">{k.count}</span>
                     </div>
                 ))}
             </div>
@@ -184,9 +184,9 @@ const StatCard = ({ title, value, sub, icon: Icon, color }) => {
             <Icon className="w-7 h-7" />
         </div>
         <div className="min-w-0">
-            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">{title}</p>
+            <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1">{title}</p>
             <h3 className="text-2xl font-black text-slate-800 tabular-nums truncate">{value}</h3>
-            <p className="text-[10px] text-slate-400 mt-0.5 font-bold">{sub}</p>
+            <p className="text-[11px] text-slate-400 mt-0.5 font-bold uppercase tracking-tight">{sub}</p>
         </div>
     </div>
   );

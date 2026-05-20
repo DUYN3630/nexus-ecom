@@ -6,6 +6,7 @@ const dotenv = require('dotenv');
 const { generateText } = require('./utils/gemini');
 const Setting = require('./models/Setting');
 const SupportTicket = require('./models/SupportTicket');
+const repairController = require('./controllers/repairController');
 const { NEXUS_SYSTEM_INSTRUCTION, NEXUS_EXPERT_SUPPORT_INSTRUCTION } = require('./config/aiPrompt');
 
 // Cấu hình môi trường
@@ -18,6 +19,20 @@ if (!process.env.JWT_SECRET) {
 
 const app = express();
 app.use(cors());
+
+// --- SECURITY HEADERS (Fix COOP popup issues) ---
+app.use((req, res, next) => {
+    res.setHeader('Cross-Origin-Opener-Policy', 'same-origin-allow-popups');
+    res.setHeader('Cross-Origin-Embedder-Policy', 'credentialless'); // Optional, helps with some cross-origin isolated features
+    next();
+});
+
+// --- MASTER REQUEST LOGGER (Temporary for debugging 404) ---
+app.use((req, res, next) => {
+    console.log(`>>> [SERVER LOG] ${req.method} ${req.url}`);
+    next();
+});
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -70,7 +85,6 @@ app.use('/api/users', userRoutes);
 app.use('/api/reviews', reviewRoutes);
 app.use('/api/experts', expertRoutes);
 app.use('/api/tickets', ticketRoutes);
-
 app.use('/api/support', supportRoutes);
 app.use('/api/ai-settings', aiSettingRoutes);
 app.use('/api/upload', uploadRoutes);

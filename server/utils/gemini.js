@@ -1,11 +1,13 @@
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 
 /**
- * generateText - Gọi API Gemini dùng SDK chính thức của Google
+ * generateText - Gọi API Gemini dùng SDK chính thức của Google với cơ chế Retry
  * @param {string} prompt 
  * @param {Object} options - Các tùy chọn cấu hình
  */
-const generateText = async (prompt, options = {}) => {
+const generateText = async (prompt, options = {}, retryCount = 0) => {
+    const MAX_RETRIES = 2; // Số lần thử lại tối đa
+    
     // Lấy modelName từ options hoặc mặc định
     const { 
         systemInstruction = null, 
@@ -16,15 +18,12 @@ const generateText = async (prompt, options = {}) => {
     } = options;
 
     // Chuẩn hóa modelName
-    let finalModelName = (optionsModelName || "gemini-flash-latest").toString().toLowerCase().trim();
+    let finalModelName = (optionsModelName || "gemini-1.5-flash").toString().toLowerCase().trim();
     
-    // Nếu có ảnh, bắt buộc dùng model có khả năng vision (như gemini-1.5-flash hoặc gemini-1.5-pro)
-    // Để an toàn, có thể dùng gemini-1.5-flash
-    if (image && finalModelName === "gemini-pro") {
+    // Nếu có ảnh, bắt buộc dùng model có khả năng vision
+    if (image && (finalModelName === "gemini-pro" || finalModelName === "gemini-flash-latest")) {
         finalModelName = "gemini-1.5-flash";
     }
-
-    console.log(`--- [DEBUG] Final Model Name Sent to Google: "${finalModelName}" ---`);
 
     try {
         if (!prompt && !image) {
@@ -48,8 +47,6 @@ const generateText = async (prompt, options = {}) => {
             parts.push({ text: prompt });
         }
         if (image) {
-            // Giả định image là chuỗi base64 đã bỏ phần header 'data:image/...;base64,'
-            // Nếu frontend gửi kèm header thì cần tách ra.
             let base64Data = image;
             let mimeType = "image/jpeg";
             if (image.includes("base64,")) {
@@ -77,21 +74,32 @@ const generateText = async (prompt, options = {}) => {
         return response.text();
 
     } catch (error) {
+        // CƠ CHẾ RETRY CHO LỖI 503 (Service Unavailable)
+        if (error.message.includes("503") && retryCount < MAX_RETRIES) {
+            const delay = Math.pow(2, retryCount) * 1000; // Exponential backoff: 1s, 2s...
+            console.log(`--- [RETRY] Gemini API 503. Retrying in ${delay}ms... (Attempt ${retryCount + 1}/${MAX_RETRIES}) ---`);
+            await new Promise(resolve => setTimeout(resolve, delay));
+            return generateText(prompt, options, retryCount + 1);
+        }
+
         console.error("--- [ERROR] Gemini API Utility Detail ---");
         console.error("Model:", finalModelName);
         console.error("Error Message:", error.message);
-        if (error.stack) console.error("Stack:", error.stack);
         
-        // Trả về thông báo lỗi thân thiện
+        // Trả về thông báo lỗi thân thiện cho người dùng
         if (error.message.includes("429") || error.message.includes("quota")) {
-            return `Dạ, hiện tại em đã hết lượt hỗ trợ miễn phí. Anh/Chị vui lòng đợi một chút rồi nhắn lại nhé!`;
+            return `Dạ, hiện tại AI đang bận vì quá tải lượt yêu cầu miễn phí. Anh/Chị vui lòng đợi khoảng 1 phút rồi thử lại nhé!`;
+        }
+
+        if (error.message.includes("503")) {
+            return `Dạ, máy chủ AI của Google đang quá tải (High Demand). Em đã thử kết nối lại nhưng không được, Anh/Chị vui lòng nhắn lại sau giây lát nhé!`;
         }
 
         if (error.message.includes("404") || error.message.includes("not found")) {
-            return `Dạ, model "${finalModelName}" không tìm thấy hoặc chưa được hỗ trợ trên tài khoản này.`;
+            return `Dạ, hệ thống đang bảo trì mô hình trí tuệ nhân tạo này.`;
         }
 
-        return `Dạ, em gặp lỗi hệ thống: ${error.message}. Anh/Chị thử lại sau nhé!`;
+        return `Dạ, AI của em đang gặp chút trục trặc: ${error.message}. Anh/Chị thử lại sau nhé!`;
     }
 };
 
