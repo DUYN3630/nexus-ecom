@@ -17,29 +17,43 @@ if (!process.env.JWT_SECRET) {
     console.error('❌ CẢNH BÁO: JWT_SECRET chưa được cấu hình trong môi trường!');
 }
 
+const sanitize = require('mongo-sanitize');
+
 const app = express();
 app.use(cors());
-
-// --- SECURITY HEADERS (Fix COOP popup issues) ---
-app.use((req, res, next) => {
-    res.setHeader('Cross-Origin-Opener-Policy', 'same-origin-allow-popups');
-    res.setHeader('Cross-Origin-Embedder-Policy', 'credentialless'); // Optional, helps with some cross-origin isolated features
-    next();
-});
-
-// --- MASTER REQUEST LOGGER (Temporary for debugging 404) ---
-app.use((req, res, next) => {
-    console.log(`>>> [SERVER LOG] ${req.method} ${req.url}`);
-    next();
-});
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// --- SECURITY: SANITIZE INPUTS ---
+app.use((req, res, next) => {
+    req.body = sanitize(req.body);
+    req.query = sanitize(req.query);
+    req.params = sanitize(req.params);
+    next();
+});
+
+// --- SECURITY HEADERS (Fix COOP popup issues) ---
+app.use((req, res, next) => {
+    res.setHeader('Cross-Origin-Opener-Policy', 'same-origin-allow-popups');
+    res.setHeader('Cross-Origin-Embedder-Policy', 'credentialless');
+    next();
+});
+
+// --- MASTER REQUEST LOGGER ---
+app.use((req, res, next) => {
+    if (process.env.NODE_ENV !== 'test') {
+        console.log(`>>> [SERVER LOG] ${req.method} ${req.url}`);
+    }
+    next();
+});
+
 // Kết nối Database
-mongoose.connect(process.env.MONGODB_URI)
-  .then(() => console.log('✅ Kết nối MongoDB Atlas thành công'))
-  .catch(err => console.error('❌ Lỗi kết nối MongoDB:', err));
+if (process.env.NODE_ENV !== 'test') {
+    mongoose.connect(process.env.MONGODB_URI)
+      .then(() => console.log('✅ Kết nối MongoDB Atlas thành công'))
+      .catch(err => console.error('❌ Lỗi kết nối MongoDB:', err));
+}
 
 // --- CẤU HÌNH STATIC FILES (PHỤC VỤ HÌNH ẢNH) ---
 app.use((req, res, next) => {
@@ -108,4 +122,8 @@ app.use((err, req, res, next) => {
 });
 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+if (process.env.NODE_ENV !== 'test') {
+    app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+}
+
+module.exports = app;

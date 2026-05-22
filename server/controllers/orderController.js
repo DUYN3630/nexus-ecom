@@ -109,27 +109,46 @@ const getAllOrders = async (req, res) => {
     }
 };
 
+const Product = require('../models/Product');
+
 // @desc    Tạo đơn hàng mới
 // @route   POST /api/orders
 // @access  Private
 const createOrder = async (req, res) => {
+    const isTest = process.env.NODE_ENV === 'test';
+    const session = isTest ? null : await Order.startSession();
+    if (session) session.startTransaction();
+
     try {
-        // Tạo orderNumber tự động nếu không có
+        const { items } = req.body;
+
+        // 1. Kiểm tra và cập nhật tồn kho
+        for (const item of items) {
+            const product = await Product.findById(item.productId).session(session);
+            if (!product) {
+                throw new Error(`Sản phẩm ${item.name} không tồn tại.`);
+            }
+            if (product.stock < item.quantity) {
+                throw new Error(`Sản phẩm ${item.name} không đủ hàng trong kho (Còn lại: ${product.stock}).`);
+            }
+            
+            // Giảm tồn kho
+            product.stock -= item.quantity;
+            await product.save({ session });
+        }
+
+        // 2. Tạo đơn hàng
         const orderNumber = req.body.orderNumber || `NX-${Date.now()}-${Math.random().toString(36).substr(2, 5).toUpperCase()}`;
         
-        // Xác định paymentStatus dựa vào phương thức thanh toán
-        const paymentMethod = req.body.paymentMethod || 'COD';
-        const paymentStatus = paymentMethod === 'MOMO' ? 'Unpaid' : 'Unpaid';
-
         const newOrder = new Order({
             ...req.body,
             orderNumber,
-            userId: req.user?._id, // Gắn ID user vào đơn hàng
+            userId: req.user?._id,
             customer: {
                 ...req.body.customer,
-                email: req.user?.email || req.body.customer?.email // Ưu tiên email của user đã đăng nhập
+                email: req.user?.email || req.body.customer?.email
             },
-            paymentStatus,
+            paymentStatus: 'Unpaid',
             isDeleted: false,
             deliveryStatus: 'New', 
             createdAt: new Date(),
@@ -140,10 +159,21 @@ const createOrder = async (req, res) => {
                 time: new Date()
             }]
         });
-        const savedOrder = await newOrder.save();
+
+        const savedOrder = await newOrder.save({ session });
+        
+        if (session) {
+            await session.commitTransaction();
+            session.endSession();
+        }
+
         res.status(201).json(savedOrder);
     } catch (err) { 
-        res.status(400).json({ message: "Lỗi tạo đơn: " + err.message }); 
+        if (session) {
+            await session.abortTransaction();
+            session.endSession();
+        }
+        res.status(400).json({ message: err.message }); 
     }
 };
 

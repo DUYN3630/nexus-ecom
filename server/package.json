@@ -6,7 +6,7 @@
   "scripts": {
     "lint": "eslint . --ext .js --no-ignore",
     "seed:orders": "node scripts/seedOrders.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "vitest run"
   },
   "keywords": [],
   "author": "",
@@ -22,11 +22,15 @@
     "firebase-admin": "^13.8.0",
     "google-auth-library": "^10.6.2",
     "jsonwebtoken": "^9.0.3",
+    "mongo-sanitize": "^1.1.0",
     "mongoose": "^9.0.2",
     "multer": "^2.0.2",
     "nodemailer": "^8.0.3"
   },
   "devDependencies": {
-    "eslint": "^8.55.0"
+    "eslint": "^8.55.0",
+    "mongodb-memory-server": "^11.1.0",
+    "supertest": "^7.2.2",
+    "vitest": "^4.1.7"
   }
 }

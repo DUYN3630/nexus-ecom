@@ -8,7 +8,8 @@
     "build": "vite build",
     "lint": "eslint . --ext js,jsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview",
-    "test": "vitest",
+    "test": "vitest run src && cd server && npm test",
+    "test:server": "cd server && npm test",
     "test:run": "vitest run",
     "test:ui": "vitest --ui"
   },
