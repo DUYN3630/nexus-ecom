@@ -79,6 +79,10 @@ const CategoryProductCard = ({
   const imageUrl = getProductImageUrl(product);
   const isLiked = isInWishlist(product._id);
 
+  const hasDiscount = product.discountPrice && product.discountPrice > 0 && product.discountPrice < product.price;
+  const finalPrice = hasDiscount ? product.discountPrice : product.price;
+  const discountPct = hasDiscount ? Math.round(((product.price - product.discountPrice) / product.price) * 100) : null;
+
   const handlePurchase = (e) => {
     e.stopPropagation();
     dispatch(addToCartAction({ product, quantity: 1 }));
@@ -106,11 +110,18 @@ const CategoryProductCard = ({
           className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
           onError={(e) => { e.target.src = IMAGE_ERROR_PLACEHOLDER; }}
         />
-        {showBadge && (
-          <div className="absolute top-4 left-4">
-            <span className={`px-3 py-1 ${colors.badgeBg} text-white text-[9px] font-black uppercase tracking-widest rounded-full opacity-0 group-hover:opacity-100 transition-opacity`}>
-              Mới
-            </span>
+        {(showBadge || hasDiscount) && (
+          <div className="absolute top-4 left-4 flex flex-col gap-2">
+            {hasDiscount && (
+              <span className="px-3 py-1 bg-red-500 text-white text-[9px] font-black uppercase tracking-widest rounded-full shadow-lg">
+                -{discountPct}%
+              </span>
+            )}
+            {showBadge && (
+              <span className={`px-3 py-1 ${colors.badgeBg} text-white text-[9px] font-black uppercase tracking-widest rounded-full opacity-0 group-hover:opacity-100 transition-opacity shadow-lg`}>
+                Mới
+              </span>
+            )}
           </div>
         )}
         {showTooltip && product.featuredReason && (
@@ -134,9 +145,16 @@ const CategoryProductCard = ({
         
         <div className="mt-auto flex items-end justify-between">
           <div className="flex flex-col">
-            <span className="text-[9px] font-black uppercase tracking-widest text-slate-300">Giá sở hữu từ</span>
-            <span className="text-2xl font-black tracking-tighter text-slate-900">
-              {product.price?.toLocaleString('vi-VN')}₫
+            <span className="text-[9px] font-black uppercase tracking-widest text-slate-300">
+              {hasDiscount ? 'Giá khuyến mãi' : 'Giá sở hữu từ'}
+            </span>
+            {hasDiscount && (
+              <span className="text-xs text-slate-400 line-through font-bold">
+                {product.price?.toLocaleString('vi-VN')}₫
+              </span>
+            )}
+            <span className={`text-2xl font-black tracking-tighter ${hasDiscount ? 'text-red-500' : 'text-slate-900'}`}>
+              {finalPrice?.toLocaleString('vi-VN')}₫
             </span>
           </div>
           {showAddToCart ? (

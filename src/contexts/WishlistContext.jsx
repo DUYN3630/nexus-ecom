@@ -22,6 +22,7 @@ export const WishlistProvider = ({ children }) => {
 
   // Load wishlist khi key thay đổi
   useEffect(() => {
+    setIsLoaded(false); // Quan trọng: Đánh dấu chưa load xong khi key thay đổi
     try {
       const stored = localStorage.getItem(wishlistKey);
       const initialWishlist = stored ? JSON.parse(stored) : [];

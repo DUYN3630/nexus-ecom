@@ -100,11 +100,6 @@ const HeroSlider = () => {
                 
                 {/* Content Side: Layered Staggered Animation */}
                 <div className="space-y-8 relative z-20">
-                  <div className={`transition-all duration-1000 delay-[300ms] ease-out ${idx === current ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'}`}>
-                    <p className="inline-block text-[11px] font-black uppercase tracking-[0.4em] text-indigo-600 bg-indigo-50 px-4 py-1.5 rounded-full">
-                      {slide.content?.supertitle || 'Thế hệ mới / 2024'}
-                    </p>
-                  </div>
                   
                   <h1 className={`text-[clamp(2.5rem,6vw,5rem)] font-bold text-slate-900 tracking-tight leading-[1.1] whitespace-pre-line transition-all duration-1000 delay-[450ms] ease-out ${idx === current ? 'translate-y-0 opacity-100' : 'translate-y-12 opacity-0'}`}>
                     {slide.content?.title || slide.name}

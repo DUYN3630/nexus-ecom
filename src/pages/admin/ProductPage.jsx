@@ -3,14 +3,11 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Plus, Pencil, Trash2, X, Package,
   Search, Upload, ChevronLeft, ChevronRight, FileText, LayoutGrid, ShieldCheck,
-  CreditCard, Star
+  CreditCard, Star, Zap
 } from 'lucide-react';
 import productApi from '../../api/productApi';
 import categoryApi from '../../api/categoryApi';
 import getProductImageUrl from '../../utils/getProductImageUrl';
-
-// --- CONSTANTS ---
-const API_URL = 'http://127.0.0.1:5000'; 
 
 // --- HELPERS ---
 const formatCurrency = (amount) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
@@ -468,10 +465,7 @@ const ProductFormView = ({ product: currentProduct, categories, onBack, onSave }
                 
                 <div className="grid grid-cols-3 gap-4">
                   {imagePreviews.map((preview, index) => {
-                    let imageUrl = preview;
-                    if (!preview.startsWith('blob:') && !preview.startsWith('http')) {
-                       imageUrl = `${API_URL}${preview.startsWith('/') ? preview : `/${preview}`}`;
-                    }
+                    let imageUrl = getProductImageUrl(preview);
                     const isMain = formData.mainImage === preview || (!formData.mainImage && index === 0);
                     
                     return (
@@ -511,23 +505,45 @@ const ProductFormView = ({ product: currentProduct, categories, onBack, onSave }
                 </div>
 
                 <div className="space-y-8">
-                  <div className="space-y-4">
-                    <label className="text-[10px] font-black text-slate-800 uppercase tracking-widest ml-1 block">Giá bán lẻ niêm yết (VND)</label>
-                    <div className="p-8 bg-slate-900 rounded-[32px] shadow-2xl relative overflow-hidden group border-4 border-slate-800">
-                        <div className="absolute top-0 right-0 p-4 opacity-5">
-                            <CreditCard size={100} className="text-white" />
-                        </div>
-                        <label className="text-[9px] font-black text-white/30 uppercase tracking-[0.2em] mb-4 block">Official Price</label>
-                        <div className="relative flex items-center">
-                            <input 
-                                type="number" 
-                                name="price" 
-                                value={formData.price} 
-                                onChange={handleInputChange} 
-                                className="w-full bg-transparent border-none text-4xl font-black text-white placeholder:text-white/10 outline-none transition-all" 
-                            />
-                            <span className="text-white/20 font-black text-xl ml-2">đ</span>
-                        </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-4">
+                      <label className="text-[10px] font-black text-slate-800 uppercase tracking-widest ml-1 block">Giá gốc niêm yết (VND)</label>
+                      <div className="p-6 bg-slate-900 rounded-3xl shadow-2xl relative overflow-hidden group border-4 border-slate-800">
+                          <div className="absolute top-0 right-0 p-4 opacity-5">
+                              <CreditCard size={60} className="text-white" />
+                          </div>
+                          <div className="relative flex items-center">
+                              <input 
+                                  type="number" 
+                                  name="price" 
+                                  value={formData.price} 
+                                  onChange={handleInputChange} 
+                                  className="w-full bg-transparent border-none text-2xl font-black text-white placeholder:text-white/10 outline-none transition-all" 
+                                  placeholder="0"
+                              />
+                              <span className="text-white/20 font-black text-lg ml-2">đ</span>
+                          </div>
+                      </div>
+                    </div>
+
+                    <div className="space-y-4">
+                      <label className="text-[10px] font-black text-rose-600 uppercase tracking-widest ml-1 block">Giá khuyến mãi / Bán ra (VND)</label>
+                      <div className="p-6 bg-white border-4 border-rose-100 rounded-3xl shadow-sm relative overflow-hidden group">
+                          <div className="absolute top-0 right-0 p-4 opacity-10 text-rose-500">
+                              <Zap size={60} />
+                          </div>
+                          <div className="relative flex items-center">
+                              <input 
+                                  type="number" 
+                                  name="discountPrice" 
+                                  value={formData.discountPrice} 
+                                  onChange={handleInputChange} 
+                                  className="w-full bg-transparent border-none text-2xl font-black text-slate-900 placeholder:text-slate-200 outline-none transition-all" 
+                                  placeholder="0 (Để 0 nếu không giảm)"
+                              />
+                              <span className="text-slate-200 font-black text-lg ml-2">đ</span>
+                          </div>
+                      </div>
                     </div>
                   </div>
 

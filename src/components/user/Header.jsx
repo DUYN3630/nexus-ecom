@@ -8,6 +8,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { selectIsAuthenticated, selectCurrentUser, logout as logoutAction } from '../../store/slices/authSlice';
 import { useWishlist } from '../../contexts/WishlistContext';
 import trackingApi from '../../api/trackingApi'; // Import tracking API
+import productApi from '../../api/productApi'; // Import product API
 
 const Header = ({ cartCount, onOpenMobileMenu, topOffset = 0 }) => {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -15,6 +16,7 @@ const Header = ({ cartCount, onOpenMobileMenu, topOffset = 0 }) => {
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [showUserDropdown, setShowUserDropdown] = useState(false);
+  const [megaMenuProducts, setMegaMenuProducts] = useState({});
 
   const navigate = useNavigate();
   const dispatch = useDispatch();
@@ -23,11 +25,46 @@ const Header = ({ cartCount, onOpenMobileMenu, topOffset = 0 }) => {
 
   const { wishlist } = useWishlist();
   const dropdownRef = useRef(null);
+  const fetchedCategories = useRef(new Set()); // Theo dõi các category đã fetch
 
   const handleLogout = () => {
     dispatch(logoutAction());
     setShowUserDropdown(false);
     navigate('/'); 
+  };
+
+  const fetchProductsForCategory = async (catId) => {
+    const categorySlugMap = {
+      'iphone': 'iphone',
+      'mac': 'mac',
+      'ipad': 'ipad',
+      'watch': 'watch',
+      'tv-ent': 'tv-giai-tri',
+      'acc': 'phu-kien'
+    };
+
+    try {
+      const slug = categorySlugMap[catId] || catId;
+      const response = await productApi.getAll({ 
+          category: slug, 
+          limit: 8,
+          status: 'active' 
+      });
+      
+      setMegaMenuProducts(prev => ({
+        ...prev,
+        [catId]: response.data || []
+      }));
+    } catch (error) {
+      console.error(`Failed to fetch products for ${catId}`, error);
+    }
+  };
+
+  const handleMouseEnter = (catId) => {
+    setActiveMenu(catId);
+    if (catId !== 'store' && catId !== 'about') {
+      fetchProductsForCategory(catId);
+    }
   };
 
   useEffect(() => {
@@ -290,10 +327,10 @@ const Header = ({ cartCount, onOpenMobileMenu, topOffset = 0 }) => {
       </div>
 
       {/* Menu Điều hướng Chính (Desktop) */}
-      <nav className="hidden lg:block border-t border-slate-50 relative">
+      <nav className="hidden lg:block border-t border-slate-50 relative" onMouseLeave={() => setActiveMenu(null)}>
         <div className="max-w-7xl mx-auto px-10 h-10 flex items-center justify-center gap-12">
           {NAV_CATEGORIES.map((cat) => (
-            <div key={cat.id} className="h-full flex items-center" onMouseEnter={() => setActiveMenu(cat.id)}>
+            <div key={cat.id} className="h-full flex items-center" onMouseEnter={() => handleMouseEnter(cat.id)}>
               <button onClick={() => handleNavClick(null, cat.id)} className={`text-[9.5px] font-black uppercase tracking-[0.25em] transition-all hover:text-black relative ${activeMenu === cat.id ? 'text-black' : 'text-slate-400'}`}>
                 {cat.name}
                 <span className={`absolute -bottom-[13px] left-0 right-0 h-0.5 bg-black transition-all duration-300 ${activeMenu === cat.id ? 'opacity-100 scale-x-100' : 'opacity-0 scale-x-0'}`}></span>
@@ -316,7 +353,22 @@ const Header = ({ cartCount, onOpenMobileMenu, topOffset = 0 }) => {
                 </div>
               </div>
               <div className="col-span-5 grid grid-cols-4 gap-y-6 gap-x-8">
-                {activeMenu && NAV_CATEGORIES.find(c => c.id === activeMenu).children.map((sub) => (
+                {activeMenu && (megaMenuProducts[activeMenu] || []).length > 0 ? (
+                  megaMenuProducts[activeMenu].map((product) => (
+                    <div 
+                      key={product._id} 
+                      className="flex flex-col gap-1 cursor-pointer group/item" 
+                      onClick={() => {
+                        navigate(`/product/${product.slug}`);
+                        setActiveMenu(null);
+                      }}
+                    >
+                      <span className="text-[10px] font-black uppercase tracking-widest text-slate-600 group-hover/item:text-black transition-colors">
+                        {product.name}
+                      </span>
+                    </div>
+                  ))
+                ) : activeMenu && NAV_CATEGORIES.find(c => c.id === activeMenu).children.map((sub) => (
                   <div key={sub.id} className="flex flex-col gap-1 cursor-pointer group/item" onClick={() => handleNavClick(null, activeMenu)}>
                     <span className="text-[10px] font-black uppercase tracking-widest text-slate-600 group-hover/item:text-black transition-colors">{sub.name}</span>
                   </div>

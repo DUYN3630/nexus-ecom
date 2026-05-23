@@ -40,7 +40,7 @@ const ProductCard = ({ product, className = '', style = {} }) => {
     name,
     slug, // Fallback if slug missing (though it shouldn't be)
     price,
-    salePrice, // Optional
+    discountPrice, // Align with backend
     images = [],
     isFeatured,
     tag // Optional UI tag
@@ -50,8 +50,8 @@ const ProductCard = ({ product, className = '', style = {} }) => {
   const displayImage = getProductImageUrl(product);
   const displaySlug = slug || _id; // Fallback slug
   
-  const hasDiscount = salePrice && salePrice < price;
-  const finalPrice = hasDiscount ? salePrice : price;
+  const hasDiscount = discountPrice && discountPrice > 0 && discountPrice < price;
+  const finalPrice = hasDiscount ? discountPrice : price;
   const isLiked = isInWishlist(_id);
 
   const handleCardClick = () => {
@@ -90,7 +90,7 @@ const ProductCard = ({ product, className = '', style = {} }) => {
           )}
           {hasDiscount && (
             <span className="px-3 py-1 bg-red-500 text-white rounded-full text-[8px] font-black uppercase tracking-widest shadow-sm">
-              -{Math.round(((price - salePrice) / price) * 100)}%
+              -{Math.round(((price - discountPrice) / price) * 100)}%
             </span>
           )}
           {tag && (

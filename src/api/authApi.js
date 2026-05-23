@@ -24,6 +24,10 @@ const authApi = {
   phoneAuth: (data) => {
     return axiosClient.post('/auth/phone-auth', data);
   },
+
+  changePassword: (data) => {
+    return axiosClient.post('/auth/change-password', data);
+  },
 };
 
 export default authApi;

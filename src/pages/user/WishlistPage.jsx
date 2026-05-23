@@ -5,6 +5,7 @@ import { useWishlist } from '../../contexts/WishlistContext';
 import { useDispatch } from 'react-redux';
 import { addToCart as addToCartAction } from '../../store/slices/cartSlice';
 import { useToast } from '../../contexts/ToastContext';
+import getProductImageUrl from '../../utils/getProductImageUrl';
 
 const WishlistPage = () => {
   const { wishlist, toggleWishlist, clearWishlist } = useWishlist();
@@ -12,14 +13,12 @@ const WishlistPage = () => {
   const { addToast } = useToast();
   const navigate = useNavigate();
 
-  const API_URL = 'http://127.0.0.1:5000';
-
   if (wishlist.length === 0) {
     // ... (empty state JSX is the same)
   }
 
   return (
-    <div className="bg-slate-50 min-h-screen py-16 md:py-24">
+    <div className="bg-slate-50 min-h-screen pt-28 pb-16 md:pt-36 md:pb-24">
       <div className="max-w-7xl mx-auto px-6 md:px-10">
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
           <div>
@@ -38,7 +37,7 @@ const WishlistPage = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {wishlist.map((item) => {
-            const imageUrl = item.images?.[0] ? (item.images[0].startsWith('http') ? item.images[0] : `${API_URL}${item.images[0]}`) : 'https://placehold.co/400x400';
+            const imageUrl = getProductImageUrl(item.images?.[0]);
             const price = item.discountPrice || item.price;
             
             return (

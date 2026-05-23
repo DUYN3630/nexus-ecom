@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { X, Upload, Link as LinkIcon, Calendar, Type, Image as ImageIcon, Save } from 'lucide-react';
 import productApi from '../../../api/productApi';
 import categoryApi from '../../../api/categoryApi';
+import getProductImageUrl from '../../../utils/getProductImageUrl';
 
 const QuickEditDrawer = ({ banner, mode, isOpen, onClose, onSave }) => {
   const [activeTab, setActiveTab] = useState('basic');
@@ -37,13 +38,12 @@ const QuickEditDrawer = ({ banner, mode, isOpen, onClose, onSave }) => {
             url: banner.linkTarget?.url || ''
           },
           schedule: {
-            startAt: banner.schedule?.startAt ? new Date(banner.schedule.startAt).toISOString().slice(0, 16) : '',
-            endAt: banner.schedule?.endAt ? new Date(banner.schedule.endAt).toISOString().slice(0, 16) : ''
+          startAt: banner.schedule?.startAt ? new Date(banner.schedule.startAt).toISOString().slice(0, 16) : '',
+          endAt: banner.schedule?.endAt ? new Date(banner.schedule.endAt).toISOString().slice(0, 16) : ''
           }
-        });
-        setPreviewUrl(banner.media?.url ? `http://127.0.0.1:5000${banner.media.url}` : '');
-      } else {
-        // Reset form
+          });
+          setPreviewUrl(getProductImageUrl(banner.media?.url));
+          } else {        // Reset form
         setFormData({
             name: '', type: 'hero', position: 'home-top', status: 'active', priority: 0,
             media: { url: '', kind: 'image' },

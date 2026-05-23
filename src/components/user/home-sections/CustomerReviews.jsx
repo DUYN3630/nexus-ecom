@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Star, CheckCircle2, Quote } from 'lucide-react';
 import reviewApi from '../../../api/reviewApi';
+import getProductImageUrl from '../../../utils/getProductImageUrl';
 
 // Mock data (fallback in case of API error or no reviews)
 const MOCK_REVIEWS = [
@@ -69,8 +70,6 @@ const CustomerReviews = () => {
     fetchReviews();
   }, []);
 
-  const API_URL = 'http://127.0.0.1:5000';
-
   if (loading) {
     return (
        <section className="py-24 bg-[#FBFBFB]">
@@ -114,7 +113,7 @@ const CustomerReviews = () => {
             // Determine structure dynamically based on whether it is from API or Mock
             const isApi = !!review._id;
             const id = isApi ? review._id : review.id;
-            const avatar = isApi ? (review.user?.avatar?.url ? (review.user.avatar.url.startsWith('http') ? review.user.avatar.url : `${API_URL}${review.user.avatar.url}`) : 'https://placehold.co/100x100?text=User') : review.avatar;
+            const avatar = isApi ? getProductImageUrl(review.user?.avatar?.url) : review.avatar;
             const name = isApi ? review.user?.name : review.name;
             const content = isApi ? review.content : review.content;
             const productName = isApi ? review.product?.name : review.product;

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Minus, Plus, Trash2, ArrowRight, ShieldCheck, ShoppingBag } from 'lucide-react';
 import EmptyState from '../../components/common/EmptyState';
 import { formatCurrency } from '../../utils/formatCurrency';
+import getProductImageUrl from '../../utils/getProductImageUrl';
 import { useSelector, useDispatch } from 'react-redux';
 import { selectCartItems, updateQuantity as updateQuantityAction, removeFromCart as removeFromCartAction } from '../../store/slices/cartSlice';
 import { selectIsAuthenticated } from '../../store/slices/authSlice';
@@ -92,7 +93,7 @@ const CartPage = () => {
             {cartItems.map(item => (
               <div key={item._id + JSON.stringify(item.variant)} className="group grid grid-cols-1 md:grid-cols-12 gap-8 py-12 border-t border-stone-200 first:border-t-0">
                 <div className="md:col-span-4 aspect-[3/4] bg-white rounded-2xl overflow-hidden p-8 relative">
-                  <img src={item.image} alt={item.name} className="w-full h-full object-contain group-hover:scale-110 transition-transform duration-1000" />
+                  <img src={getProductImageUrl(item.image)} alt={item.name} className="w-full h-full object-contain group-hover:scale-110 transition-transform duration-1000" />
                   <div className="absolute inset-0 bg-stone-900/5 opacity-0 group-hover:opacity-100 transition-opacity" />
                 </div>
                 

@@ -1,5 +1,6 @@
 import { useBulkAction } from '../../../hooks/useBulkAction';
 import { PencilLine, Lock } from 'lucide-react';
+import getProductImageUrl from '../../../utils/getProductImageUrl';
 
 const getStatusClass = (s) => {
     if(s==='active') return 'bg-white/90 text-emerald-600 border-emerald-100';
@@ -38,7 +39,7 @@ const BannerGrid = ({ banners, onEdit }) => {
                             />
                         </div>
                         <div className="aspect-[16/8] relative overflow-hidden bg-slate-100 border-b border-slate-100">
-                            <img src={`http://127.0.0.1:5000${b.media?.url}`} alt={b.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+                            <img src={getProductImageUrl(b.media?.url)} alt={b.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
                             {isExpired && (
                                 <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-[1px] flex items-center justify-center text-white">
                                     <Lock size={32} />

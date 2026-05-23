@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Package, User, LogOut, ChevronRight, Clock, ShoppingBag, Wrench, ShieldCheck, MessageSquare } from 'lucide-react';
+import { Package, User, LogOut, ChevronRight, Clock, ShoppingBag, Wrench, ShieldCheck, MessageSquare, Lock, Eye, EyeOff } from 'lucide-react';
 import { useSelector, useDispatch } from 'react-redux';
 import { selectCurrentUser, logout as logoutAction } from '../../store/slices/authSlice';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -7,19 +7,36 @@ import orderApi from '../../api/orderApi';
 import supportApi from '../../api/supportApi';
 import appointmentApi from '../../api/appointmentApi';
 import paymentApi from '../../api/paymentApi';
+import authApi from '../../api/authApi';
 import { formatCurrency } from '../../utils/formatCurrency';
+import { useToast } from '../../contexts/ToastContext';
 
 const AccountPage = () => {
   const dispatch = useDispatch();
   const user = useSelector(selectCurrentUser);
   const navigate = useNavigate();
   const { tab } = useParams();
+  const { addToast } = useToast();
+
   const [activeTab, setActiveTab] = useState(tab || 'orders');
   const [orders, setOrders] = useState([]);
   const [repairs, setRepairs] = useState([]);
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(false);
   const [isPaying, setIsPaying] = useState(false);
+
+  // Password change state
+  const [passwordData, setPasswordData] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: ''
+  });
+  const [showPasswords, setShowPasswords] = useState({
+    current: false,
+    new: false,
+    confirm: false
+  });
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
 
   // Cập nhật tab khi URL thay đổi
   useEffect(() => {
@@ -112,6 +129,33 @@ const AccountPage = () => {
   const handleTabChange = (newTab) => {
     setActiveTab(newTab);
     navigate(`/user/account/${newTab}`);
+  };
+
+  const handlePasswordChange = async (e) => {
+    e.preventDefault();
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
+      addToast('Mật khẩu xác nhận không khớp', 'error');
+      return;
+    }
+    if (passwordData.newPassword.length < 6) {
+      addToast('Mật khẩu mới phải từ 6 ký tự trở lên', 'error');
+      return;
+    }
+
+    setIsChangingPassword(true);
+    try {
+      await authApi.changePassword({
+        currentPassword: passwordData.currentPassword,
+        newPassword: passwordData.newPassword,
+        confirmPassword: passwordData.confirmPassword
+      });
+      addToast('Đổi mật khẩu thành công', 'success');
+      setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
+    } catch (error) {
+      addToast(error.response?.data?.message || 'Đổi mật khẩu thất bại', 'error');
+    } finally {
+      setIsChangingPassword(false);
+    }
   };
 
   const getStatusColor = (status) => {
@@ -428,38 +472,131 @@ const AccountPage = () => {
             )}
 
             {activeTab === 'profile' && (
-              <div className="bg-white p-8 md:p-12 rounded-[2.5rem] border border-slate-100 space-y-10 animate-in fade-in slide-in-from-right-4 duration-500 shadow-sm">
-                <div className="flex items-center gap-6">
-                  <div className="w-24 h-24 rounded-3xl flex items-center justify-center text-white text-3xl font-black shadow-xl ring-8 ring-slate-50 overflow-hidden">
-                    {user?.avatar ? (
-                        <img src={user.avatar} className="w-full h-full object-cover" />
-                    ) : (
-                        <div className="w-full h-full bg-gradient-to-br from-brand-500 to-indigo-600 flex items-center justify-center">
-                            {user?.name?.charAt(0) || 'U'}
-                        </div>
-                    )}
+              <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-500">
+                {/* Thông tin cơ bản */}
+                <div className="bg-white p-8 md:p-12 rounded-[2.5rem] border border-slate-100 space-y-10 shadow-sm">
+                  <div className="flex items-center gap-6">
+                    <div className="w-24 h-24 rounded-3xl flex items-center justify-center text-white text-3xl font-black shadow-xl ring-8 ring-slate-50 overflow-hidden">
+                      {user?.avatar ? (
+                          <img src={user.avatar} className="w-full h-full object-cover" />
+                      ) : (
+                          <div className="w-full h-full bg-gradient-to-br from-brand-500 to-indigo-600 flex items-center justify-center">
+                              {user?.name?.charAt(0) || 'U'}
+                          </div>
+                      )}
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-black uppercase tracking-tighter italic leading-tight">{user?.name || 'Khách hàng'}</h3>
+                      <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mt-1">{user?.role || 'Verified Member'}</p>
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="text-xl font-black uppercase tracking-tighter italic leading-tight">{user?.name || 'Khách hàng'}</h3>
-                    <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mt-1">{user?.role || 'Verified Member'}</p>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-8 border-t border-slate-50">
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black uppercase tracking-widest text-slate-300">Họ tên đầy đủ</label>
+                      <div className="p-5 bg-slate-50 border border-slate-100 rounded-2xl text-[13px] font-bold text-slate-900 shadow-inner">{user?.name || 'Khách hàng'}</div>
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black uppercase tracking-widest text-slate-300">Địa chỉ Email</label>
+                      <div className="p-5 bg-slate-50 border border-slate-100 rounded-2xl text-[13px] font-bold text-slate-900 shadow-inner">{user?.email || 'email@example.com'}</div>
+                    </div>
                   </div>
-                </div>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-8 border-t border-slate-50">
-                   <div className="space-y-2">
-                     <label className="text-[10px] font-black uppercase tracking-widest text-slate-300">Họ tên đầy đủ</label>
-                     <div className="p-5 bg-slate-50 border border-slate-100 rounded-2xl text-[13px] font-bold text-slate-900 shadow-inner">{user?.name || 'Khách hàng'}</div>
-                   </div>
-                   <div className="space-y-2">
-                     <label className="text-[10px] font-black uppercase tracking-widest text-slate-300">Địa chỉ Email</label>
-                     <div className="p-5 bg-slate-50 border border-slate-100 rounded-2xl text-[13px] font-bold text-slate-900 shadow-inner">{user?.email || 'email@example.com'}</div>
-                   </div>
+
+                  <div className="pt-8">
+                    <button className="px-8 py-4 bg-black text-white text-[11px] font-black uppercase tracking-[0.2em] rounded-2xl hover:bg-indigo-600 transition-all shadow-xl shadow-slate-100 active:scale-95">
+                      Cập nhật thông tin
+                    </button>
+                  </div>
                 </div>
 
-                <div className="pt-8">
-                  <button className="px-8 py-4 bg-black text-white text-[11px] font-black uppercase tracking-[0.2em] rounded-2xl hover:bg-indigo-600 transition-all shadow-xl shadow-slate-100 active:scale-95">
-                    Lưu thay đổi
-                  </button>
+                {/* Đổi mật khẩu */}
+                <div className="bg-white p-8 md:p-12 rounded-[2.5rem] border border-slate-100 space-y-8 shadow-sm">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 bg-slate-900 text-white rounded-xl flex items-center justify-center">
+                      <Lock size={20} />
+                    </div>
+                    <h3 className="text-xl font-black uppercase tracking-tighter italic">Bảo mật tài khoản</h3>
+                  </div>
+
+                  <form onSubmit={handlePasswordChange} className="space-y-6 pt-4">
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Mật khẩu hiện tại</label>
+                      <div className="relative">
+                        <input 
+                          type={showPasswords.current ? "text" : "password"}
+                          value={passwordData.currentPassword}
+                          onChange={(e) => setPasswordData({...passwordData, currentPassword: e.target.value})}
+                          placeholder="••••••••"
+                          required
+                          className="w-full p-5 bg-slate-50 border border-slate-100 rounded-2xl text-[13px] font-bold text-slate-900 placeholder:text-slate-300 focus:bg-white focus:border-indigo-500 transition-all outline-none"
+                        />
+                        <button 
+                          type="button"
+                          onClick={() => setShowPasswords({...showPasswords, current: !showPasswords.current})}
+                          className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-black transition-colors"
+                        >
+                          {showPasswords.current ? <EyeOff size={18} /> : <Eye size={18} />}
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Mật khẩu mới</label>
+                        <div className="relative">
+                          <input 
+                            type={showPasswords.new ? "text" : "password"}
+                            value={passwordData.newPassword}
+                            onChange={(e) => setPasswordData({...passwordData, newPassword: e.target.value})}
+                            placeholder="Mật ít nhất 6 ký tự"
+                            required
+                            className="w-full p-5 bg-slate-50 border border-slate-100 rounded-2xl text-[13px] font-bold text-slate-900 placeholder:text-slate-300 focus:bg-white focus:border-indigo-500 transition-all outline-none"
+                          />
+                          <button 
+                            type="button"
+                            onClick={() => setShowPasswords({...showPasswords, new: !showPasswords.new})}
+                            className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-black transition-colors"
+                          >
+                            {showPasswords.new ? <EyeOff size={18} /> : <Eye size={18} />}
+                          </button>
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Xác nhận mật khẩu</label>
+                        <div className="relative">
+                          <input 
+                            type={showPasswords.confirm ? "text" : "password"}
+                            value={passwordData.confirmPassword}
+                            onChange={(e) => setPasswordData({...passwordData, confirmPassword: e.target.value})}
+                            placeholder="Nhập lại mật khẩu mới"
+                            required
+                            className="w-full p-5 bg-slate-50 border border-slate-100 rounded-2xl text-[13px] font-bold text-slate-900 placeholder:text-slate-300 focus:bg-white focus:border-indigo-500 transition-all outline-none"
+                          />
+                          <button 
+                            type="button"
+                            onClick={() => setShowPasswords({...showPasswords, confirm: !showPasswords.confirm})}
+                            className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-black transition-colors"
+                          >
+                            {showPasswords.confirm ? <EyeOff size={18} /> : <Eye size={18} />}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="pt-4">
+                      <button 
+                        disabled={isChangingPassword}
+                        className="px-8 py-4 bg-black text-white text-[11px] font-black uppercase tracking-[0.2em] rounded-2xl hover:bg-indigo-600 transition-all shadow-xl shadow-slate-100 active:scale-95 disabled:bg-slate-300 disabled:cursor-not-allowed flex items-center gap-3"
+                      >
+                        {isChangingPassword ? (
+                          <>
+                            <div className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                            Đang xử lý...
+                          </>
+                        ) : 'Thay đổi mật khẩu'}
+                      </button>
+                    </div>
+                  </form>
                 </div>
               </div>
             )}

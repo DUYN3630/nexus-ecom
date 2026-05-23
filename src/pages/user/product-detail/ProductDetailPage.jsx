@@ -13,6 +13,7 @@ import useProductDetail from '../../../hooks/useProductDetail';
 import trackingApi from '../../../api/trackingApi';
 import usePageTiming from '../../../hooks/usePageTiming';
 import { formatCurrency } from '../../../utils/formatCurrency';
+import getProductImageUrl from '../../../utils/getProductImageUrl';
 import { useDispatch } from 'react-redux';
 import { addToCart as addToCartAction } from '../../../store/slices/cartSlice';
 import { useToast } from '../../../contexts/ToastContext';
@@ -97,9 +98,8 @@ const ProductDetailPage = () => {
     </div>
   );
 
-  const API_URL = 'http://127.0.0.1:5000';
   const productImages = (product.images && product.images.length > 0)
-    ? product.images.map(img => img.startsWith('http') ? img : `${API_URL}${img.startsWith('/') ? '' : '/'}${img}`)
+    ? product.images.map(img => getProductImageUrl(img))
     : ['https://placehold.co/600x600?text=No+Image'];
 
   return (
@@ -187,34 +187,12 @@ const ProductDetailPage = () => {
         </div>
       </section>
 
-      {/* THE MATERIAL STORY */}
-      <section className="py-48 mt-48 bg-stone-900 text-white overflow-hidden relative">
-        <div 
-          className="absolute inset-0 opacity-30 grayscale contrast-125"
-          style={{ 
-            backgroundImage: `url(${productImages[0]})`,
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-            transform: `translateY(${(scrollY - 2000) * 0.1}px)`
-          }}
-        />
-        <div className="relative z-10 max-w-4xl mx-auto px-6 text-center space-y-12">
-          <span className="text-xs tracking-[0.5em] uppercase text-stone-500 font-bold">Chế tác cao cấp</span>
-          <h2 className="text-5xl md:text-8xl font-serif italic leading-none">Titanium <br /> Đẳng cấp mới.</h2>
-          <p className="text-stone-400 text-lg font-light leading-relaxed max-w-2xl mx-auto">
-            Mạnh mẽ hơn, nhẹ hơn và cực kỳ bền bỉ. Nexus nâng tầm tiêu chuẩn chế tác với lớp hoàn thiện Titanium cấp độ 5.
-          </p>
-          <div className="pt-12">
-            <div className="w-px h-24 bg-gradient-to-b from-stone-50 to-transparent mx-auto" />
-          </div>
-        </div>
-      </section>
-
       <div className="max-w-[1920px] mx-auto px-6 md:px-12 lg:px-24">
         <AiInsightSection 
           productName={product.name} 
           productPrice={product.price}
           productDescription={product.description}
+          productImage={productImages[0]}
         />
 
         {/* REVIEW SECTION */}

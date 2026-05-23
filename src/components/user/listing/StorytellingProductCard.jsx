@@ -1,6 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowRight, Sparkles } from 'lucide-react';
+import getProductImageUrl from '../../../utils/getProductImageUrl';
 
 const formatCurrency = (value) => {
   return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(value);
@@ -16,9 +17,7 @@ const StorytellingProductCard = ({ product, featured = false }) => {
     navigate(`/product/${product.slug}`);
   };
 
-  const imageSrc = product.images?.[0]?.startsWith('http') 
-    ? product.images[0] 
-    : `http://127.0.0.1:5000${product.images?.[0]}`;
+  const imageSrc = getProductImageUrl(product.images?.[0]);
 
   return (
     <div 

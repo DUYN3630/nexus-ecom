@@ -2,15 +2,14 @@ import { useState, useEffect, useCallback } from 'react';
 import { Search, ShoppingBag, Scale, ArrowRight, ChevronRight, Plus, Cpu, MessageSquare, Layers, Zap } from 'lucide-react';
 import axiosClient from '../../api/axiosClient';
 import { formatCurrency } from '../../utils/formatCurrency';
+import getProductImageUrl from '../../utils/getProductImageUrl';
 import { Link, useNavigate } from 'react-router-dom';
 import debounce from 'lodash/debounce';
 import { useDispatch } from 'react-redux';
 import { addToCart as addToCartAction } from '../../store/slices/cartSlice';
 import '../../styles/StoreGallery.css';
 
-const BASE_URL = 'http://127.0.0.1:5000';
-
-const ProductCard = ({ product, getImageUrl, onAddToCart, onCompare, isComparing }) => {
+const ProductCard = ({ product, onAddToCart, onCompare, isComparing }) => {
   const navigate = useNavigate();
 
   const hasDiscount = product.discountPrice && product.discountPrice < product.price;
@@ -25,7 +24,7 @@ const ProductCard = ({ product, getImageUrl, onAddToCart, onCompare, isComparing
     >
       <div className="relative mb-6 block aspect-square w-full overflow-hidden rounded-xl">
         <img
-          src={getImageUrl(product.images?.[0])}
+          src={getProductImageUrl(product.images?.[0])}
           alt={product.name}
           className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
           onError={(e) => { e.target.src = 'https://via.placeholder.com/300?text=No+Image'; }}
@@ -155,13 +154,6 @@ const StorePage = () => {
   
   const handleAddToCart = (product) => {
     dispatch(addToCartAction({ product, quantity: 1 }));
-    // Consider adding a toast message for user feedback
-  };
-
-  const getImageUrl = (imagePath) => {
-    if (!imagePath) return '';
-    if (imagePath.startsWith('http')) return imagePath;
-    return `${BASE_URL}${imagePath.startsWith('/') ? '' : '/'}${imagePath}`;
   };
 
   return (
@@ -274,7 +266,6 @@ const StorePage = () => {
               <ProductCard
                 key={product._id}
                 product={product}
-                getImageUrl={getImageUrl}
                 onAddToCart={() => handleAddToCart(product)}
                 onCompare={() => toggleCompare(product)}
                 isComparing={compareList.some((p) => p._id === product._id)}
@@ -365,7 +356,7 @@ const StorePage = () => {
             <div className="flex -space-x-2">
               {compareList.map((p) => (
                 <div key={p._id} className="w-9 h-9 rounded-full bg-slate-50 border border-slate-200 overflow-hidden p-0.5">
-                  <img src={getImageUrl(p.images[0])} className="w-full h-full object-contain" alt="" />
+                  <img src={getProductImageUrl(p.images?.[0])} className="w-full h-full object-contain" alt="" />
                 </div>
               ))}
               {compareList.length < 3 && (
@@ -394,7 +385,7 @@ const StorePage = () => {
             {compareList.map((p) => (
               <div key={p._id} className="space-y-3">
                 <div className="aspect-square bg-slate-50 rounded-xl p-4 flex items-center justify-center">
-                  <img src={getImageUrl(p.images[0])} className="max-h-full object-contain" alt="" />
+                  <img src={getProductImageUrl(p.images?.[0])} className="max-h-full object-contain" alt="" />
                 </div>
                 <div>
                   <h4 className="font-bold text-sm leading-tight mb-2 text-slate-800">{p.name}</h4>

@@ -128,7 +128,7 @@ const AccountManagementPage = () => {
   const handleResetPassword = async () => {
     if (!newPassword) return;
     try {
-      const response = await axiosClient.post(`/users/${selectedUser._id}/reset-password`, { password: newPassword });
+      const response = await axiosClient.post(`/users/${selectedUser._id}/reset-password`, { newPassword: newPassword });
       if (response.success) {
         addToast("Đã cấp mật khẩu mới thành công", "success");
         setIsResetModalOpen(false);

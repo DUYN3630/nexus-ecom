@@ -41,10 +41,14 @@ axiosClient.interceptors.request.use(
 );
 
 // XỬ LÝ LỖI 401: Nếu token hết hạn hoặc sai, tự động đăng xuất
+// TUY NHIÊN: Không đăng xuất nếu là lỗi sai mật khẩu khi Login hoặc Đổi mật khẩu
 axiosClient.interceptors.response.use(
   (response) => response.data,
   (error) => {
-    if (error.response?.status === 401) {
+    const isLoginRequest = error.config?.url?.includes('/auth/login');
+    const isChangePasswordRequest = error.config?.url?.includes('/auth/change-password');
+
+    if (error.response?.status === 401 && !isLoginRequest && !isChangePasswordRequest) {
       localStorage.removeItem('user');
       localStorage.removeItem('token');
       if (window.location.pathname.startsWith('/admin')) {

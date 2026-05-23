@@ -7,7 +7,9 @@ const uploadApi = {
         formData.append('file', file);
         
         const token = localStorage.getItem('token');
-        const baseUrl = 'http://127.0.0.1:5000/api'; // Hoặc lấy từ biến môi trường
+        
+        const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+        const baseUrl = isLocal ? 'http://localhost:5000/api' : 'https://nexus-ecom-es17.onrender.com/api';
 
         try {
             const response = await fetch(`${baseUrl}/upload`, {

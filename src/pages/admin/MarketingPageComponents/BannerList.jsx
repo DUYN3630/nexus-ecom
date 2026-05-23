@@ -1,4 +1,5 @@
 import { Pencil, Trash2, Circle } from 'lucide-react';
+import getProductImageUrl from '../../../utils/getProductImageUrl';
 
 const BannerList = ({ banners, onEdit, onDelete }) => (
   <div className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden flex flex-col">
@@ -20,9 +21,9 @@ const BannerList = ({ banners, onEdit, onDelete }) => (
                 <div className="flex items-center gap-4">
                   <div className="w-16 h-10 bg-slate-50 rounded-xl overflow-hidden border border-slate-100 shadow-sm group-hover:scale-105 transition-transform">
                     {banner.media?.kind === 'video' ? (
-                      <video src={`http://127.0.0.1:5000${banner.media.url}`} className="w-full h-full object-cover" muted />
+                      <video src={getProductImageUrl(banner.media.url)} className="w-full h-full object-cover" muted />
                     ) : (
-                      <img src={`http://127.0.0.1:5000${banner.media.url}`} alt={banner.name} className="w-full h-full object-cover" />
+                      <img src={getProductImageUrl(banner.media.url)} alt={banner.name} className="w-full h-full object-cover" />
                     )}
                   </div>
                   <div className="min-w-0">
