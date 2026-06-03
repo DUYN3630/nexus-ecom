@@ -4,7 +4,8 @@ import {
   Send, ShieldCheck, Cpu, Smartphone, Monitor, Watch, 
   MessageSquare, Star, MapPin, CheckCircle, AlertTriangle, 
   Search, ChevronRight, HelpCircle, Info, History, Terminal,
-  User, Loader2, StarHalf, Camera, X, AlertCircle, DollarSign
+  User, Loader2, StarHalf, Camera, X, AlertCircle, DollarSign,
+  Plus
 } from 'lucide-react';
 import expertApi from '../../api/expertApi';
 import geminiApi from '../../api/geminiApi';
@@ -50,19 +51,34 @@ const ExpertSupportPage = () => {
   const [userInput, setUserInput] = useState('');
   const [isAiTyping, setIsAiTyping] = useState(false);
   const [selectedImage, setSelectedImage] = useState(null);
+  const [chatHistoryList, setChatHistoryList] = useState(JSON.parse(localStorage.getItem('nexus_chat_history_list')) || []);
   const [sessionId, setSessionId] = useState(localStorage.getItem('nexus_chat_session') || `sess_${Math.random().toString(36).substr(2, 9)}`);
   const chatEndRef = useRef(null);
   const fileInputRef = useRef(null);
   const { addToast } = useToast();
 
-  // Lưu sessionId
+  // Lưu sessionId và history list
   useEffect(() => {
     localStorage.setItem('nexus_chat_session', sessionId);
   }, [sessionId]);
 
-  // Khôi phục hội thoại cũ khi load trang
+  useEffect(() => {
+    localStorage.setItem('nexus_chat_history_list', JSON.stringify(chatHistoryList));
+  }, [chatHistoryList]);
+
+  // Khôi phục hội thoại cũ khi load trang hoặc đổi sessionId
   useEffect(() => {
     const restoreHistory = async () => {
+      // Clear current messages before loading new ones to avoid "flash"
+      if (sessionId.startsWith('sess_')) {
+         // Check if we have local fallback for this specific session
+         const localSession = chatHistoryList.find(s => s.id === sessionId);
+         if (localSession && localSession.messages) {
+            setChatMessages(localSession.messages);
+            return;
+         }
+      }
+
       const userString = localStorage.getItem('user');
       const user = userString ? JSON.parse(userString) : null;
       
@@ -322,11 +338,80 @@ const ExpertSupportPage = () => {
         sessionId: sessionId,
         image: image
       });
-      setChatMessages([...newMessages, { role: 'ai', content: response.text || response.data?.text || "Đã nhận được phản hồi" }]);
+      const aiResponse = response.text || response.data?.text || "Đã nhận được phản hồi";
+      const updatedMessages = [...newMessages, { role: 'ai', content: aiResponse }];
+      setChatMessages(updatedMessages);
+
+      // Auto-save to history list
+      setChatHistoryList(prev => {
+        const existingIdx = prev.findIndex(s => s.id === sessionId);
+        const title = updatedMessages.find(m => m.role === 'user')?.content.substring(0, 30) + '...' || 'Cuộc trò chuyện mới';
+
+        const sessionData = {
+          id: sessionId,
+          title,
+          timestamp: new Date().toISOString(),
+          messages: updatedMessages
+        };
+
+        if (existingIdx >= 0) {
+          const newList = [...prev];
+          newList[existingIdx] = sessionData;
+          return newList;
+        }
+        return [sessionData, ...prev];
+      });
     } catch (error) {
       addToast('Mất kết nối với AI Support', 'error');
     } finally {
       setIsAiTyping(false);
+    }
+  };
+
+  const saveCurrentSession = () => {
+    if (chatMessages.length <= 1) return; // Don't save empty chats
+
+    setChatHistoryList(prev => {
+      const existingIdx = prev.findIndex(s => s.id === sessionId);
+      const title = chatMessages.find(m => m.role === 'user')?.content.substring(0, 30) + '...' || 'Cuộc trò chuyện mới';
+      
+      const sessionData = {
+        id: sessionId,
+        title,
+        timestamp: new Date().toISOString(),
+        messages: chatMessages
+      };
+
+      if (existingIdx >= 0) {
+        const newList = [...prev];
+        newList[existingIdx] = sessionData;
+        return newList;
+      }
+      return [sessionData, ...prev];
+    });
+  };
+
+  const handleNewChat = () => {
+    saveCurrentSession();
+    const newSessId = `sess_${Math.random().toString(36).substr(2, 9)}`;
+    setSessionId(newSessId);
+    setChatMessages([
+      { role: 'ai', content: 'Hệ thống đã sẵn sàng. Vui lòng mô tả tình trạng thiết bị của bạn để bắt đầu chẩn đoán kỹ thuật.' }
+    ]);
+    setHasCreatedTicket(false);
+    addToast('Đã bắt đầu cuộc hội thoại mới', 'info');
+  };
+
+  const switchSession = (id) => {
+    saveCurrentSession();
+    setSessionId(id);
+  };
+
+  const deleteSession = (e, id) => {
+    e.stopPropagation();
+    setChatHistoryList(prev => prev.filter(s => s.id !== id));
+    if (sessionId === id) {
+      handleNewChat();
     }
   };
 
@@ -493,10 +578,10 @@ const ExpertSupportPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#FBFBFB] pt-24 pb-0 px-0 font-sans text-slate-900 overflow-hidden flex flex-col relative">
+    <div className="h-[calc(100vh-96px)] bg-[#FBFBFB] pt-0 pb-0 px-0 font-sans text-slate-900 overflow-hidden flex flex-col relative">
       
       {/* Header Bar */}
-      <div className="w-full border-b border-slate-200 bg-white/80 backdrop-blur-md z-30">
+      <div className="w-full border-b border-slate-200 bg-white/80 backdrop-blur-md z-30 shrink-0">
         <div className="max-w-[1440px] mx-auto px-6 h-20 flex items-center justify-between">
           <div className="flex items-center gap-6">
             <div className="cursor-pointer" onClick={() => setSelectedCategory('All')}>
@@ -541,15 +626,21 @@ const ExpertSupportPage = () => {
         </div>
       </div>
 
-      <div className="flex-1 flex flex-col md:flex-row max-w-[1440px] mx-auto w-full h-[calc(100vh-80px)] overflow-hidden">
+      <div className="flex-1 flex flex-col md:flex-row max-w-[1440px] mx-auto w-full overflow-hidden">
         
         {/* Left Column: Diagnostics Terminal */}
-        <div className="flex-1 flex flex-col border-r border-slate-200 bg-white">
-          <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+        <div className="flex-1 flex flex-col border-r border-slate-200 bg-white overflow-hidden">
+          <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50/50 shrink-0">
              <div className="flex items-center gap-3">
                 <Terminal size={18} className="text-slate-400" />
                 <span className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-500">Diagnostic Flow v4.2</span>
              </div>
+             <button 
+                onClick={handleNewChat}
+                className="flex items-center gap-2 px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-[9px] font-black uppercase tracking-widest text-slate-500 hover:text-slate-900 hover:border-slate-900 transition-all shadow-sm"
+             >
+                <Plus size={12} /> Cuộc trò chuyện mới
+             </button>
           </div>
 
           {/* Chat Messages */}
@@ -614,7 +705,7 @@ const ExpertSupportPage = () => {
           </div>
 
           {/* Input Area */}
-          <div className="p-8 bg-white border-t border-slate-200">
+          <div className="p-8 bg-white border-t border-slate-200 shrink-0">
             {selectedImage && (
               <div className="mb-4 relative inline-block">
                 <img src={selectedImage} alt="Preview" className="h-20 rounded-lg border border-slate-200" />
@@ -661,8 +752,57 @@ const ExpertSupportPage = () => {
           </div>
         </div>
 
-        {/* Right Column: Expert Intelligence */}
-        <div className="w-full md:w-[450px] bg-slate-50/50 overflow-y-auto custom-scrollbar flex flex-col p-8 space-y-8 text-left">
+        {/* Right Column: Expert Intelligence & History */}
+        <div className="w-full md:w-[450px] bg-slate-50/50 overflow-y-auto custom-scrollbar flex flex-col p-8 space-y-10 text-left h-full border-l border-slate-200">
+          
+          {/* Chat History Section */}
+          <div>
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-[11px] font-black uppercase tracking-[0.3em] text-slate-400">Lịch sử hội thoại</h3>
+              <button 
+                onClick={handleNewChat}
+                className="p-2 hover:bg-slate-200 rounded-lg transition-colors text-slate-400 hover:text-slate-900"
+                title="Cuộc trò chuyện mới"
+              >
+                <Plus size={16} />
+              </button>
+            </div>
+            
+            <div className="space-y-2 max-h-[300px] overflow-y-auto custom-scrollbar pr-2">
+               {chatHistoryList.length === 0 ? (
+                 <div className="p-4 bg-white/50 border border-dashed border-slate-200 rounded-xl text-center">
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Chưa có lịch sử</p>
+                 </div>
+               ) : (
+                 chatHistoryList.map((hist) => (
+                   <div 
+                    key={hist.id}
+                    onClick={() => switchSession(hist.id)}
+                    className={`group relative p-4 rounded-xl border transition-all cursor-pointer flex items-center gap-3 ${
+                      sessionId === hist.id 
+                        ? 'bg-slate-900 border-slate-900 text-white shadow-lg shadow-slate-200' 
+                        : 'bg-white border-slate-200 hover:border-slate-400 text-slate-600'
+                    }`}
+                   >
+                     <MessageSquare size={14} className={sessionId === hist.id ? 'text-indigo-400' : 'text-slate-400'} />
+                     <div className="flex-1 min-w-0">
+                        <p className="text-[11px] font-bold truncate leading-none mb-1">{hist.title}</p>
+                        <p className={`text-[8px] uppercase tracking-tighter opacity-50 ${sessionId === hist.id ? 'text-white' : 'text-slate-400'}`}>
+                          {new Date(hist.timestamp).toLocaleDateString('vi-VN')}
+                        </p>
+                     </div>
+                     <button 
+                      onClick={(e) => deleteSession(e, hist.id)}
+                      className={`opacity-0 group-hover:opacity-100 p-1 hover:bg-red-500 hover:text-white rounded transition-all ${sessionId === hist.id ? 'text-white/50' : 'text-slate-300'}`}
+                     >
+                        <X size={12} />
+                     </button>
+                   </div>
+                 ))
+               )}
+            </div>
+          </div>
+
           {/* Tracking Search Area */}
           <div>
             <h3 className="text-[11px] font-black uppercase tracking-[0.3em] text-slate-400 mb-6">Theo dõi đơn hàng</h3>

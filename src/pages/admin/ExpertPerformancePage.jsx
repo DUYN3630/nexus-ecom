@@ -4,13 +4,18 @@ import {
   Users, Briefcase, DollarSign, TrendingUp, 
   Star, CheckCircle, Clock, Smartphone,
   BarChart2, PieChart as PieChartIcon, ArrowUpRight, 
-  ArrowDownRight, MoreHorizontal, User, Shield, Box, ArrowRight
+  ArrowDownRight, MoreHorizontal, User, Shield, Box, ArrowRight, X, Mail, Award, Calendar
 } from 'lucide-react';
 import aiSettingApi from '../../api/aiSettingApi';
 import supportApi from '../../api/supportApi';
+import { getRepairAnalytics } from '../../api/analyticsApi';
 
 const ExpertPerformancePage = () => {
   const [experts, setExperts] = useState([]);
+  const [repairTrend, setRepairTrend] = useState([]);
+  const [topParts, setTopParts] = useState([]);
+  const [revenueDistribution, setRevenueDistribution] = useState({ service: 0, parts: 0 });
+  const [opStats, setOpStats] = useState({ avgTime: 0, totalParts: 0, qualityRate: 100 });
   const [stats, setStats] = useState({
     totalRevenue: 0,
     completedRepairs: 0,
@@ -18,16 +23,49 @@ const ExpertPerformancePage = () => {
     activeExperts: 0
   });
   const [isLoading, setIsLoading] = useState(true);
+  
+  // States for Detail Modal
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedExpertData, setSelectedExpertData] = useState(null);
+  const [isDetailLoading, setIsDetailLoading] = useState(false);
+  const [detailError, setDetailError] = useState(null);
 
   useEffect(() => {
     fetchData();
   }, []);
 
+  const handleViewDetail = async (id) => {
+    console.log("aiSettingApi object:", aiSettingApi);
+    setIsDetailLoading(true);
+    setIsModalOpen(true);
+    setDetailError(null);
+    setSelectedExpertData(null);
+    try {
+      const response = await aiSettingApi.getExpertDetail(id);
+      setSelectedExpertData(response);
+    } catch (error) {
+      console.error("Error fetching expert details:", error);
+      setDetailError("Không thể tải thông tin chuyên gia. Vui lòng thử lại sau.");
+    } finally {
+      setIsDetailLoading(false);
+    }
+  };
+
   const fetchData = async () => {
     setIsLoading(true);
     try {
-      const expertData = await aiSettingApi.getExpertPerformance();
+      const [expertData, repairData] = await Promise.all([
+        aiSettingApi.getExpertPerformance(),
+        getRepairAnalytics()
+      ]);
+
       setExperts(expertData || []);
+      if (repairData.success) {
+          setRepairTrend(repairData.data.revenueTrend || []);
+          setTopParts(repairData.data.topParts || []);
+          setRevenueDistribution(repairData.data.revenueDistribution || { service: 0, parts: 0 });
+          setOpStats(repairData.data.operationalStats || { avgTime: 0, totalParts: 0, qualityRate: 100 });
+      }
 
       // Calculate aggregate stats
       let totalRevenue = 0;
@@ -63,6 +101,8 @@ const ExpertPerformancePage = () => {
     { label: 'Đánh giá Trung bình', value: stats.avgRating + '/5', icon: Star, color: 'text-amber-600', bg: 'bg-amber-50', trend: '+0.3' },
     { label: 'Chuyên gia Hoạt động', value: stats.activeExperts, icon: Users, color: 'text-indigo-600', bg: 'bg-indigo-50', trend: 'Ổn định' },
   ];
+
+  const maxTrendValue = Math.max(...repairTrend.map(t => t.amount), 1);
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500 text-left pb-20">
@@ -100,7 +140,7 @@ const ExpertPerformancePage = () => {
 
       {/* Revenue Analysis Section */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Repair Revenue Trend (Mock) */}
+        {/* Repair Revenue Trend */}
         <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm h-[350px] flex flex-col">
            <div className="flex items-center justify-between mb-6 pb-4 border-b border-slate-50">
               <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-800 flex items-center gap-2">
@@ -110,21 +150,29 @@ const ExpertPerformancePage = () => {
                  <span>30 ngày qua</span>
               </div>
            </div>
-           <div className="flex-1 flex items-end gap-2.5 px-1">
-              {[45, 62, 58, 75, 90, 82, 95, 110, 88, 120, 105, 135].map((val, i) => (
+           <div className="flex-1 flex items-end gap-2.5 px-1 min-h-0">
+              {repairTrend.length > 0 ? repairTrend.map((val, i) => (
                 <div key={i} className="flex-1 flex flex-col items-center gap-2 group">
-                   <div className="w-full bg-brand-600/10 rounded-t-md relative group-hover:bg-brand-600/20 transition-colors" style={{ height: `${val}%` }}>
-                      <div className="absolute -top-7 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-[9px] font-semibold py-0.5 px-1.5 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
-                         {val}tr
+                   <div 
+                      className="w-full bg-brand-600/10 rounded-t-md relative group-hover:bg-brand-600/20 transition-colors" 
+                      style={{ height: `${(val.amount / maxTrendValue) * 100}%` }}
+                    >
+                      <div className="absolute -top-7 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-[9px] font-semibold py-0.5 px-1.5 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10">
+                         {val.amount.toLocaleString('vi-VN')} ₫
                       </div>
                    </div>
-                   <span className="text-[9px] font-semibold text-slate-400">T{i+1}</span>
+                   <span className="text-[8px] font-semibold text-slate-400 truncate max-w-[40px]">{val.date.slice(-5)}</span>
                 </div>
-              ))}
+              )) : (
+                <div className="w-full h-full flex flex-col items-center justify-center opacity-20 space-y-2">
+                    <TrendingUp size={48} />
+                    <p className="text-[10px] font-black uppercase tracking-widest">Chưa có dữ liệu doanh thu</p>
+                </div>
+              )}
            </div>
         </div>
 
-        {/* Top Replacement Parts (Revenue focus) */}
+        {/* Top Replacement Parts */}
         <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col">
            <div className="flex items-center justify-between mb-6 pb-4 border-b border-slate-50">
               <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-800 flex items-center gap-2">
@@ -134,28 +182,28 @@ const ExpertPerformancePage = () => {
            </div>
            
            <div className="space-y-4">
-              {[
-                { name: 'Màn hình iPhone 15 Pro Max', revenue: 155000000, sold: 12, growth: '+15%' },
-                { name: 'Pin dung lượng cao (All models)', revenue: 85000000, sold: 45, growth: '+22%' },
-                { name: 'Cụm Camera iPhone 14 Series', revenue: 62000000, sold: 8, growth: '-5%' },
-                { name: 'Vỏ sườn Titan chính hãng', revenue: 48000000, sold: 5, growth: '+10%' }
-              ].map((part, i) => (
+              {topParts.length > 0 ? topParts.map((part, i) => (
                 <div key={i} className="flex items-center justify-between p-3.5 bg-slate-50/50 rounded-xl border border-transparent hover:border-slate-200 transition-all">
                    <div className="flex items-center gap-3">
                       <div className="w-9 h-9 bg-white rounded-lg flex items-center justify-center border border-slate-100 shadow-sm">
                          <Box size={16} className="text-slate-400" />
                       </div>
-                      <div>
-                         <p className="text-xs font-semibold text-slate-800">{part.name}</p>
+                      <div className="min-w-0 flex-1">
+                         <p className="text-xs font-semibold text-slate-800 truncate">{part.name}</p>
                          <p className="text-[10px] font-medium text-slate-400">{part.sold} linh kiện đã thay</p>
                       </div>
                    </div>
                    <div className="text-right">
                       <p className="text-xs font-bold text-brand-600">{part.revenue.toLocaleString('vi-VN')} ₫</p>
-                      <p className={`text-[10px] font-semibold ${part.growth.startsWith('+') ? 'text-emerald-500' : 'text-rose-500'}`}>{part.growth}</p>
+                      <p className={`text-[10px] font-semibold text-emerald-500`}>Tăng trưởng tốt</p>
                    </div>
                 </div>
-              ))}
+              )) : (
+                <div className="py-10 text-center opacity-20">
+                    <Box size={40} className="mx-auto mb-2" />
+                    <p className="text-[10px] font-black uppercase tracking-widest">Chưa có dữ liệu linh kiện</p>
+                </div>
+              )}
            </div>
         </div>
       </div>
@@ -170,22 +218,27 @@ const ExpertPerformancePage = () => {
           
           <div className="flex-1 flex flex-col justify-center gap-5">
             <div className="space-y-4">
-               {[
-                 { label: 'Công Sửa chữa', percent: 45, color: 'bg-brand-600', revenue: '45.000.000 ₫' },
-                 { label: 'Linh kiện thay thế', percent: 35, color: 'bg-emerald-500', revenue: '35.000.000 ₫' },
-                 { label: 'Dịch vụ Bảo trì', percent: 15, color: 'bg-indigo-500', revenue: '15.000.000 ₫' },
-                 { label: 'Phụ kiện đi kèm', percent: 5, color: 'bg-slate-300', revenue: '5.000.000 ₫' }
-               ].map((item, i) => (
-                 <div key={i} className="space-y-1.5">
-                    <div className="flex justify-between items-center text-[11px] font-semibold uppercase">
-                       <span className="text-slate-500">{item.label}</span>
-                       <span className="text-slate-900">{item.revenue}</span>
-                    </div>
-                    <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
-                       <div className={`h-full ${item.color}`} style={{ width: `${item.percent}%` }}></div>
-                    </div>
-                 </div>
-               ))}
+               {(() => {
+                 const total = revenueDistribution.service + revenueDistribution.parts || 1;
+                 const servicePercent = Math.round((revenueDistribution.service / total) * 100);
+                 const partsPercent = Math.round((revenueDistribution.parts / total) * 100);
+                 
+                 return [
+                   { label: 'Công Sửa chữa', percent: servicePercent, color: 'bg-brand-600', revenue: revenueDistribution.service.toLocaleString('vi-VN') + ' ₫' },
+                   { label: 'Linh kiện thay thế', percent: partsPercent, color: 'bg-emerald-500', revenue: revenueDistribution.parts.toLocaleString('vi-VN') + ' ₫' },
+                   { label: 'Dịch vụ khác', percent: 0, color: 'bg-indigo-500', revenue: '0 ₫' },
+                 ].map((item, i) => (
+                   <div key={i} className="space-y-1.5">
+                      <div className="flex justify-between items-center text-[11px] font-semibold uppercase">
+                         <span className="text-slate-500">{item.label}</span>
+                         <span className="text-slate-900">{item.revenue}</span>
+                      </div>
+                      <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
+                         <div className={`h-full ${item.color}`} style={{ width: `${item.percent}%` }}></div>
+                      </div>
+                   </div>
+                 ));
+               })()}
             </div>
           </div>
         </div>
@@ -242,7 +295,10 @@ const ExpertPerformancePage = () => {
                              <span className="text-xs font-bold text-brand-600">{(exp.totalRevenue || 0).toLocaleString('vi-VN')} ₫</span>
                           </td>
                           <td className="px-8 py-4 text-right">
-                             <button className="p-1.5 hover:bg-slate-100 rounded-lg transition-all text-slate-400 hover:text-slate-900">
+                             <button 
+                                onClick={() => handleViewDetail(exp._id)}
+                                className="p-1.5 hover:bg-slate-100 rounded-lg transition-all text-slate-400 hover:text-slate-900"
+                             >
                                 <ArrowRight size={14} />
                              </button>
                           </td>
@@ -268,9 +324,9 @@ const ExpertPerformancePage = () => {
                   </div>
                   <h4 className="text-base font-bold tracking-tight">Hiệu suất Xử lý</h4>
                </div>
-               <p className="text-xs text-slate-400 leading-relaxed">Thời gian hoàn thành: <span className="text-white font-semibold">120 phút/đơn</span></p>
+               <p className="text-xs text-slate-400 leading-relaxed">Thời gian hoàn thành: <span className="text-white font-semibold">{opStats.avgTime || 0} phút/đơn</span></p>
                <div className="h-1 w-full bg-slate-800 rounded-full overflow-hidden">
-                  <div className="h-full bg-brand-500" style={{ width: '85%' }}></div>
+                  <div className="h-full bg-brand-500" style={{ width: opStats.avgTime > 0 ? '85%' : '0%' }}></div>
                </div>
             </div>
 
@@ -281,9 +337,9 @@ const ExpertPerformancePage = () => {
                   </div>
                   <h4 className="text-base font-bold tracking-tight">Chất lượng Sửa chữa</h4>
                </div>
-               <p className="text-xs text-slate-400 leading-relaxed">Tỷ lệ bảo hành sau sửa: <span className="text-white font-semibold">1.2%</span></p>
+               <p className="text-xs text-slate-400 leading-relaxed">Tỷ lệ thành công: <span className="text-white font-semibold">{opStats.qualityRate}%</span></p>
                <div className="h-1 w-full bg-slate-800 rounded-full overflow-hidden">
-                  <div className="h-full bg-emerald-500" style={{ width: '92%' }}></div>
+                  <div className="h-full bg-emerald-500" style={{ width: `${opStats.qualityRate}%` }}></div>
                </div>
             </div>
 
@@ -294,13 +350,189 @@ const ExpertPerformancePage = () => {
                   </div>
                   <h4 className="text-base font-bold tracking-tight">Linh kiện thay thế</h4>
                </div>
-               <p className="text-xs text-slate-400 leading-relaxed">Đã thay thế: <span className="text-white font-semibold">1,240 linh kiện</span></p>
+               <p className="text-xs text-slate-400 leading-relaxed">Đã thay thế: <span className="text-white font-semibold">{opStats.totalParts.toLocaleString('vi-VN')} linh kiện</span></p>
                <div className="h-1 w-full bg-slate-800 rounded-full overflow-hidden">
-                  <div className="h-full bg-indigo-500" style={{ width: '78%' }}></div>
+                  <div className="h-full bg-indigo-500" style={{ width: opStats.totalParts > 0 ? '78%' : '0%' }}></div>
                </div>
             </div>
          </div>
       </div>
+
+      {/* Expert Detail Modal */}
+      {isModalOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setIsModalOpen(false)}
+            className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"
+          />
+          
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            className="bg-white w-full max-w-4xl max-h-[90vh] rounded-3xl shadow-2xl overflow-hidden relative z-10 flex flex-col"
+          >
+            {/* Modal Header */}
+            <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+              <div className="flex items-center gap-4">
+                 <div className="w-12 h-12 bg-brand-600 rounded-2xl flex items-center justify-center text-white text-xl font-black">
+                    {selectedExpertData?.expert?.name?.[0] || 'E'}
+                 </div>
+                 <div>
+                    <h2 className="text-lg font-black text-slate-900 leading-tight">Expert Profile Details</h2>
+                    <p className="text-xs font-medium text-slate-500 uppercase tracking-wider">Chi tiết hiệu suất và lịch sử kỹ thuật</p>
+                 </div>
+              </div>
+              <button 
+                onClick={() => setIsModalOpen(false)}
+                className="w-10 h-10 rounded-xl hover:bg-slate-200 flex items-center justify-center text-slate-500 transition-colors"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-8 custom-scrollbar">
+              {isDetailLoading ? (
+                <div className="py-20 flex flex-col items-center justify-center space-y-4">
+                   <div className="w-10 h-10 border-4 border-brand-600/20 border-t-brand-600 rounded-full animate-spin"></div>
+                   <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Đang tải dữ liệu chuyên gia...</p>
+                </div>
+              ) : detailError ? (
+                <div className="py-20 flex flex-col items-center justify-center space-y-4 text-center">
+                   <div className="w-16 h-16 bg-red-50 text-red-500 rounded-full flex items-center justify-center">
+                      <X size={32} />
+                   </div>
+                   <p className="text-sm font-bold text-slate-600">{detailError}</p>
+                   <button 
+                      onClick={() => handleViewDetail(selectedExpertData?.expert?._id)}
+                      className="text-xs font-bold text-brand-600 uppercase border-b-2 border-brand-600 pb-0.5"
+                   >
+                      Thử lại
+                   </button>
+                </div>
+              ) : selectedExpertData ? (
+                <div className="space-y-10">
+                   {/* Personal Info & Key Stats */}
+                   <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                      <div className="md:col-span-1 space-y-6">
+                         <div className="bg-slate-50 p-6 rounded-3xl border border-slate-100">
+                            <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-4">Thông tin cơ bản</h4>
+                            <div className="space-y-4">
+                               <div className="flex items-center gap-3">
+                                  <User size={16} className="text-slate-400" />
+                                  <span className="text-sm font-bold text-slate-700">{selectedExpertData.expert.name}</span>
+                               </div>
+                               <div className="flex items-center gap-3">
+                                  <Mail size={16} className="text-slate-400" />
+                                  <span className="text-sm font-medium text-slate-500">{selectedExpertData.expert.email}</span>
+                               </div>
+                               <div className="flex items-center gap-3">
+                                  <Award size={16} className="text-slate-400" />
+                                  <span className="text-sm font-medium text-slate-500">{selectedExpertData.expert.role || 'Apple Technician'}</span>
+                               </div>
+                               <div className="pt-4 border-t border-slate-200">
+                                  <div className="flex flex-wrap gap-2">
+                                     {selectedExpertData.expert.specialty?.map((s, i) => (
+                                       <span key={i} className="px-2 py-1 bg-white border border-slate-200 rounded-lg text-[10px] font-bold text-slate-600 uppercase">
+                                          {s}
+                                       </span>
+                                     ))}
+                                  </div>
+                               </div>
+                            </div>
+                         </div>
+                      </div>
+
+                      <div className="md:col-span-2 space-y-6">
+                         <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Biểu đồ Doanh thu (6 tháng gần nhất)</h4>
+                         <div className="bg-slate-50 h-48 rounded-3xl border border-slate-100 flex items-end justify-between p-6 gap-3">
+                            {selectedExpertData.stats.monthlyStats.length > 0 ? (
+                              selectedExpertData.stats.monthlyStats.map((m, i) => {
+                                const maxRevenue = Math.max(...selectedExpertData.stats.monthlyStats.map(s => s.revenue), 1);
+                                return (
+                                  <div key={i} className="flex-1 flex flex-col items-center gap-2 group relative">
+                                     <div 
+                                        className="w-full bg-brand-600/20 rounded-t-xl hover:bg-brand-600/40 transition-all cursor-pointer"
+                                        style={{ height: `${(m.revenue / maxRevenue) * 100}%`, minHeight: '4px' }}
+                                     >
+                                        <div className="absolute -top-10 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-[10px] font-bold py-1 px-2 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-20">
+                                           {m.revenue.toLocaleString('vi-VN')} ₫
+                                        </div>
+                                     </div>
+                                     <span className="text-[9px] font-bold text-slate-400 uppercase">{m._id.slice(5)}</span>
+                                  </div>
+                                )
+                              })
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center opacity-20">
+                                 <BarChart2 size={32} />
+                              </div>
+                            )}
+                         </div>
+                      </div>
+                   </div>
+
+                   {/* Recent Activity Table */}
+                   <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                         <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Lịch sử sửa chữa gần nhất</h4>
+                         <span className="text-[10px] font-bold text-brand-600 bg-brand-50 px-2 py-1 rounded-lg">Last 10 Tickets</span>
+                      </div>
+                      <div className="border border-slate-100 rounded-2xl overflow-hidden">
+                         <table className="w-full text-left">
+                            <thead className="bg-slate-50 text-[10px] font-bold text-slate-500 uppercase tracking-widest border-b border-slate-100">
+                               <tr>
+                                  <th className="px-6 py-3">Mã đơn</th>
+                                  <th className="px-6 py-3">Thiết bị</th>
+                                  <th className="px-6 py-3">Khách hàng</th>
+                                  <th className="px-6 py-3">Ngày</th>
+                                  <th className="px-6 py-3 text-right">Trạng thái</th>
+                               </tr>
+                            </thead>
+                            <tbody className="divide-y divide-slate-50">
+                               {selectedExpertData.stats.recentRepairs.map((repair, i) => (
+                                 <tr key={i} className="text-xs">
+                                    <td className="px-6 py-4 font-bold text-slate-900">#{repair.ticketNumber.slice(-8)}</td>
+                                    <td className="px-6 py-4 font-semibold text-slate-600">{repair.deviceType}</td>
+                                    <td className="px-6 py-4 font-medium text-slate-500">{repair.user?.name || repair.guestInfo?.name || 'Guest'}</td>
+                                    <td className="px-6 py-4 font-medium text-slate-400">{new Date(repair.createdAt).toLocaleDateString('vi-VN')}</td>
+                                    <td className="px-6 py-4 text-right">
+                                       <span className={`px-2 py-1 rounded-lg text-[9px] font-black uppercase ${
+                                          repair.status === 'Done' ? 'bg-emerald-50 text-emerald-600' :
+                                          repair.status === 'Repairing' ? 'bg-amber-50 text-amber-600' : 'bg-slate-100 text-slate-500'
+                                       }`}>
+                                          {repair.status}
+                                       </span>
+                                    </td>
+                                 </tr>
+                               ))}
+                               {selectedExpertData.stats.recentRepairs.length === 0 && (
+                                 <tr>
+                                    <td colSpan="5" className="px-6 py-10 text-center text-slate-400 font-bold uppercase tracking-widest text-[10px]">Chưa có lịch sử sửa chữa</td>
+                                 </tr>
+                               )}
+                            </tbody>
+                         </table>
+                      </div>
+                   </div>
+                </div>
+              ) : null}
+            </div>
+
+            {/* Modal Footer */}
+            <div className="p-6 border-t border-slate-100 bg-slate-50/50 flex justify-end gap-3">
+               <button 
+                  onClick={() => setIsModalOpen(false)}
+                  className="px-6 py-2.5 bg-slate-900 text-white text-[10px] font-bold uppercase tracking-widest rounded-xl hover:bg-slate-800 transition-colors shadow-lg shadow-slate-200"
+               >
+                  Close Detail
+               </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
     </div>
   );
 };

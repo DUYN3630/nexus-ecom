@@ -10,6 +10,7 @@ const aiSettingApi = {
   
   // Tab: Giám sát chuyên gia
   getExpertPerformance: () => axiosClient.get('/ai-settings/experts-performance'),
+  getExpertDetail: (id) => axiosClient.get(`/ai-settings/experts-performance/${id}`),
 
   // Tab: Giám sát hội thoại
   getSupportTickets: () => axiosClient.get('/ai-settings/tickets'),

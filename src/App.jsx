@@ -63,6 +63,7 @@ import ExpertPerformancePage from './pages/admin/ExpertPerformancePage.jsx';
 // Helper Components
 import ProtectedRoute from './components/Auth/ProtectedRoute.jsx';
 import ScrollToTop from './components/common/ScrollToTop.jsx';
+import { Toaster } from 'react-hot-toast';
 import './features/product-experience/ProductExperience.css';
 
 const App = () => {
@@ -83,6 +84,8 @@ const App = () => {
   }, [currentUser, dispatch]);
 
   return (
+    <>
+    <Toaster position="top-right" reverseOrder={false} />
     <BrowserRouter 
       future={{ 
         v7_startTransition: true, 
@@ -168,6 +171,7 @@ const App = () => {
         </Route>
       </Routes>
     </BrowserRouter>
+    </>
   );
 };
 

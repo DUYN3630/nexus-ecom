@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 const { generateText } = require('../utils/gemini');
 const Setting = require('../models/Setting');
 const SupportTicket = require('../models/SupportTicket');
+const Product = require('../models/Product');
 const { NEXUS_SYSTEM_INSTRUCTION, NEXUS_EXPERT_SUPPORT_INSTRUCTION } = require('../config/aiPrompt');
 
 const handleChat = async (req, res) => {
@@ -11,6 +12,28 @@ const handleChat = async (req, res) => {
     try {
         if (!prompt && !image) return res.status(400).json({ message: "Prompt or image is required" });
 
+        // --- RAG LITE: DYNAMIC CONTEXT RETRIEVAL ---
+        let dynamicContext = "";
+        if (prompt && !image) {
+            // 1. Trích xuất từ khóa đơn giản (Keyword Extraction)
+            const keywords = prompt.split(' ').filter(word => word.length > 3);
+            
+            // 2. Tìm kiếm sản phẩm liên quan trong Database
+            const relatedProducts = await Product.find({
+                $or: [
+                    { name: { $regex: keywords.join('|'), $options: 'i' } },
+                    { description: { $regex: keywords.join('|'), $options: 'i' } }
+                ],
+                status: 'active'
+            }).select('name price stock colors storage').limit(5).lean();
+
+            if (relatedProducts.length > 0) {
+                dynamicContext = "\n\n[DỮ LIỆU THỰC TẾ TỪ CỬA HÀNG]:\n" + relatedProducts.map(p => 
+                    `- ${p.name}: Giá ${p.price.toLocaleString('vi-VN')}đ, Kho: ${p.stock}, Màu: ${p.colors?.join(', ') || 'N/A'}`
+                ).join('\n') + "\n(Hãy dùng dữ liệu này để tư vấn chính xác. Nếu khách hỏi sản phẩm không có ở đây, hãy nói cửa hàng hiện không có sẵn).";
+            }
+        }
+
         // Ưu tiên lấy User ID từ Token (req.user) nếu có, nếu không mới lấy từ body
         const effectiveUserId = req.user?._id || userId;
 
@@ -18,11 +41,12 @@ const handleChat = async (req, res) => {
         const settings = await Setting.find({ key: { $in: ['ai_system_instruction', 'ai_model_name', 'ai_temperature', 'ai_max_tokens'] } });
         const configMap = settings.reduce((acc, curr) => { acc[curr.key] = curr.value; return acc; }, {});
 
-        // ... (phần xác định finalSystemInstruction và options giữ nguyên)
-
-        const finalSystemInstruction = customInstruction === 'NEXUS_EXPERT_SUPPORT_INSTRUCTION'
+        let baseSystemInstruction = customInstruction === 'NEXUS_EXPERT_SUPPORT_INSTRUCTION'
             ? NEXUS_EXPERT_SUPPORT_INSTRUCTION
             : systemInstruction || configMap.ai_system_instruction || NEXUS_SYSTEM_INSTRUCTION;
+        
+        // Bơm ngữ cảnh thực tế vào System Instruction
+        const finalSystemInstruction = baseSystemInstruction + dynamicContext;
 
         const options = {
             systemInstruction: finalSystemInstruction,

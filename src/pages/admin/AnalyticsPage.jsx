@@ -26,7 +26,7 @@ export const AnalyticsPage = () => {
       setLoading(true);
       const endDate = new Date().toISOString();
       const startDate = new Date(Date.now() - parseInt(timeRange) * 24 * 60 * 60 * 1000).toISOString();
-      const response = await getOverviewStats(startDate, endDate);
+      const response = await getOverviewStats({ startDate, endDate });
       if (response.success) setStats(response.data);
     } catch (error) {
       console.error(error);
@@ -108,8 +108,8 @@ export const AnalyticsPage = () => {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
         <StatCard title="Tổng doanh thu" value={formatCurrency(stats?.totalRevenue)} sub="+15.2% so với kỳ trước" icon={DollarSign} color="brand" />
-        <StatCard title="Doanh thu Sửa chữa" value={formatCurrency(stats?.repairRevenue || 54000000)} sub="Từ 124 đơn kỹ thuật" icon={Wrench} color="emerald" />
-        <StatCard title="Sản lượng đơn" value={stats?.totalOrders} sub="Đang vận chuyển: 8" icon={ShoppingBag} color="amber" />
+        <StatCard title="Doanh thu Sửa chữa" value={formatCurrency(stats?.repairRevenue)} sub={`Từ ${stats?.repairCount || 0} đơn kỹ thuật`} icon={Wrench} color="emerald" />
+        <StatCard title="Sản lượng đơn" value={stats?.totalOrders} sub={`Đang vận chuyển: ${stats?.pendingOrders || 0}`} icon={ShoppingBag} color="amber" />
         <StatCard title="Khách hàng mới" value={stats?.newUsers} sub="Tỷ lệ quay lại: 24%" icon={Users} color="purple" />
       </div>
 

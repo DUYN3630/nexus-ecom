@@ -12,6 +12,7 @@ router.get('/analytics', protect, adminOrExpert, aiHubController.getAIAnalytics)
 
 // 3. Hiệu suất nhân sự (Tab Experts) - Admin và Expert có thể xem
 router.get('/experts-performance', protect, adminOrExpert, aiHubController.getExpertPerformance);
+router.get('/experts-performance/:id', protect, adminOrExpert, aiHubController.getSingleExpertPerformance);
 
 // 4. Giám sát hội thoại (Tab Chat Monitor) - Admin và Expert có thể xem
 router.get('/tickets', protect, adminOrExpert, aiHubController.getSupportTickets);

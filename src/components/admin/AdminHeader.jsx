@@ -1,7 +1,22 @@
-import { Search, Bell, Menu, Eye, ExternalLink } from 'lucide-react';
+import { Search, Bell, Menu, Eye, ExternalLink, Zap } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import socket from '../../utils/socket';
+import toast from 'react-hot-toast';
 
 export const AdminHeader = () => {
+  const testSocket = () => {
+    if (socket.connected) {
+      socket.emit('join_admin_room'); // Đảm bảo đã vào room
+      // Gửi sự kiện giả lập đến server để server phát lại cho admin
+      toast.loading("Đang gửi test signal...", { id: 'test-s', duration: 1000 });
+      // Tôi sẽ thêm một route test ở backend hoặc dùng chính socket để test
+      socket.emit('test_notification', { message: 'Đây là thông báo thử nghiệm!' });
+    } else {
+      toast.error("Socket chưa kết nối!");
+      socket.connect();
+    }
+  };
+
   return (
     <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-8 z-20">
       <div className="flex items-center gap-4">
@@ -13,6 +28,16 @@ export const AdminHeader = () => {
       </div>
       
       <div className="flex items-center gap-3">
+        {/* Nút Test Socket */}
+        <button 
+          onClick={testSocket}
+          className="flex items-center gap-2 px-3 py-1.5 text-xs font-bold text-amber-600 hover:bg-amber-50 rounded-lg transition-all border border-amber-100"
+          title="Test Real-time Notification"
+        >
+          <Zap className="w-3.5 h-3.5 fill-amber-500" />
+          <span className="hidden xl:inline">Test Socket</span>
+        </button>
+
         {/* Nút Xem cửa hàng mới */}
         <Link 
           to="/" 

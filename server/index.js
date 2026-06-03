@@ -20,6 +20,50 @@ if (!process.env.JWT_SECRET) {
 const sanitize = require('mongo-sanitize');
 
 const app = express();
+const http = require('http');
+const { Server } = require('socket.io');
+
+const server = http.createServer(app);
+const io = new Server(server, {
+    cors: {
+        origin: "*", // Adjust this in production
+        methods: ["GET", "POST"]
+    }
+});
+
+// --- SOCKET.IO LOGIC ---
+io.on('connection', (socket) => {
+    console.log(`⚡ [SOCKET] User connected: ${socket.id}`);
+    
+    // Gửi lời chào để test kết nối
+    socket.emit('welcome', { message: 'Kết nối Socket thành công!' });
+
+    socket.on('join_admin_room', () => {
+        socket.join('admin_room');
+        console.log(`🛡️ [SOCKET] User ${socket.id} joined Admin Room`);
+        socket.emit('joined_confirmation', { room: 'admin_room' });
+    });
+
+    socket.on('test_notification', (data) => {
+        console.log(`🧪 [SOCKET] Test notification requested by ${socket.id}`);
+        // Phát ngược lại cho chính mình (hoặc cả phòng admin) để test
+        io.to('admin_room').emit('new_order', {
+            orderId: 'TEST-123',
+            orderNumber: 'NX-TEST-DEBUG',
+            customerName: 'Người dùng thử nghiệm',
+            totalAmount: 999999,
+            time: new Date()
+        });
+    });
+
+    socket.on('disconnect', () => {
+        console.log(`👋 [SOCKET] User disconnected: ${socket.id}`);
+    });
+});
+
+// Make io accessible in routes
+app.set('io', io);
+
 app.use(cors());
 
 app.use(express.json());
@@ -123,7 +167,7 @@ app.use((err, req, res, next) => {
 
 const PORT = process.env.PORT || 5000;
 if (process.env.NODE_ENV !== 'test') {
-    app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+    server.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
 }
 
-module.exports = app;
+module.exports = { app, server };

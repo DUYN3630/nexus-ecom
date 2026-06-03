@@ -25,7 +25,8 @@
     "mongo-sanitize": "^1.1.0",
     "mongoose": "^9.0.2",
     "multer": "^2.0.2",
-    "nodemailer": "^8.0.3"
+    "nodemailer": "^8.0.3",
+    "socket.io": "^4.8.3"
   },
   "devDependencies": {
     "eslint": "^8.55.0",

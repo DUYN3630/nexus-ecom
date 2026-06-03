@@ -1,5 +1,8 @@
-import { useEffect, useState, useRef } from 'react';
-import { ShoppingBag, Users, Star, Box, ArrowRight, TrendingUp, AlertTriangle, Clock, ChevronRight } from 'lucide-react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
+import { 
+  ShoppingBag, Users, Star, Box, ArrowRight, 
+  TrendingUp, AlertTriangle, Clock, ChevronRight, Plus 
+} from 'lucide-react';
 import { getOverviewStats } from '../../api/analyticsApi';
 import { formatCurrency } from '../../utils/formatCurrency';
 import { Link } from 'react-router-dom';
@@ -8,52 +11,76 @@ import Chart from 'chart.js/auto';
 export const DashboardPage = () => {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [timeRange, setTimeRange] = useState('month'); // 'week' or 'month'
   const chartRef = useRef(null);
   const chartInstanceRef = useRef(null);
 
-  useEffect(() => {
-    const fetchQuickStats = async () => {
-      try {
-        const response = await getOverviewStats();
-        if (response.success) setStats(response.data);
-      } catch (error) {
-        console.error(error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchQuickStats();
+  const fetchQuickStats = useCallback(async (range) => {
+    // Không set loading toàn trang để tránh nhấp nháy, chỉ cập nhật data
+    try {
+      const days = range === 'week' ? 7 : 30;
+      const startDate = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
+      const response = await getOverviewStats({ startDate });
+      if (response.success) setStats(response.data);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
   }, []);
+
+  useEffect(() => {
+    fetchQuickStats(timeRange);
+  }, [timeRange, fetchQuickStats]);
 
   // Biểu đồ doanh thu
   useEffect(() => {
-    if (stats?.revenueByDay && chartRef.current) {
+    if (stats?.revenueByDay?.length > 0 && chartRef.current) {
         if (chartInstanceRef.current) chartInstanceRef.current.destroy();
         
         const ctx = chartRef.current.getContext('2d');
         chartInstanceRef.current = new Chart(ctx, {
-            type: 'line',
+            type: 'bar',
             data: {
                 labels: stats.revenueByDay.map(d => d.date),
                 datasets: [{
                     label: 'Doanh thu (VND)',
                     data: stats.revenueByDay.map(d => d.amount),
-                    borderColor: '#4f46e5',
-                    backgroundColor: 'rgba(79, 70, 229, 0.1)',
-                    fill: true,
-                    tension: 0.4,
-                    borderWidth: 3,
-                    pointRadius: 0,
-                    pointHoverRadius: 6
+                    backgroundColor: '#4f46e5',
+                    borderRadius: 8,
+                    barThickness: 20,
+                    hoverBackgroundColor: '#4338ca'
                 }]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                plugins: { legend: { display: false } },
+                plugins: { 
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: '#1e293b',
+                        padding: 12,
+                        titleFont: { size: 12, weight: 'bold' },
+                        bodyFont: { size: 12 },
+                        callbacks: {
+                            label: (context) => `Doanh thu: ${formatCurrency(context.raw)}`
+                        }
+                    }
+                },
                 scales: {
-                    y: { display: false },
-                    x: { grid: { display: false }, ticks: { font: { weight: 'bold', size: 10 } } }
+                    y: { 
+                        display: true,
+                        beginAtZero: true,
+                        grid: { color: '#f1f5f9', drawBorder: false },
+                        ticks: {
+                            font: { size: 10, weight: 'bold' },
+                            callback: (value) => value >= 1000000 ? (value/1000000).toFixed(1) + 'M' : formatCurrency(value)
+                        }
+                    },
+                    x: { 
+                        grid: { display: false }, 
+                        ticks: { font: { weight: 'bold', size: 10 } } 
+                    }
                 }
             }
         });
@@ -86,10 +113,10 @@ export const DashboardPage = () => {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
-        <SummaryCard title="Doanh thu" value={formatCurrency(stats?.totalRevenue || 0)} sub="+12% so với tháng trước" icon={ShoppingBag} color="brand" />
-        <SummaryCard title="Đơn hàng" value={stats?.totalOrders || 0} sub={`${stats?.pendingOrders || 0} đơn chờ xử lý`} icon={Box} color="amber" />
-        <SummaryCard title="Khách hàng" value={stats?.newUsers || 0} sub="+5 tài khoản mới" icon={Users} color="purple" />
-        <SummaryCard title="Tỷ lệ Review" value="4.9/5" sub="Dựa trên 128 đánh giá" icon={Star} color="emerald" />
+        <SummaryCard title="Doanh thu" value={formatCurrency(stats?.totalRevenue || 0)} sub={`Tổng tích lũy ${timeRange === 'week' ? '7 ngày' : '30 ngày'}`} icon={ShoppingBag} color="brand" />
+        <SummaryCard title="Đơn hàng" value={stats?.totalOrders || 0} sub={`${stats?.pendingOrders || 0} đơn đang xử lý`} icon={Box} color="amber" />
+        <SummaryCard title="Khách hàng" value={stats?.newUsers || 0} sub={`Tài khoản ${timeRange === 'week' ? '7 ngày' : '30 ngày'} qua`} icon={Users} color="purple" />
+        <SummaryCard title="Hài lòng" value="4.9/5" sub="Chỉ số tin cậy" icon={Star} color="emerald" />
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
@@ -100,15 +127,26 @@ export const DashboardPage = () => {
                     <h3 className="text-xs font-black uppercase tracking-[0.2em] text-slate-800 flex items-center gap-2">
                         <TrendingUp size={16} className="text-brand-600" /> Tăng trưởng doanh thu
                     </h3>
-                    <p className="text-[10px] text-slate-400 font-bold uppercase mt-1">7 ngày gần nhất</p>
+                    <p className="text-[10px] text-slate-400 font-bold uppercase mt-1">Dữ liệu {timeRange === 'week' ? '7 ngày' : '30 ngày'} gần nhất</p>
                 </div>
-                <select className="bg-slate-50 border-none text-[10px] font-black uppercase tracking-widest p-2 rounded-xl outline-none">
-                    <option>Theo Tuần</option>
-                    <option>Theo Tháng</option>
+                <select 
+                    value={timeRange}
+                    onChange={(e) => setTimeRange(e.target.value)}
+                    className="bg-slate-50 border-none text-[10px] font-black uppercase tracking-widest p-2 rounded-xl outline-none cursor-pointer hover:bg-slate-100 transition-colors"
+                >
+                    <option value="month">Theo Tháng</option>
+                    <option value="week">Theo Tuần</option>
                 </select>
             </div>
             <div className="flex-1 min-h-[300px]">
-                <canvas ref={chartRef}></canvas>
+                {stats?.revenueByDay?.length > 0 ? (
+                    <canvas ref={chartRef}></canvas>
+                ) : (
+                    <div className="h-full flex flex-col items-center justify-center text-slate-400 space-y-2 opacity-50">
+                        <TrendingUp size={48} />
+                        <p className="text-[10px] font-black uppercase tracking-widest">Chưa có dữ liệu {timeRange === 'week' ? 'tuần này' : 'tháng này'}</p>
+                    </div>
+                )}
             </div>
         </div>
 
@@ -209,6 +247,3 @@ const DashboardAction = ({ title, link, icon: Icon }) => (
         </div>
     </Link>
 );
-
-const Plus = ({size}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>;
-

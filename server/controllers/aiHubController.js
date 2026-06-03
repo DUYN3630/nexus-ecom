@@ -1,7 +1,10 @@
+const mongoose = require('mongoose');
 const Setting = require('../models/Setting');
 const RepairRequest = require('../models/RepairRequest');
 const Expert = require('../models/Expert');
 const SupportTicket = require('../models/SupportTicket');
+const User = require('../models/User');
+const Part = require('../models/Part');
 
 // 1. Lấy cấu hình AI
 exports.getAISettings = async (req, res) => {
@@ -86,10 +89,10 @@ exports.getAIAnalytics = async (req, res) => {
 // 4. API Giám sát Chuyên gia (Tab Experts)
 exports.getExpertPerformance = async (req, res) => {
   try {
-    console.log("--- [DEBUG] Fetching Expert Performance ---");
+    const RepairRequest = require('../models/RepairRequest');
     
     // Tìm các hồ sơ chuyên gia và populate thông tin User
-    const experts = await Expert.find()
+    const experts = await Expert.find({ status: 'active' })
       .populate({
         path: 'user',
         select: 'role name email'
@@ -97,29 +100,92 @@ exports.getExpertPerformance = async (req, res) => {
       .lean();
     
     if (!experts || experts.length === 0) {
-      console.log("--- [DEBUG] No experts found in database ---");
       return res.json([]);
     }
 
     // Thống kê cho từng chuyên gia
     const performanceData = await Promise.all(experts.map(async (expert) => {
       try {
-        const assigned = await RepairRequest.countDocuments({ expert: expert._id });
-        const resolved = await RepairRequest.countDocuments({ expert: expert._id, status: { $in: ['Done', 'Returned'] } });
-        
+        // 1. Số lượng công việc hoàn tất
+        const completedCount = await RepairRequest.countDocuments({ 
+            expert: expert._id, 
+            status: { $in: ['Done', 'Returned'] } 
+        });
+
+        // 2. Tổng doanh thu (Dựa trên serviceFee + giá linh kiện của các đơn đã hoàn thành)
+        const revenueResult = await RepairRequest.aggregate([
+            { 
+                $match: { 
+                    expert: expert._id, 
+                    status: { $in: ['Done', 'Returned'] }
+                } 
+            },
+            {
+                $lookup: {
+                    from: "parts",
+                    localField: "usedParts.part",
+                    foreignField: "_id",
+                    as: "partsData"
+                }
+            },
+            {
+                $addFields: {
+                    partsRevenue: {
+                        $sum: {
+                            $map: {
+                                input: "$usedParts",
+                                as: "up",
+                                in: {
+                                    $multiply: [
+                                        "$$up.quantity",
+                                        {
+                                            $let: {
+                                                vars: {
+                                                    matchedPart: {
+                                                        $arrayElemAt: [
+                                                            {
+                                                                $filter: {
+                                                                    input: "$partsData",
+                                                                    as: "pd",
+                                                                    cond: { $eq: ["$$pd._id", "$$up.part"] }
+                                                                }
+                                                            },
+                                                            0
+                                                        ]
+                                                    }
+                                                },
+                                                in: { $ifNull: ["$$matchedPart.price", 0] }
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            { 
+                $group: { 
+                    _id: null, 
+                    total: { $sum: { $add: ["$serviceFee", "$partsRevenue"] } } 
+                } 
+            }
+        ]);
+
+        const totalRevenue = revenueResult.length > 0 ? revenueResult[0].total : 0;
+
         return {
           _id: expert._id,
-          user: expert.user?._id || expert.user, // Bổ sung ID User để frontend khớp lệnh
-          name: expert.name || expert.user?.name || "Chuyên gia chưa rõ tên",
-          role: expert.role || "Technician",
+          name: expert.name || expert.user?.name || "Kỹ thuật viên",
+          role: expert.role || "Apple Certified Technician",
           avatar: expert.avatar || null,
           specialty: expert.specialty || [],
           isOnline: expert.isOnline !== undefined ? expert.isOnline : true,
-          stats: {
-            assigned,
-            resolved,
-            efficiency: assigned > 0 ? Math.round((resolved / assigned) * 100) : 100
-          }
+          // Các trường frontend mong đợi
+          completedRepairs: completedCount,
+          totalRevenue: totalRevenue,
+          avgRating: expert.rating || 5.0,
+          efficiency: 100 // Có thể tính toán sau
         };
       } catch (err) {
         console.error(`--- [ERROR] Stats failed for expert ${expert._id}:`, err.message);
@@ -127,14 +193,90 @@ exports.getExpertPerformance = async (req, res) => {
       }
     }));
 
-    // Lọc bỏ các kết quả null nếu có lỗi trong vòng lặp
     const cleanData = performanceData.filter(item => item !== null);
-    
-    console.log(`--- [DEBUG] Sending performance data for ${cleanData.length} experts ---`);
     res.json(cleanData);
   } catch (error) {
     console.error("--- [ERROR] getExpertPerformance Crash:", error.message);
-    res.status(500).json({ message: "Lỗi hệ thống khi tải dữ liệu chuyên gia" });
+    res.status(500).json({ success: false, message: "Lỗi hệ thống khi tải dữ liệu chuyên gia" });
+  }
+};
+
+// 4b. API Chi tiết hiệu suất một chuyên gia
+exports.getSingleExpertPerformance = async (req, res) => {
+  try {
+    const { id } = req.params;
+    console.log(`--- [DEBUG] Fetching Detail for Expert ID: ${id} ---`);
+    
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      console.log(`--- [DEBUG] Invalid Expert ID format: ${id} ---`);
+      return res.status(400).json({ message: "ID chuyên gia không hợp lệ" });
+    }
+
+    const expert = await Expert.findById(id).populate('user', 'name email').lean();
+    if (!expert) {
+      console.log(`--- [DEBUG] Expert not found in DB: ${id} ---`);
+      return res.status(404).json({ message: "Không tìm thấy chuyên gia" });
+    }
+
+    // 1. Lấy danh sách 10 đơn sửa chữa gần nhất
+    const recentRepairs = await RepairRequest.find({ expert: id })
+      .sort({ createdAt: -1 })
+      .limit(10)
+      .populate('user', 'name email');
+
+    console.log(`--- [DEBUG] Found ${recentRepairs.length} recent repairs ---`);
+
+    // 2. Thống kê theo tháng (6 tháng gần nhất)
+    const sixMonthsAgo = new Date();
+    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+    
+    const monthlyStats = await RepairRequest.aggregate([
+      { 
+        $match: { 
+          expert: new mongoose.Types.ObjectId(id), 
+          status: { $in: ['Done', 'Returned'] },
+          updatedAt: { $gte: sixMonthsAgo }
+        } 
+      },
+      {
+        $group: {
+          _id: { $dateToString: { format: "%Y-%m", date: "$updatedAt" } },
+          revenue: { $sum: "$serviceFee" },
+          count: { $sum: 1 }
+        }
+      },
+      { $sort: { "_id": 1 } }
+    ]);
+
+    console.log(`--- [DEBUG] Monthly stats count: ${monthlyStats.length} ---`);
+
+    // 3. Phân bổ loại thiết bị đã xử lý
+    const deviceStats = await RepairRequest.aggregate([
+      { $match: { expert: new mongoose.Types.ObjectId(id) } },
+      {
+        $group: {
+          _id: "$deviceType",
+          count: { $sum: 1 }
+        }
+      },
+      { $sort: { count: -1 } }
+    ]);
+
+    res.json({
+      expert: {
+        ...expert,
+        name: expert.name || expert.user?.name || "Kỹ thuật viên",
+        email: expert.user?.email || ""
+      },
+      stats: {
+        recentRepairs,
+        monthlyStats,
+        deviceStats
+      }
+    });
+  } catch (error) {
+    console.error("--- [ERROR] getSingleExpertPerformance failed:", error.stack);
+    res.status(500).json({ message: "Lỗi khi tải chi tiết chuyên gia: " + error.message });
   }
 };
 
