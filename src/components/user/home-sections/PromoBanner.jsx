@@ -48,14 +48,14 @@ const PromoBanner = () => {
           <div className="md:col-span-4 flex flex-col gap-6">
             
             {/* Top Right Block */}
-            <div 
+            <div
               onClick={() => navigate('/products')}
               className="flex-1 relative rounded-3xl bg-indigo-50 overflow-hidden group cursor-pointer border border-indigo-100"
             >
-              <img 
-                src="https://images.unsplash.com/photo-1544244015-0df4b3ffc6b0?auto=format&fit=crop&q=80&w=800" 
-                className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-[1500ms]" 
-                alt="iPad Air" 
+              <img
+                src="/products/iPad-Pro-M2-cover.jpg"
+                className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-[1500ms]"
+                alt="iPad Air"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
               <div className="relative h-full p-10 flex flex-col justify-end">
@@ -67,14 +67,14 @@ const PromoBanner = () => {
             </div>
 
             {/* Bottom Right Block */}
-            <div 
+            <div
               onClick={() => navigate('/products')}
               className="flex-1 relative rounded-3xl bg-slate-100 overflow-hidden group cursor-pointer border border-slate-200"
             >
-              <img 
-                src="https://images.unsplash.com/photo-1546868871-7041f2a55e12?auto=format&fit=crop&q=80&w=800" 
-                className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-[1500ms]" 
-                alt="Apple Watch" 
+              <img
+                src="/products/stylewatch.jpg"
+                className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-[1500ms]"
+                alt="Apple Watch"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-white/20 via-transparent to-transparent"></div>
               <div className="relative h-full p-10 flex flex-col justify-between">

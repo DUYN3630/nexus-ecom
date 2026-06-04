@@ -56,7 +56,7 @@ const QualitySection = () => {
              <div className="absolute inset-0 bg-indigo-100 rounded-3xl translate-x-4 translate-y-4 group-hover:translate-x-6 group-hover:translate-y-6 transition-transform duration-700"></div>
              <div className="relative aspect-[4/5] overflow-hidden rounded-3xl border-8 border-white shadow-2xl">
                 <img 
-                  src="https://images.unsplash.com/photo-1616348436168-de43ad0db179?auto=format&fit=crop&q=80&w=1200" 
+                  src="/products/leca.jpg" 
                   className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-[2000ms]" 
                   alt="Quality check" 
                 />
