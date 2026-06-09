@@ -16,21 +16,24 @@ const handleChat = async (req, res) => {
         let dynamicContext = "";
         if (prompt && !image) {
             // 1. Trích xuất từ khóa đơn giản (Keyword Extraction)
-            const keywords = prompt.split(' ').filter(word => word.length > 3);
+            const cleanPrompt = prompt.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // Escape regex chars
+            const keywords = cleanPrompt.split(' ').filter(word => word.length > 3);
             
-            // 2. Tìm kiếm sản phẩm liên quan trong Database
-            const relatedProducts = await Product.find({
-                $or: [
-                    { name: { $regex: keywords.join('|'), $options: 'i' } },
-                    { description: { $regex: keywords.join('|'), $options: 'i' } }
-                ],
-                status: 'active'
-            }).select('name price stock colors storage').limit(5).lean();
+            if (keywords.length > 0) {
+                // 2. Tìm kiếm sản phẩm liên quan trong Database
+                const relatedProducts = await Product.find({
+                    $or: [
+                        { name: { $regex: keywords.join('|'), $options: 'i' } },
+                        { description: { $regex: keywords.join('|'), $options: 'i' } }
+                    ],
+                    status: 'active'
+                }).select('name price stock colors storage').limit(5).lean();
 
-            if (relatedProducts.length > 0) {
-                dynamicContext = "\n\n[DỮ LIỆU THỰC TẾ TỪ CỬA HÀNG]:\n" + relatedProducts.map(p => 
-                    `- ${p.name}: Giá ${p.price.toLocaleString('vi-VN')}đ, Kho: ${p.stock}, Màu: ${p.colors?.join(', ') || 'N/A'}`
-                ).join('\n') + "\n(Hãy dùng dữ liệu này để tư vấn chính xác. Nếu khách hỏi sản phẩm không có ở đây, hãy nói cửa hàng hiện không có sẵn).";
+                if (relatedProducts.length > 0) {
+                    dynamicContext = "\n\n[DỮ LIỆU THỰC TẾ TỪ CỬA HÀNG]:\n" + relatedProducts.map(p => 
+                        `- ${p.name}: Giá ${p.price.toLocaleString('vi-VN')}đ, Kho: ${p.stock}, Màu: ${p.colors?.join(', ') || 'N/A'}`
+                    ).join('\n') + "\n(Hãy dùng dữ liệu này để tư vấn chính xác. Nếu khách hỏi sản phẩm không có ở đây, hãy nói cửa hàng hiện không có sẵn).";
+                }
             }
         }
 

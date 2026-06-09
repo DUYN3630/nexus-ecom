@@ -1,18 +1,22 @@
-version: '3.8'
-
 services:
   backend:
+    platform: linux/amd64
     build:
       context: ./server
       dockerfile: Dockerfile
     ports:
       - "5000:5000"
+    volumes:
+      - ./server/public/uploads:/app/public/uploads
+      - ./public/products:/app/public/products
     env_file:
       - ./server/.env
     environment:
       - NODE_ENV=production
+    # Không cần depends_on mongodb nữa vì dùng Cloud
 
   frontend:
+    platform: linux/amd64
     build:
       context: .
       dockerfile: Dockerfile

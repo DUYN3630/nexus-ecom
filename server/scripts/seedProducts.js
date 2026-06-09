@@ -2,8 +2,8 @@ const mongoose = require('mongoose');
 const dotenv = require('dotenv');
 const path =require('path');
 const fs = require('fs/promises');
-const Product = require('./models/Product');
-const Category = require('./models/Category');
+const Product = require('../models/Product');
+const Category = require('../models/Category');
 
 // Load environment variables from server/.env
 dotenv.config({ path: path.resolve(__dirname, './.env') });
@@ -26,7 +26,7 @@ async function seedProducts() {
     console.log('Existing products deleted.');
 
     // Read products from JSON file
-    const productsPath = path.join(__dirname, 'products.json');
+    const productsPath = path.join(__dirname, '../products.json');
     const productsData = JSON.parse(await fs.readFile(productsPath, 'utf-8'));
     
     if (!productsData || productsData.length === 0) {

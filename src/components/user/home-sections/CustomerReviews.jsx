@@ -129,7 +129,7 @@ const CustomerReviews = () => {
               {/* User Info */}
               <div className="flex items-center gap-4 mb-6">
                 <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-slate-50 relative bg-slate-100">
-                  <img src={avatar} alt={name} className="w-full h-full object-cover" onError={(e) => e.target.src='https://placehold.co/100x100?text=U'} />
+                  <img src={avatar} alt={name} className="w-full h-full object-cover" onError={(e) => e.target.src='/products/product-archive-1.jpg'} />
                 </div>
                 <div>
                   <h4 className="text-sm font-black text-slate-900 uppercase tracking-tight">{name}</h4>

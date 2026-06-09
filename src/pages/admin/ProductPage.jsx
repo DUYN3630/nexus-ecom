@@ -280,7 +280,12 @@ const ProductFormView = ({ product: currentProduct, categories, onBack, onSave }
     if (!formData.sku.trim()) newErrors.sku = 'Vui lòng nhập mã SKU.';
     
     setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    
+    if (Object.keys(newErrors).length > 0) {
+      alert('Vui lòng kiểm tra lại các trường thông tin có viền đỏ.');
+      return false;
+    }
+    return true;
   };
   
   const handleSaveClick = async () => {
@@ -758,27 +763,29 @@ const ProductPage = () => {
     const actionText = isEditing ? 'cập nhật' : 'tạo';
     
     try {
-      console.log(`Saving (${actionText}) product...`, { productData, imageFiles });
+      console.log(`[DEBUG] Bắt đầu ${actionText} sản phẩm...`, { productData, imageFilesCount: imageFiles.length });
       let response;
 
       if (isEditing) {
         response = await productApi.update(currentProduct._id, productData, imageFiles);
-        if (response.status === 200) { 
+        if (response && response._id) { 
+          console.log(`[DEBUG] Cập nhật thành công:`, response);
           alert('Sản phẩm đã được cập nhật thành công!');
         }
       } else {
         response = await productApi.create(productData, imageFiles);
-        if (response.status === 201) { 
+        if (response && response._id) { 
+          console.log(`[DEBUG] Tạo mới thành công:`, response);
           alert('Sản phẩm đã được tạo thành công!');
         }
       }
       
-      fetchData(); 
+      await fetchData(pagination.page); 
       handleBackToList(); 
 
     } catch (error) {
         const errorData = error.response?.data;
-        console.error(`Failed to ${actionText} product:`, errorData || error);
+        console.error(`[ERROR] Lỗi khi ${actionText} sản phẩm:`, errorData || error);
         
         if (error.response?.status === 404) {
              alert(`Lỗi: Không tìm thấy sản phẩm để ${actionText}.`);

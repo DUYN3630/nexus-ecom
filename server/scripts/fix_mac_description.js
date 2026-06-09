@@ -15,7 +15,10 @@ const fixMacDescription = async () => {
 
     const result = await Category.findOneAndUpdate(
       { slug: 'mac' },
-      { description: 'Máy tính mạnh mẽ cho công việc và sáng tạo.' },
+      { 
+        description: 'Mạnh mẽ vượt trội với chip M4 Pro.',
+        productThumbnail: '/products/macbookprom4.jpg' // Đảm bảo có ảnh để text không bị "nuốt"
+      },
       { new: true }
     );
 

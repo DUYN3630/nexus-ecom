@@ -1,8 +1,8 @@
 const path = require('path');
 require('dotenv').config({ path: path.resolve(__dirname, '.env') });
 const mongoose = require('mongoose');
-const Marketing = require('./models/Marketing');
-const Product = require('./models/Product');
+const Marketing = require('../models/Marketing');
+const Product = require('../models/Product');
 
 const seedMarketing = async () => {
     try {

@@ -100,7 +100,7 @@ const ProductDetailPage = () => {
 
   const productImages = (product.images && product.images.length > 0)
     ? product.images.map(img => getProductImageUrl(img))
-    : ['https://placehold.co/600x600?text=No+Image'];
+    : ['/products/product-archive-1.jpg'];
 
   return (
     <div className="bg-[#F7F7F7] min-h-screen text-stone-900 selection:bg-stone-900 selection:text-white overflow-x-hidden">

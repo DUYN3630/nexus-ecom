@@ -12,6 +12,10 @@ const getBaseURL = () => {
     window.location.hostname.endsWith('.local');
 
   if (isLocal) {
+    // Nếu đang chạy Docker (thông qua Port 80 của Nginx)
+    if (window.location.port === '' || window.location.port === '80') {
+      return '/api'; // Dùng relative path để Nginx tự proxy sang backend:5000
+    }
     return 'http://localhost:5000/api';
   }
   return RENDER_API_URL;

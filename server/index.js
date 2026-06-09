@@ -100,6 +100,21 @@ if (process.env.NODE_ENV !== 'test') {
 }
 
 // --- CẤU HÌNH STATIC FILES (PHỤC VỤ HÌNH ẢNH) ---
+const fs = require('fs');
+console.log('--- [DEBUG] Static Directories ---');
+const uploadsPath = path.resolve(__dirname, 'public/uploads');
+const publicPath = path.resolve(__dirname, 'public');
+
+// Linh hoạt giữa Docker (./public/products) và Local (../public/products)
+let productsPath = path.resolve(__dirname, 'public/products');
+if (!fs.existsSync(productsPath)) {
+    productsPath = path.resolve(__dirname, '../public/products');
+}
+
+console.log(`[DEBUG] Uploads Path: ${uploadsPath}`);
+console.log(`[DEBUG] Public Path: ${publicPath}`);
+console.log(`[DEBUG] Products Path: ${productsPath}`);
+
 app.use((req, res, next) => {
     if (req.url.startsWith('/uploads') || req.url.startsWith('/public') || req.url.startsWith('/products')) {
         res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
@@ -110,9 +125,16 @@ app.use((req, res, next) => {
     next();
 });
 
-app.use('/uploads', express.static(path.join(__dirname, 'public/uploads')));
-app.use('/public', express.static(path.join(__dirname, 'public')));
-app.use('/products', express.static(path.join(__dirname, '../public/products')));
+app.use('/uploads', express.static(uploadsPath));
+app.use('/public', express.static(publicPath));
+app.use('/products', express.static(productsPath));
+
+// --- DEBUG: Log 404s for images ---
+app.use(['/uploads', '/products', '/public'], (req, res, next) => {
+    console.log(`[DEBUG] 404 Not Found: ${req.method} ${req.originalUrl}`);
+    console.log(`[DEBUG] Attempted to find in: ${uploadsPath}`);
+    next();
+});
 
 // --- ROUTES ---
 const authRoutes = require('./routes/authRoutes');

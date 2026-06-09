@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { Search, ShoppingBag, Scale, ArrowRight, ChevronRight, Plus, Cpu, MessageSquare, Layers, Zap } from 'lucide-react';
 import axiosClient from '../../api/axiosClient';
 import { formatCurrency } from '../../utils/formatCurrency';
-import getProductImageUrl from '../../utils/getProductImageUrl';
+import { getProductImageUrl, IMAGE_ERROR_PLACEHOLDER } from '../../utils/getProductImageUrl';
 import { Link, useNavigate } from 'react-router-dom';
 import debounce from 'lodash/debounce';
 import { useDispatch } from 'react-redux';
@@ -27,7 +27,7 @@ const ProductCard = ({ product, onAddToCart, onCompare, isComparing }) => {
           src={getProductImageUrl(product.images?.[0])}
           alt={product.name}
           className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-          onError={(e) => { e.target.src = 'https://via.placeholder.com/300?text=No+Image'; }}
+          onError={(e) => { e.target.src = IMAGE_ERROR_PLACEHOLDER; }}
         />
         {hasDiscount && (
           <div className="absolute top-3 left-3 z-10">

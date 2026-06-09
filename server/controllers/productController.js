@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const path = require('path');
 const Product = require('../models/Product');
 const Category = require('../models/Category');
 const Review = require('../models/Review');
@@ -95,31 +96,41 @@ const getProducts = async (req, res) => {
 // @access  Private/Admin
 const createProduct = async (req, res) => {
     try {
-        // Data is now sanitized and type-converted by express-validator middleware
+        console.log('--- [DEBUG] Creating Product ---');
         const { name, sku, category, price, discountPrice, stock, description, specifications, status, isFeatured, keyBenefit, featuredReason } = req.body;
 
-        if (!req.files || req.files.length === 0) {
+        // Map uploaded files to their web-accessible paths
+        const images = (req.files || []).map(file => {
+            const filename = path.basename(file.path);
+            const webPath = `/uploads/${filename}`;
+            console.log(`[DEBUG] File: ${file.path} -> URL: ${webPath}`);
+            return webPath;
+        });
+
+        if (images.length === 0 && (!req.body.images || req.body.images.length === 0)) {
             return res.status(400).json({ message: 'Bạn phải tải lên ít nhất một hình ảnh.' });
         }
-        
-        // Map uploaded files to their web-accessible paths
-        const images = req.files.map(file => {
-            return `/${file.path.replace(/\\/g, '/').split('public/')[1]}`;
-        });
+
+        let parsedSpecs = {};
+        try {
+            parsedSpecs = typeof specifications === 'string' ? JSON.parse(specifications || '{}') : (specifications || {});
+        } catch (e) {
+            console.error('[ERROR] Failed to parse specifications:', e.message);
+            parsedSpecs = {};
+        }
 
         const createdProduct = await new Product({
             name,
             sku,
-            category: category || null, // Ensure category is null if it's an empty string after validation
-            price,
-            discountPrice,
-            stock,
+            category: (category === 'null' || category === '') ? null : category,
+            price: isNaN(Number(price)) ? 0 : Number(price),
+            discountPrice: isNaN(Number(discountPrice)) ? 0 : Number(discountPrice),
+            stock: isNaN(Number(stock)) ? 0 : Number(stock),
             description,
             images,
-            mainImage: req.body.mainImage || images[0] || null,
-            // JSON parsing for specifications is still needed here as it's complex data
-            specifications: typeof specifications === 'string' ? JSON.parse(specifications || '{}') : specifications,
-            status,
+            mainImage: req.body.mainImage || (images.length > 0 ? images[0] : null),
+            specifications: parsedSpecs,
+            status: status || 'draft',
             isFeatured: isFeatured === 'true' || isFeatured === true,
             keyBenefit,
             featuredReason
@@ -138,43 +149,34 @@ const createProduct = async (req, res) => {
 // @access  Private/Admin
 const updateProduct = async (req, res) => {
     try {
+        console.log('--- [DEBUG] Updating Product ---');
         const { id: productId } = req.params;
         let { name, sku, category, price, discountPrice, stock, description, specifications, status, isFeatured, keyBenefit, featuredReason } = req.body;
 
         const product = await Product.findById(productId);
-
         if (!product) {
             return res.status(404).json({ message: 'Không tìm thấy sản phẩm để cập nhật.' });
         }
 
-        // --- SANITIZE DATA (Chuyển đổi kiểu dữ liệu) ---
-        // FormData gửi mọi thứ là string, cần convert lại Number
-        if (stock === 'null' || stock === '' || stock === undefined) stock = 0;
-        else stock = Number(stock);
-
-        if (price === 'null' || price === '' || price === undefined) price = 0;
-        else price = Number(price);
-
-        if (discountPrice === 'null' || discountPrice === '' || discountPrice === undefined) discountPrice = 0;
-        else discountPrice = Number(discountPrice);
-
-        // Sanitize Category
+        // Convert types
+        stock = isNaN(Number(stock)) ? 0 : Number(stock);
+        price = isNaN(Number(price)) ? 0 : Number(price);
+        discountPrice = isNaN(Number(discountPrice)) ? 0 : Number(discountPrice);
         if (category === 'null' || category === '') category = null;
 
-        // Xử lý hình ảnh: kết hợp ảnh cũ và ảnh mới
+        // Combine old and new images
         let existingImages = req.body.images || [];
-        if (!Array.isArray(existingImages)) {
-            existingImages = [existingImages];
-        }
+        if (!Array.isArray(existingImages)) existingImages = [existingImages];
 
-        // Ánh xạ các file ảnh mới tải lên thành đường dẫn URL
         const newImagePaths = (req.files || []).map(file => {
-            return `/${file.path.replace(/\\/g, '/').split('public/')[1]}`;
+            const filename = path.basename(file.path);
+            const webPath = `/uploads/${filename}`;
+            console.log(`[DEBUG] New File: ${file.path} -> URL: ${webPath}`);
+            return webPath;
         });
 
         const allImages = [...existingImages, ...newImagePaths];
 
-        // Cập nhật các trường của sản phẩm
         product.name = name;
         product.sku = sku;
         product.category = category;
@@ -188,11 +190,19 @@ const updateProduct = async (req, res) => {
             product.specifications = {};
         }
         product.status = status;
-        product.isFeatured = isFeatured === 'true' || isFeatured === true; // Handle boolean from string
+        product.isFeatured = isFeatured === 'true' || isFeatured === true;
         product.keyBenefit = keyBenefit;
         product.featuredReason = featuredReason;
         product.images = allImages;
-        product.mainImage = req.body.mainImage || (allImages.length > 0 ? allImages[0] : null);
+        
+        // Cập nhật mainImage: Ưu tiên body, sau đó là ảnh đầu tiên, cuối cùng là null
+        if (req.body.mainImage) {
+            product.mainImage = req.body.mainImage;
+        } else if (allImages.length > 0) {
+            product.mainImage = allImages[0];
+        } else {
+            product.mainImage = null;
+        }
 
         const updatedProduct = await product.save();
         res.status(200).json(updatedProduct);

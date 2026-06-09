@@ -1,6 +1,6 @@
 require('dotenv').config({ path: './.env' });
 const mongoose = require('mongoose');
-const Category = require('./models/Category.js');
+const Category = require('../models/Category.js');
 
 // Dữ liệu danh mục gốc để thêm vào database
 const categoriesToSeed = [

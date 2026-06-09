@@ -10,34 +10,44 @@ const PromoBanner = () => {
       <div className="max-w-[1440px] mx-auto px-6 md:px-20">
         <div className="grid grid-cols-1 md:grid-cols-12 gap-6 h-full md:h-[650px]">
           
-          {/* Main Large Block (Left) */}
+          {/* Main Large Block (Left) - MacBook Pro */}
           <div 
             onClick={() => navigate('/products')}
-            className="md:col-span-8 relative rounded-3xl bg-slate-900 overflow-hidden group cursor-pointer shadow-2xl"
+            className="md:col-span-8 relative rounded-3xl bg-black overflow-hidden group cursor-pointer shadow-2xl min-h-[400px]"
           >
             <img
               src="/products/macbookprom4.jpg"
-              className="w-full h-full object-cover opacity-80 group-hover:scale-105 transition-transform duration-[2000ms]"
+              className="absolute inset-0 w-full h-full object-cover opacity-80 group-hover:scale-105 transition-transform duration-[2000ms]"
               alt="MacBook Pro"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
-            <div className="relative h-full p-12 flex flex-col justify-end">
-               <div className="max-w-md space-y-4 translate-y-4 group-hover:translate-y-0 transition-transform duration-700">
-                  <span className="text-[10px] font-bold uppercase tracking-[0.4em] text-white/80 bg-white/10 backdrop-blur-md px-4 py-2 rounded-full border border-white/10 w-fit">
-                    MacBook Pro M3
-                  </span>
-                  <h2 className="text-[clamp(2rem,5vw,3.5rem)] font-bold text-white tracking-tight leading-[1.1]">
+            {/* Overlay - Forced visibility */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent z-10"></div>
+            
+            {/* Content - Forced on top */}
+            <div className="relative h-full p-8 md:p-16 flex flex-col justify-end z-20">
+               <div className="max-w-xl space-y-6">
+                  <div>
+                    <span className="inline-block text-[10px] font-black uppercase tracking-[0.4em] text-white bg-blue-600 px-4 py-2 rounded-full">
+                      MacBook Pro M4 Pro
+                    </span>
+                  </div>
+                  
+                  <h2 className="text-4xl md:text-6xl font-black text-white tracking-tighter leading-none uppercase italic">
                     Sức mạnh <br/>thay đổi cuộc chơi
                   </h2>
-                  <p className="text-[clamp(0.875rem,1.2vw,1rem)] font-normal text-white/80 leading-relaxed line-clamp-2">
-                    Xử lý mọi tác vụ đồ họa nặng nề nhất với chip M3 Pro mới nhất.
+                  
+                  {/* Mô tả: Bỏ line-clamp, bỏ max-width quá nhỏ, ép text-white */}
+                  <p className="text-base md:text-xl font-medium text-white block visible opacity-100 leading-relaxed">
+                    Trải nghiệm hiệu năng không giới hạn với chip M4 Pro thế hệ mới. 
+                    Mọi tác vụ đồ họa và lập trình phức tạp nhất đều được xử lý mượt mà.
                   </p>
-                  <div className="pt-4 flex items-center gap-4">
-                    <button className="px-8 py-4 bg-white text-black text-[11px] font-bold uppercase tracking-[0.2em] rounded-2xl hover:bg-indigo-600 hover:text-white transition-all shadow-lg">
+                  
+                  <div className="pt-4 flex flex-wrap items-center gap-6">
+                    <button className="px-10 py-5 bg-white text-black text-[11px] font-black uppercase tracking-[0.2em] rounded-2xl hover:bg-blue-600 hover:text-white transition-all">
                       Mua ngay
                     </button>
-                    <span className="text-white text-[11px] font-bold uppercase tracking-widest flex items-center gap-2 group-hover:underline underline-offset-4">
-                      Tìm hiểu thêm <ArrowUpRight size={16} />
+                    <span className="text-white text-[11px] font-black uppercase tracking-widest flex items-center gap-2 underline underline-offset-8">
+                      Tìm hiểu thêm <ArrowUpRight size={18} />
                     </span>
                   </div>
                </div>
@@ -47,45 +57,45 @@ const PromoBanner = () => {
           {/* Right Column (2 Smaller Blocks) */}
           <div className="md:col-span-4 flex flex-col gap-6">
             
-            {/* Top Right Block */}
+            {/* Top Right Block - iPad Air */}
             <div
               onClick={() => navigate('/products')}
-              className="flex-1 relative rounded-3xl bg-indigo-50 overflow-hidden group cursor-pointer border border-indigo-100"
+              className="flex-1 relative rounded-3xl bg-slate-900 overflow-hidden group cursor-pointer border border-white/10 min-h-[250px]"
             >
               <img
                 src="/products/iPad-Pro-M2-cover.jpg"
-                className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-[1500ms]"
+                className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-[1500ms] opacity-70"
                 alt="iPad Air"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
-              <div className="relative h-full p-10 flex flex-col justify-end">
+              <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent z-10"></div>
+              <div className="relative h-full p-8 flex flex-col justify-end z-20">
                 <div className="space-y-2">
-                  <h3 className="text-2xl font-bold text-white tracking-tight">iPad Air</h3>
-                  <p className="text-[11px] font-semibold text-white/90 uppercase tracking-widest">Sáng tạo không giới hạn</p>
+                  <h3 className="text-2xl font-black text-white uppercase italic">iPad Air</h3>
+                  <p className="text-[11px] font-bold text-white uppercase tracking-widest opacity-90">Sáng tạo không giới hạn với chip M2.</p>
                 </div>
               </div>
             </div>
 
-            {/* Bottom Right Block */}
+            {/* Bottom Right Block - Watch S9 */}
             <div
               onClick={() => navigate('/products')}
-              className="flex-1 relative rounded-3xl bg-slate-100 overflow-hidden group cursor-pointer border border-slate-200"
+              className="flex-1 relative rounded-3xl bg-slate-900 overflow-hidden group cursor-pointer border border-white/10 min-h-[250px]"
             >
               <img
                 src="/products/stylewatch.jpg"
-                className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-[1500ms]"
+                className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-[1500ms] opacity-70"
                 alt="Apple Watch"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-white/20 via-transparent to-transparent"></div>
-              <div className="relative h-full p-10 flex flex-col justify-between">
+              <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent z-10"></div>
+              <div className="relative h-full p-8 flex flex-col justify-between z-20">
                 <div className="flex justify-end">
-                   <div className="w-10 h-10 bg-white/80 backdrop-blur-md rounded-full flex items-center justify-center text-slate-900 border border-white shadow-sm">
+                   <div className="w-10 h-10 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center text-white border border-white/20">
                       <ArrowUpRight size={20} />
                    </div>
                 </div>
                 <div className="space-y-2">
-                  <h3 className="text-2xl font-bold text-slate-900 tracking-tight">Watch S9</h3>
-                  <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-widest">Thông minh hơn, sáng hơn</p>
+                  <h3 className="text-2xl font-black text-white uppercase italic">Watch S9</h3>
+                  <p className="text-[11px] font-bold text-white uppercase tracking-widest opacity-90">Thông minh hơn, sáng hơn, bền bỉ hơn.</p>
                 </div>
               </div>
             </div>
@@ -98,4 +108,3 @@ const PromoBanner = () => {
 };
 
 export default PromoBanner;
-

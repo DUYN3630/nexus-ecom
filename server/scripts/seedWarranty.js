@@ -1,6 +1,6 @@
 require('dotenv').config({ path: __dirname + '/.env' });
 const mongoose = require('mongoose');
-const Warranty = require('./models/Warranty');
+const Warranty = require('../models/Warranty');
 
 const seedWarranty = async () => {
   try {

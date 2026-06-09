@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 require('dotenv').config();
-const Product = require('./models/Product');
+const Product = require('../models/Product');
 
 async function debug() {
     try {
@@ -12,8 +12,12 @@ async function debug() {
         console.log("Total Products in DB:", count);
         
         const allProducts = await Product.find({}).limit(10);
-        console.log("Sample Products (Name | Status):");
-        allProducts.forEach(p => console.log(`- ${p.name} | ${p.status}`));
+        console.log("Sample Products (Name | Images | MainImage):");
+        allProducts.forEach(p => {
+            console.log(`- ${p.name}`);
+            console.log(`  Images: ${JSON.stringify(p.images)}`);
+            console.log(`  MainImage: ${p.mainImage}`);
+        });
         
         const activeOnly = await Product.countDocuments({ status: 'active' });
         console.log("Active Products:", activeOnly);
