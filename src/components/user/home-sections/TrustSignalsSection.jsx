@@ -36,7 +36,28 @@ const IconRenderer = ({ iconName, size = 20, className }) => {
   return <IconComponent size={size} strokeWidth={1.5} className={className} />;
 };
 
-const TrustSignalsSection = () => {
+const TrustSignalsSection = ({ isCompact = false }) => {
+  if (isCompact) {
+    return (
+      <section className="py-6 bg-slate-900 text-white overflow-hidden">
+        <div className="max-w-[1440px] mx-auto px-6 md:px-20">
+          <div className="flex flex-wrap justify-center md:justify-between items-center gap-y-4 gap-x-12">
+            {TRUST_SIGNALS_CONFIG.map((signal) => (
+              <div key={signal.id} className="flex items-center gap-3 group cursor-default">
+                <div className="flex items-center justify-center text-indigo-400">
+                  <IconRenderer iconName={signal.iconName} size={16} />
+                </div>
+                <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-100 leading-none">
+                  {signal.label}
+                </h4>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+    );
+  }
+
   return (
     <section className="py-8 bg-[#FBFBFB] border-y border-slate-100/60">
       <div className="max-w-[1440px] mx-auto px-6 md:px-20">

@@ -8,24 +8,25 @@ const GuidedCTA = () => {
       <div className="max-w-[1440px] mx-auto px-6 md:px-20">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
           
-          {/* Card 1: Consulting */}
+          {/* Card 1: AI Consulting */}
           <Link to="/support" className="group relative bg-[#FBFBFB] p-16 rounded-3xl border border-slate-100 overflow-hidden hover:shadow-2xl hover:shadow-indigo-100/40 transition-all duration-700 cursor-pointer block">
             <div className="relative z-10 space-y-10 h-full flex flex-col justify-between">
               <div className="space-y-6">
-                <div className="w-16 h-16 bg-white rounded-3xl flex items-center justify-center text-indigo-600 shadow-sm transition-all duration-500 group-hover:scale-110 group-hover:rotate-6 border border-slate-50">
-                  <MessageSquare size={32} strokeWidth={1.5} />
+                <div className="w-16 h-16 bg-white rounded-3xl flex items-center justify-center text-indigo-600 shadow-sm transition-all duration-500 group-hover:scale-110 group-hover:rotate-6 border border-slate-50 relative">
+                  <Sparkles size={32} strokeWidth={1.5} className="animate-pulse" />
+                  <div className="absolute top-0 right-0 w-4 h-4 bg-green-500 rounded-full border-2 border-white"></div>
                 </div>
                 <div className="space-y-4">
                   <h3 className="text-4xl font-black uppercase tracking-tighter italic text-slate-900 leading-tight">
-                    Tìm kiếm <br/> trợ giúp chuyên gia?
+                    Nexus AI <br/> Consultant
                   </h3>
                   <p className="text-sm font-medium text-slate-500 leading-relaxed max-w-xs">
-                    Đội ngũ tư vấn viên am hiểu sản phẩm luôn sẵn sàng giúp bạn chọn ra thiết bị Apple hoàn hảo nhất.
+                    Bạn không biết chọn máy nào? Hãy để chuyên gia AI của Nexus giúp bạn tìm ra thiết bị hoàn hảo trong 30 giây.
                   </p>
                 </div>
               </div>
               <div className="inline-flex items-center gap-4 text-[11px] font-black uppercase tracking-[0.3em] text-indigo-600 border-b-2 border-indigo-600/20 pb-1 w-fit group-hover:border-indigo-600 transition-all">
-                Bắt đầu trò chuyện <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
+                Hỏi trợ lý AI ngay <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
               </div>
             </div>
             {/* Background Decor */}

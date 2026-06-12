@@ -35,24 +35,24 @@ const SupportEntry = () => {
   const navigate = useNavigate();
 
   return (
-    <section className="bg-white border-t border-slate-50">
-      <div className="max-w-[1440px] mx-auto px-6 md:px-20 py-16">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-12">
+    <section className="bg-transparent">
+      <div className="max-w-[1440px] mx-auto px-6 md:px-20 py-10">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
           {SUPPORT_LINKS.map((item) => (
             <div 
               key={item.id}
               onClick={() => navigate(item.path)}
-              className="flex items-start gap-5 group cursor-pointer"
+              className="flex items-center gap-4 group cursor-pointer"
             >
-              <div className="w-12 h-12 rounded-2xl bg-slate-50 flex items-center justify-center text-slate-400 transition-all duration-500 group-hover:bg-indigo-600 group-hover:text-white group-hover:-translate-y-1">
-                <item.icon size={22} strokeWidth={1.5} />
+              <div className="w-10 h-10 rounded-xl bg-white border border-slate-100 flex items-center justify-center text-slate-400 transition-all duration-500 group-hover:bg-indigo-600 group-hover:text-white group-hover:-translate-y-1 shadow-sm">
+                <item.icon size={18} strokeWidth={1.5} />
               </div>
-              <div className="space-y-1">
-                <h4 className="text-[11px] font-black uppercase tracking-[0.1em] text-slate-900 flex items-center gap-2">
-                  {item.label} <ArrowRight size={10} className="opacity-0 group-hover:opacity-100 transition-all group-hover:translate-x-1" />
+              <div className="space-y-0.5">
+                <h4 className="text-[10px] font-black uppercase tracking-[0.1em] text-slate-900 flex items-center gap-2">
+                  {item.label}
                 </h4>
                 {item.sub && (
-                    <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest leading-none">
+                    <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest leading-none">
                         {item.sub}
                     </p>
                 )}

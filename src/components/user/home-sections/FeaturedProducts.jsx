@@ -28,80 +28,93 @@ const ProductCard = ({ product }) => {
     ? Math.round(((product.price - product.discountPrice) / product.price) * 100)
     : null;
 
+  const getScarcityBadge = () => {
+    if (product.stock <= 5 && product.stock > 0) return { label: 'Sắp hết hàng', color: 'bg-orange-500' };
+    if (product.isBestSeller || Math.random() > 0.8) return { label: 'Bán chạy', color: 'bg-indigo-600' };
+    return null;
+  };
+
+  const badge = getScarcityBadge();
+
   const handleAddToCart = (e) => {
     e.stopPropagation();
     dispatch(addToCartAction({ product, quantity: 1 }));
   };
 
-  const handleCardClick = () => {
-    navigate(`/product/${product.slug}`);
-  };
-
   return (
     <div
-      onClick={handleCardClick}
-      className="group flex cursor-pointer flex-col rounded-[32px] border border-slate-200/60 bg-white p-7 text-left shadow-sm transition-all duration-500 hover:shadow-2xl hover:border-slate-300/60"
+      onClick={() => navigate(`/product/${product.slug}`)}
+      className="group relative flex flex-col rounded-[32px] overflow-hidden bg-white border border-slate-100 transition-all duration-700 hover:shadow-[0_40px_80px_-15px_rgba(0,0,0,0.1)] cursor-pointer h-[500px]"
     >
-      <div className="relative mb-5 block aspect-square w-full overflow-hidden rounded-2xl bg-slate-50">
+      {/* Background/Image Layer */}
+      <div className="absolute inset-0 z-0 bg-[#FBFBFB] flex items-center justify-center p-12 transition-transform duration-[1000ms] group-hover:scale-105 group-hover:blur-[2px] group-hover:opacity-40">
         <img
           src={getProductImageUrl(product.images?.[0] || product.mainImage)}
           alt={product.name}
-          className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
+          className="w-full h-full object-contain mix-blend-multiply"
           onError={(e) => { e.target.src = IMAGE_ERROR_PLACEHOLDER; }}
         />
-        
-        {hasDiscount && (
-          <div className="absolute top-4 left-4 z-10">
-            <span className="rounded-full bg-red-500 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-white shadow-lg">
-              -{discountPct}%
-            </span>
-          </div>
-        )}
+      </div>
 
-        <div className="absolute top-4 right-4 z-10 flex flex-col gap-2 opacity-0 group-hover:opacity-100 translate-x-2 group-hover:translate-x-0 transition-all duration-300">
-          <button
-            onClick={handleAddToCart}
-            className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-900 text-white shadow-xl transition-all hover:scale-110 hover:bg-slate-700"
-          >
-            <ShoppingBag size={18} strokeWidth={2} />
-          </button>
-          {product.featuredReason && (
-            <Tooltip text={product.featuredReason}>
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white backdrop-blur-md border border-slate-200 text-slate-700 shadow-xl transition-all hover:scale-110 hover:border-slate-900">
-                    <Info size={18} strokeWidth={2} />
+      {/* Persistent Badge (Top Left) */}
+      <div className="absolute top-6 left-6 z-10 flex flex-col gap-2">
+        {hasDiscount && (
+            <span className="rounded-full bg-red-500 px-3 py-1 text-[9px] font-black uppercase tracking-widest text-white shadow-lg">
+                -{discountPct}%
+            </span>
+        )}
+        {badge && (
+            <span className={`rounded-full ${badge.color} px-3 py-1 text-[8px] font-black uppercase tracking-widest text-white shadow-lg`}>
+                {badge.label}
+            </span>
+        )}
+      </div>
+
+      {/* The Reveal Layout (Bottom-up) */}
+      <div className="absolute inset-0 z-20 flex flex-col justify-end p-10 translate-y-8 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)]">
+        
+        {/* Info Area */}
+        <div className="space-y-6">
+            <div className="space-y-2">
+                <span className="text-[10px] font-bold text-indigo-600 uppercase tracking-[0.2em]">Sản phẩm tinh chọn</span>
+                <h3 className="text-2xl font-black text-slate-900 leading-tight uppercase tracking-tighter">
+                    {product.name}
+                </h3>
+            </div>
+
+            <div className="flex flex-col">
+                <span className="text-[9px] text-slate-400 font-bold uppercase tracking-widest mb-1">Giá sở hữu</span>
+                <div className="flex items-baseline gap-3">
+                    <span className="text-3xl font-black text-slate-900 tracking-tighter">
+                        {formatCurrency(hasDiscount ? product.discountPrice : product.price)}
+                    </span>
+                    {hasDiscount && (
+                        <span className="text-sm text-slate-400 line-through font-medium italic">
+                            {formatCurrency(product.price)}
+                        </span>
+                    )}
                 </div>
-            </Tooltip>
-          )}
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex items-center gap-3 pt-4">
+                <button 
+                    onClick={handleAddToCart}
+                    className="flex-1 py-4 bg-slate-900 text-white rounded-2xl font-bold uppercase tracking-[0.2em] text-[10px] flex items-center justify-center gap-2 hover:bg-indigo-600 transition-all active:scale-95 shadow-xl shadow-slate-900/10"
+                >
+                    <ShoppingBag size={16} /> Giỏ hàng
+                </button>
+                <div className="w-14 h-14 bg-white border border-slate-100 rounded-2xl flex items-center justify-center text-slate-400 hover:border-slate-900 hover:text-slate-900 transition-all shadow-sm">
+                    <ArrowRight size={20} />
+                </div>
+            </div>
         </div>
       </div>
 
-      <div className="flex flex-1 flex-col">
-        <h3 className="mb-4 text-lg font-black leading-tight text-slate-800 line-clamp-2 uppercase tracking-tight h-12">
-          {product.name}
-        </h3>
-
-        <div className="mt-auto space-y-4">
-          <div className="flex flex-col min-w-0">
-            <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1.5">Giá bán chính thức</span>
-            {hasDiscount ? (
-              <div className="flex flex-col">
-                <span className="text-2xl font-black text-slate-900 leading-none">
-                  {formatCurrency(product.discountPrice)}
-                </span>
-                <span className="text-sm text-slate-400 line-through mt-1.5 opacity-70">
-                  {formatCurrency(product.price)}
-                </span>
-              </div>
-            ) : (
-              <span className="text-2xl font-black text-slate-900 leading-none">
-                {formatCurrency(product.price)}
-              </span>
-            )}
-          </div>
-          <div className="w-full rounded-2xl bg-slate-50 border border-slate-100 py-3.5 text-center text-[10px] font-black uppercase tracking-[0.3em] text-slate-900 transition-all duration-300 group-hover:bg-slate-900 group-hover:text-white group-hover:border-slate-900 group-hover:shadow-xl group-hover:shadow-slate-900/10">
-            Chi tiết sản phẩm
-          </div>
-        </div>
+      {/* Subtle Bottom Bar (Visible by default to hint at product name) */}
+      <div className="absolute bottom-0 left-0 w-full p-8 flex items-center justify-between z-10 transition-opacity duration-300 group-hover:opacity-0">
+          <h4 className="text-[11px] font-black text-slate-900 uppercase tracking-tight truncate max-w-[70%]">{product.name}</h4>
+          <span className="text-[11px] font-bold text-indigo-600 italic">{formatCurrency(hasDiscount ? product.discountPrice : product.price)}</span>
       </div>
     </div>
   );
@@ -148,9 +161,9 @@ const FeaturedProducts = () => {
   if (products.length === 0) return null;
 
   return (
-    <section className="py-24 bg-slate-50/50">
+    <section className="pt-10 pb-24 bg-slate-50/50">
       <div className="max-w-[1440px] mx-auto px-6 md:px-10">
-        <div className="mb-16">
+        <div className="mb-10">
           <h2 className="text-4xl font-black uppercase tracking-tighter italic text-slate-900 leading-none mb-4">
             Sản phẩm nổi bật
           </h2>

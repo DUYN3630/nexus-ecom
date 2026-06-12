@@ -1,9 +1,11 @@
 import React from 'react';
-import HeroSlider from '../../components/user/HeroSlider';
+import RefinedHeroSection from '../../components/user/home-sections/RefinedHeroSection';
 import QuickNav from '../../components/user/home-sections/QuickNav';
 import TrustSignalsSection from '../../components/user/home-sections/TrustSignalsSection';
 import PromoBanner from '../../components/user/home-sections/PromoBanner';
 import FeaturedProducts from '../../components/user/home-sections/FeaturedProducts';
+import ComparisonMatrix from '../../components/user/home-sections/ComparisonMatrix';
+import EliteLifestyle from '../../components/user/home-sections/EliteLifestyle';
 import CategoryHighlight from '../../components/user/home-sections/CategoryHighlight';
 import CustomerReviews from '../../components/user/home-sections/CustomerReviews';
 import GuidedCTA from '../../components/user/home-sections/GuidedCTA';
@@ -16,40 +18,46 @@ const HomePage = () => {
   return (
     <>
       {/* 1. Hero / Banner chính */}
-      <HeroSlider />
-      
+      <RefinedHeroSection />
+
       {/* 2. Quick Entry / User Intent */}
       <QuickNav />
 
-      {/* 3. Trust / Assurance Strip */}
-      <TrustSignalsSection />
-      
-      {/* 4. Campaign Lớn */}
-      <PromoBanner />
-
-      {/* 5. Featured Products */}
+      {/* 3. Featured Products - Sản phẩm trọng tâm */}
       <FeaturedProducts />
 
-      {/* 6. Danh mục sản phẩm (Category Highlight) */}
+      {/* 4. Comparison Matrix - Giúp khách hàng ra quyết định */}
+      <ComparisonMatrix />
+
+      {/* 5. Campaign Lớn */}
+      <PromoBanner />
+
+      {/* 6. Elite Lifestyle - Bán giải pháp & phong cách sống */}
+      <EliteLifestyle />
+
+      {/* 7. Danh mục sản phẩm (Category Highlight) */}
       <CategoryHighlight />
 
-      {/* 7. Đánh giá khách hàng (Customer Reviews) */}
+      {/* 8. Đánh giá khách hàng (Customer Reviews) */}
       <CustomerReviews />
 
-      {/* 8. Guided CTA (Soft Action) */}
+      {/* 9. Guided CTA (AI Expert & Support) */}
       <GuidedCTA />
 
-      {/* 9. FAQ Section / Pre-purchase Info */}
+      {/* 10. FAQ Section / Pre-purchase Info */}
       <FAQSection />
 
-      {/* 10. Content / Value Section */}
+      {/* 11. Content / Value Section */}
       <QualitySection />
 
-      {/* 11. Recently Viewed (Context Retention) */}
-      <RecentlyViewed />
+      {/* 12. Recently Viewed & Support Entry (Consolidated) */}
+      <div className="bg-slate-50 border-t border-slate-100">
+        <RecentlyViewed />
+        <SupportEntry />
+      </div>
 
-      {/* 12. Support / Help Entry */}
-      <SupportEntry />
+      {/* 13. Trust / Assurance Strip (Clean footer strip) */}
+      <TrustSignalsSection isCompact={true} />
     </>
   );
 };
