@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import HeroSlider from '../../components/user/HeroSlider';
 import RefinedHeroSection from '../../components/user/home-sections/RefinedHeroSection';
 import QuickNav from '../../components/user/home-sections/QuickNav';
 import TrustSignalsSection from '../../components/user/home-sections/TrustSignalsSection';
@@ -15,10 +16,19 @@ import RecentlyViewed from '../../components/user/home-sections/RecentlyViewed';
 import SupportEntry from '../../components/user/home-sections/SupportEntry';
 
 const HomePage = () => {
+  const [heroLayout, setHeroLayout] = useState('static');
+
+  useEffect(() => {
+    const savedLayout = localStorage.getItem('nexus_hero_layout');
+    if (savedLayout) {
+      setHeroLayout(savedLayout);
+    }
+  }, []);
+
   return (
     <>
-      {/* 1. Hero / Banner chính */}
-      <RefinedHeroSection />
+      {/* 1. Hero / Banner chính (Dynamic based on admin setting) */}
+      {heroLayout === 'slider' ? <HeroSlider /> : <RefinedHeroSection />}
 
       {/* 2. Quick Entry / User Intent */}
       <QuickNav />

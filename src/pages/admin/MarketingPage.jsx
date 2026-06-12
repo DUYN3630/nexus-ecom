@@ -34,6 +34,15 @@ const MarketingPage = () => {
     status: 'all',
   });
 
+  const [heroLayout, setHeroLayout] = useState(localStorage.getItem('nexus_hero_layout') || 'static');
+  
+  const toggleHeroLayout = () => {
+    const newLayout = heroLayout === 'slider' ? 'static' : 'slider';
+    setHeroLayout(newLayout);
+    localStorage.setItem('nexus_hero_layout', newLayout);
+    addToast(`Đã chuyển trang chủ sang giao diện Hero ${newLayout === 'slider' ? 'Slider (Động)' : 'Tĩnh (Refined)'}`, 'success');
+  };
+
   const fetchStats = useCallback(async () => {
     try {
       setLoadingStats(true);
@@ -172,7 +181,21 @@ const MarketingPage = () => {
           <p className="text-sm text-slate-500 font-medium">Hệ thống quản lý tài sản hình ảnh và chiến dịch quảng cáo chuẩn SEO</p>
         </div>
         
-        <div className="flex items-center gap-3 w-full md:w-auto">
+        <div className="flex items-center gap-3 w-full md:w-auto flex-wrap">
+          <div className="flex items-center bg-white border border-slate-200 rounded-xl p-1 shadow-sm">
+             <button 
+                onClick={toggleHeroLayout}
+                className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${heroLayout === 'static' ? 'bg-slate-900 text-white shadow-md' : 'text-slate-500 hover:text-slate-800'}`}
+             >
+                Hero Tĩnh
+             </button>
+             <button 
+                onClick={toggleHeroLayout}
+                className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${heroLayout === 'slider' ? 'bg-slate-900 text-white shadow-md' : 'text-slate-500 hover:text-slate-800'}`}
+             >
+                Hero Slider
+             </button>
+          </div>
           <button 
             onClick={() => handleOpenDrawer(null)} 
             className="flex-1 md:flex-none px-5 py-2.5 bg-brand-600 text-white rounded-xl text-sm font-bold shadow-lg shadow-brand-200 hover:bg-brand-700 transition-all flex items-center justify-center gap-2 active:scale-95"

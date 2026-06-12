@@ -142,7 +142,8 @@ const QuickEditDrawer = ({ banner, mode, isOpen, onClose, onSave }) => {
                 <div className="space-y-2">
                   <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-1">Vị trí hiển thị</label>
                   <select name="position" value={formData.position} onChange={handleInputChange} className="w-full px-5 py-3.5 bg-white border border-slate-200 rounded-xl text-sm font-bold outline-none cursor-pointer focus:ring-1 focus:ring-brand-500 transition-all shadow-sm">
-                    <option value="home-top">Home Slider (Top)</option>
+                    <option value="home-top">Hero Slider (Động)</option>
+                    <option value="hero-static">Hero Banner (Tĩnh)</option>
                     <option value="home-mid">Giữa trang chủ</option>
                     <option value="popup">Popup Quảng cáo</option>
                   </select>
