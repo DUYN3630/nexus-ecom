@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 
 const EliteLifestyle = () => {
   return (
-    <section className="relative w-full h-[80vh] min-h-[600px] flex items-center overflow-hidden bg-black group">
+    <section className="relative w-full min-h-[80vh] py-20 md:py-32 flex items-center bg-black group">
       {/* Background Image - Lifestyle/Magazine style */}
       <div className="absolute inset-0 z-0 overflow-hidden">
         <img 

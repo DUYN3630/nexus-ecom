@@ -34,9 +34,9 @@ const MacListingPage = () => {
     <div className="min-h-screen bg-white text-slate-900 selection:bg-slate-200 font-sans overflow-x-hidden pt-24">
       
       {/* SECTION 1: HERO */}
-      <section className="relative h-[90vh] flex items-center justify-center overflow-hidden bg-slate-50">
+      <section className="relative min-h-[75vh] py-12 flex items-center justify-center bg-slate-50">
         <div className="max-w-7xl mx-auto px-10 grid grid-cols-1 lg:grid-cols-2 gap-20 items-center relative z-10">
-          <div className="space-y-8 text-left">
+          <div className="space-y-6 text-left">
             <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-slate-900 text-white text-[10px] font-bold uppercase tracking-[0.2em]">
               <Sparkles size={14} /> M3 Series Silicon
             </div>
