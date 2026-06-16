@@ -69,9 +69,6 @@ const HomePage = () => {
         <RecentlyViewed />
         <SupportEntry />
       </div>
-
-      {/* 13. Trust / Assurance Strip (Clean footer strip) */}
-      <TrustSignalsSection isCompact={true} />
     </>
   );
 };
