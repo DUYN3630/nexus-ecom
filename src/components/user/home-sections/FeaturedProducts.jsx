@@ -123,6 +123,7 @@ const ProductCard = ({ product }) => {
 const FeaturedProducts = () => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchFeatured = async () => {
@@ -163,13 +164,28 @@ const FeaturedProducts = () => {
   return (
     <section className="pt-10 pb-24 bg-slate-50/50">
       <div className="max-w-[1440px] mx-auto px-6 md:px-10">
-        <div className="mb-10">
-          <h2 className="text-4xl font-black uppercase tracking-tighter italic text-slate-900 leading-none mb-4">
-            Sản phẩm nổi bật
-          </h2>
-          <p className="text-xl text-slate-500 font-medium max-w-2xl leading-relaxed">
-            Khám phá những thiết bị Apple được yêu thích nhất với công nghệ tiên phong và hiệu năng vượt trội.
-          </p>
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-12">
+          <div className="space-y-4">
+            <h2 className="text-4xl md:text-5xl font-black uppercase tracking-tighter italic text-slate-900 leading-none">
+              Sản phẩm nổi bật
+            </h2>
+            <p className="text-xl text-slate-500 font-medium max-w-2xl leading-relaxed">
+              Khám phá những thiết bị Apple được yêu thích nhất với công nghệ tiên phong và hiệu năng vượt trội.
+            </p>
+          </div>
+
+          <button 
+            onClick={() => navigate('/products')}
+            className="group flex items-center gap-4 px-2 py-2 font-black uppercase tracking-[0.15em] text-[11px] text-slate-900 transition-all duration-300 active:scale-95"
+          >
+            <span className="relative">
+              Khám phá tất cả sản phẩm
+              <span className="absolute bottom-[-4px] left-0 w-0 h-[2px] bg-indigo-600 transition-all duration-300 group-hover:w-full"></span>
+            </span>
+            <div className="w-10 h-10 rounded-full bg-slate-900 text-white flex items-center justify-center group-hover:bg-indigo-600 transition-colors duration-300 shadow-lg shadow-slate-200">
+              <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
+            </div>
+          </button>
         </div>
 
         {/* Chuẩn 4 cột (vừa đủ 4 card) */}

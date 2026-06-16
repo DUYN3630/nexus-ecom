@@ -25,25 +25,25 @@ const QuickNav = () => {
   const navigate = useNavigate();
 
   return (
-    <section className="py-12 bg-white border-b border-slate-50">
-      <div className="max-w-[1440px] mx-auto px-6 md:px-20">
-        <div className="flex flex-wrap justify-between gap-y-10">
+    <section className="py-6 md:py-10 bg-white border-b border-slate-50">
+      <div className="max-w-6xl mx-auto px-6">
+        <div className="flex flex-wrap justify-between gap-y-6">
           {QUICK_NAV_CONFIG.map((item) => (
             <div 
               key={item.id} 
               onClick={() => navigate(item.route)} 
-              className="group cursor-pointer flex flex-col items-center text-center gap-4 flex-1 min-w-[120px] transition-all duration-300"
+              className="group cursor-pointer flex flex-col items-center text-center gap-3 flex-1 min-w-[100px] transition-all duration-300"
             >
-              <div className="relative w-16 h-16 rounded-2xl bg-slate-50 flex items-center justify-center transition-all duration-500 group-hover:bg-white group-hover:shadow-[0_20px_40px_-10px_rgba(0,0,0,0.1)] group-hover:-translate-y-2 group-active:scale-90 overflow-hidden">
+              <div className="relative w-14 h-14 rounded-2xl bg-slate-50 flex items-center justify-center transition-all duration-500 group-hover:bg-white group-hover:shadow-[0_15px_30px_-10px_rgba(0,0,0,0.08)] group-hover:-translate-y-1.5 group-active:scale-90 overflow-hidden">
                 {/* Decorative background circle on hover */}
                 <div className="absolute inset-0 bg-gradient-to-br from-slate-50 to-white opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                <IconRenderer iconName={item.icon} className={`relative z-10 text-slate-400 group-hover:${item.color} transition-colors duration-300`} />
+                <IconRenderer iconName={item.icon} size={24} className={`relative z-10 text-slate-400 group-hover:${item.color} transition-colors duration-300`} />
               </div>
-              <div className="space-y-1">
-                <h4 className="text-[11px] font-black uppercase tracking-[0.15em] text-slate-900 group-hover:text-black transition-colors">
+              <div className="space-y-0.5">
+                <h4 className="text-[10px] md:text-[11px] font-black uppercase tracking-[0.1em] text-slate-900 group-hover:text-black transition-colors">
                   {item.label}
                 </h4>
-                <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-1 group-hover:translate-y-0">
+                <p className="text-[8px] md:text-[9px] font-bold text-slate-400 uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-1 group-hover:translate-y-0">
                   {item.sub}
                 </p>
               </div>

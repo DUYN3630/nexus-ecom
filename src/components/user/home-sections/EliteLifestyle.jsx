@@ -8,7 +8,7 @@ const EliteLifestyle = () => {
       {/* Background Image - Lifestyle/Magazine style */}
       <div className="absolute inset-0 z-0 overflow-hidden">
         <img 
-          src="/products/macbanner.jpg" 
+          src="/products/hesinhthaitech.png" 
           alt="Nexus Elite Lifestyle" 
           className="w-full h-full object-cover opacity-70 grayscale-[0.2] transition-transform duration-[5000ms] group-hover:scale-105"
         />
