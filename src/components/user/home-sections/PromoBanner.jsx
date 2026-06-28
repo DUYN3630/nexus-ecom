@@ -6,7 +6,7 @@ const PromoBanner = () => {
   const navigate = useNavigate();
 
   return (
-    <section className="py-24 bg-white">
+    <section className="py-24 bg-white border-t border-black/5">
       <div className="max-w-[1440px] mx-auto px-6 md:px-20">
         <div className="grid grid-cols-1 md:grid-cols-12 gap-6 h-full md:h-[650px]">
           

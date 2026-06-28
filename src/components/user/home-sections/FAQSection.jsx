@@ -1,5 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Plus, Minus, HelpCircle, ShieldCheck, ChevronDown } from 'lucide-react';
+import { gsap } from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
+
+gsap.registerPlugin(ScrollTrigger);
 
 const FAQS = [
   {
@@ -26,13 +30,47 @@ const FAQS = [
 
 const FAQSection = () => {
   const [openId, setOpenId] = useState(1);
+  const containerRef = useRef(null);
+
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    // Force ScrollTrigger to refresh after a brief delay for dynamic content height stability
+    const timer = setTimeout(() => {
+      ScrollTrigger.refresh();
+    }, 500);
+
+    const anim = gsap.fromTo(
+      container.querySelectorAll('.animate-on-scroll'),
+      { y: 40, opacity: 0, filter: 'blur(4px)' },
+      {
+        y: 0,
+        opacity: 1,
+        filter: 'blur(0px)',
+        duration: 0.8,
+        stagger: 0.15,
+        ease: 'power3.out',
+        scrollTrigger: {
+          trigger: container,
+          start: 'top 92%',
+        }
+      }
+    );
+
+    return () => {
+      clearTimeout(timer);
+      anim.kill();
+      if (anim.scrollTrigger) anim.scrollTrigger.kill();
+    };
+  }, []);
 
   return (
-    <section className="py-32 bg-white">
+    <section ref={containerRef} className="py-32 bg-transparent">
       <div className="max-w-3xl mx-auto px-6 md:px-10">
         
         {/* Header section */}
-        <div className="text-center mb-20 space-y-4">
+        <div className="text-center mb-20 space-y-4 animate-on-scroll">
           <span className="text-[11px] font-black uppercase tracking-[0.4em] text-indigo-600">Hỗ trợ khách hàng</span>
           <h2 className="text-4xl md:text-5xl font-black uppercase tracking-tighter italic text-slate-900 leading-none">
             Giải đáp <br/> thắc mắc
@@ -44,7 +82,7 @@ const FAQSection = () => {
           {FAQS.map((faq) => (
             <div 
               key={faq.id} 
-              className={`group border-b border-slate-100 transition-all duration-500 ${
+              className={`animate-on-scroll group border-b border-slate-100/80 transition-all duration-500 ${
                 openId === faq.id ? 'pb-8' : 'pb-4'
               }`}
             >

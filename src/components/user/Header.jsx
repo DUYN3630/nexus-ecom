@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { 
   ShoppingBag, Search, User, Menu, Cpu, LogOut, ChevronDown, Package, Settings, Star, ChevronRight, Heart
 } from 'lucide-react';
@@ -19,9 +19,13 @@ const Header = ({ cartCount, onOpenMobileMenu, topOffset = 0 }) => {
   const [megaMenuProducts, setMegaMenuProducts] = useState({});
 
   const navigate = useNavigate();
+  const location = useLocation();
   const dispatch = useDispatch();
   const isAuthenticated = useSelector(selectIsAuthenticated);
   const user = useSelector(selectCurrentUser);
+
+  const isHome = location.pathname === '/';
+  const showTransparent = isHome && !isScrolled;
 
   const { wishlist } = useWishlist();
   const dropdownRef = useRef(null);
@@ -34,6 +38,9 @@ const Header = ({ cartCount, onOpenMobileMenu, topOffset = 0 }) => {
   };
 
   const fetchProductsForCategory = async (catId) => {
+    if (fetchedCategories.current.has(catId)) return;
+    fetchedCategories.current.add(catId);
+
     const categorySlugMap = {
       'iphone': 'iphone',
       'mac': 'mac',
@@ -57,6 +64,7 @@ const Header = ({ cartCount, onOpenMobileMenu, topOffset = 0 }) => {
       }));
     } catch (error) {
       console.error(`Failed to fetch products for ${catId}`, error);
+      fetchedCategories.current.delete(catId); // Allow retry on failure
     }
   };
 
@@ -120,9 +128,11 @@ const Header = ({ cartCount, onOpenMobileMenu, topOffset = 0 }) => {
     <header 
       style={{ top: topOffset }}
       className={`fixed left-0 right-0 z-[100] transition-all duration-300 ease-in-out ${
-        isScrolled 
-        ? 'bg-white/90 backdrop-blur-md h-auto border-b border-slate-100 shadow-sm' 
-        : 'bg-white'
+        showTransparent
+        ? 'bg-transparent border-transparent shadow-none'
+        : (isScrolled 
+            ? 'bg-white/90 backdrop-blur-md h-auto border-b border-slate-100 shadow-sm' 
+            : 'bg-white border-b border-slate-100/50')
       }`}
       onMouseLeave={() => setActiveMenu(null)}
     >
@@ -132,12 +142,12 @@ const Header = ({ cartCount, onOpenMobileMenu, topOffset = 0 }) => {
           <div className="w-8 h-8 bg-black rounded-lg flex items-center justify-center text-white transition-transform group-hover:scale-110">
             <Cpu size={16} strokeWidth={2.5} />
           </div>
-          <span className="text-[14px] font-black tracking-[0.2em] uppercase text-black hidden sm:block">Tech<span className="text-slate-400">Store</span></span>
+          <span className={`text-[14px] font-black tracking-[0.2em] uppercase hidden sm:block transition-colors duration-300 ${showTransparent ? 'text-white' : 'text-black'}`}>Tech<span className={showTransparent ? 'text-white/60' : 'text-slate-400'}>Store</span></span>
         </div>
 
         {/* Ô Tìm kiếm */}
         <div className="flex-1 max-w-xl relative group">
-          <div className={`absolute left-4 top-1/2 -translate-y-1/2 transition-colors duration-300 ${isSearchFocused ? 'text-black' : 'text-slate-300'}`}>
+          <div className={`absolute left-4 top-1/2 -translate-y-1/2 transition-colors duration-300 ${isSearchFocused ? 'text-black' : (showTransparent ? 'text-white/50' : 'text-slate-300')}`}>
             <Search size={16} strokeWidth={2.5} />
           </div>
           <input 
@@ -148,7 +158,11 @@ const Header = ({ cartCount, onOpenMobileMenu, topOffset = 0 }) => {
             onKeyDown={handleSearchSubmit}
             onFocus={() => setIsSearchFocused(true)}
             onBlur={() => setIsSearchFocused(false)}
-            className="w-full bg-slate-50 border border-transparent rounded-full py-2 pl-12 pr-4 text-[11px] font-bold uppercase tracking-widest text-black placeholder:text-slate-300 focus:bg-white focus:border-slate-200 transition-all outline-none"
+            className={`w-full border rounded-full py-2 pl-12 pr-4 text-[11px] font-bold uppercase tracking-widest outline-none transition-all duration-300 ${
+              showTransparent
+              ? 'bg-white/10 border-white/10 text-white placeholder:text-white/40 focus:bg-white focus:text-black focus:border-white focus:placeholder:text-slate-300'
+              : 'bg-slate-50 border-transparent text-black placeholder:text-slate-300 focus:bg-white focus:border-slate-200'
+            }`}
           />
         </div>
 
@@ -158,7 +172,11 @@ const Header = ({ cartCount, onOpenMobileMenu, topOffset = 0 }) => {
           {isAuthenticated ? (
             <div className="relative" ref={dropdownRef}>
                 <button 
-                  className="flex items-center gap-2 pl-1 pr-3 py-1 bg-slate-50 hover:bg-slate-100 rounded-full transition-all border border-slate-100"
+                  className={`flex items-center gap-2 pl-1 pr-3 py-1 rounded-full transition-all border ${
+                    showTransparent
+                    ? 'bg-white/10 hover:bg-white/20 border-white/10 text-white'
+                    : 'bg-slate-50 hover:bg-slate-100 border-slate-100 text-black'
+                  }`}
                   onClick={() => setShowUserDropdown(!showUserDropdown)}
                 >
                     <div className="w-8 h-8 rounded-full flex items-center justify-center text-white overflow-hidden shadow-sm">
@@ -170,7 +188,7 @@ const Header = ({ cartCount, onOpenMobileMenu, topOffset = 0 }) => {
                             </div>
                         )}
                     </div>
-                    <span className="text-[11px] font-black text-black hidden md:block max-w-[80px] truncate uppercase tracking-tighter">
+                    <span className={`text-[11px] font-black hidden md:block max-w-[80px] truncate uppercase tracking-tighter transition-colors duration-300 ${showTransparent ? 'text-white' : 'text-black'}`}>
                         {user?.name?.split(' ')[0]}
                     </span>
                     <ChevronDown size={12} className={`text-slate-400 transition-transform ${showUserDropdown ? 'rotate-180' : ''}`} />
@@ -297,12 +315,31 @@ const Header = ({ cartCount, onOpenMobileMenu, topOffset = 0 }) => {
             </div>
           ) : (
             <div className="flex items-center gap-2">
-                <button className="hidden md:block px-4 py-2 text-[11px] font-bold uppercase tracking-widest text-slate-500 hover:text-black transition-colors" onClick={() => handleNavClick('/login')}>Đăng nhập</button>
-                <button className="hidden md:block px-5 py-2 text-[11px] font-black uppercase tracking-widest bg-black text-white rounded-full hover:bg-slate-800 transition-all" onClick={() => handleNavClick('/register')}>Đăng ký</button>
+                <button 
+                  className={`hidden md:block px-4 py-2 text-[11px] font-bold uppercase tracking-widest transition-colors ${
+                    showTransparent ? 'text-white/70 hover:text-white' : 'text-slate-500 hover:text-black'
+                  }`} 
+                  onClick={() => handleNavClick('/login')}
+                >
+                  Đăng nhập
+                </button>
+                <button 
+                  className={`hidden md:block px-5 py-2 text-[11px] font-black uppercase tracking-widest rounded-full transition-all ${
+                    showTransparent ? 'bg-white text-black hover:bg-white/95' : 'bg-black text-white hover:bg-slate-800'
+                  }`} 
+                  onClick={() => handleNavClick('/register')}
+                >
+                  Đăng ký
+                </button>
             </div>
           )}
 
-          <button className="p-1.5 text-slate-400 hover:text-black transition-all hover:scale-110 relative" onClick={() => handleNavClick('/wishlist')}>
+          <button 
+            className={`p-1.5 transition-all hover:scale-110 relative ${
+              showTransparent ? 'text-white/70 hover:text-white' : 'text-slate-400 hover:text-black'
+            }`} 
+            onClick={() => handleNavClick('/wishlist')}
+          >
             <Heart size={18} strokeWidth={1.5} />
             {wishlist?.length > 0 && (
               <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-red-500 text-white text-[8px] font-black rounded-full flex items-center justify-center border-2 border-white shadow-sm">
@@ -311,29 +348,50 @@ const Header = ({ cartCount, onOpenMobileMenu, topOffset = 0 }) => {
             )}
           </button>
 
-          <button className="p-1.5 text-slate-400 hover:text-black transition-all hover:scale-110 relative" onClick={() => handleNavClick('/cart')}>
+          <button 
+            className={`p-1.5 transition-all hover:scale-110 relative ${
+              showTransparent ? 'text-white/70 hover:text-white' : 'text-slate-400 hover:text-black'
+            }`} 
+            onClick={() => handleNavClick('/cart')}
+          >
             <ShoppingBag size={18} strokeWidth={1.5} />
             {cartCount > 0 && (
-              <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-black text-white text-[8px] font-black rounded-full flex items-center justify-center border-2 border-white shadow-sm">
+              <span className={`absolute -top-0.5 -right-0.5 w-4 h-4 text-[8px] font-black rounded-full flex items-center justify-center border-2 shadow-sm ${
+                showTransparent ? 'bg-white text-black border-transparent' : 'bg-black text-white border-white'
+              }`}>
                 {cartCount}
               </span>
             )}
           </button>
 
-          <button className="p-2 -mr-2 text-black hover:bg-slate-100 rounded-full transition-all" onClick={onOpenMobileMenu}>
+          <button 
+            className={`p-2 -mr-2 rounded-full transition-all ${
+              showTransparent ? 'text-white hover:bg-white/10' : 'text-black hover:bg-slate-100'
+            }`} 
+            onClick={onOpenMobileMenu}
+          >
             <Menu size={24} strokeWidth={2.5} />
           </button>
         </div>
       </div>
 
       {/* Menu Điều hướng Chính (Desktop) */}
-      <nav className="hidden lg:block border-t border-slate-50 relative" onMouseLeave={() => setActiveMenu(null)}>
+      <nav className={`hidden lg:block border-t relative transition-colors duration-300 ${showTransparent ? 'border-white/10' : 'border-slate-50'}`} onMouseLeave={() => setActiveMenu(null)}>
         <div className="max-w-7xl mx-auto px-10 h-10 flex items-center justify-center gap-12">
           {NAV_CATEGORIES.map((cat) => (
             <div key={cat.id} className="h-full flex items-center" onMouseEnter={() => handleMouseEnter(cat.id)}>
-              <button onClick={() => handleNavClick(null, cat.id)} className={`text-[9.5px] font-black uppercase tracking-[0.25em] transition-all hover:text-black relative ${activeMenu === cat.id ? 'text-black' : 'text-slate-400'}`}>
+              <button 
+                onClick={() => handleNavClick(null, cat.id)} 
+                className={`text-[9.5px] font-black uppercase tracking-[0.25em] transition-all relative ${
+                  activeMenu === cat.id 
+                  ? (showTransparent ? 'text-white' : 'text-black') 
+                  : (showTransparent ? 'text-white/60 hover:text-white' : 'text-slate-400 hover:text-black')
+                }`}
+              >
                 {cat.name}
-                <span className={`absolute -bottom-[13px] left-0 right-0 h-0.5 bg-black transition-all duration-300 ${activeMenu === cat.id ? 'opacity-100 scale-x-100' : 'opacity-0 scale-x-0'}`}></span>
+                <span className={`absolute -bottom-[13px] left-0 right-0 h-0.5 transition-all duration-300 ${
+                  showTransparent ? 'bg-white' : 'bg-black'
+                } ${activeMenu === cat.id ? 'opacity-100 scale-x-100' : 'opacity-0 scale-x-0'}`}></span>
               </button>
             </div>
           ))}

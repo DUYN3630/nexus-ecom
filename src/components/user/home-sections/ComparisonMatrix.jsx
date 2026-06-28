@@ -1,14 +1,18 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Smartphone, Cpu, Camera, Battery, ArrowRight } from 'lucide-react';
 import { formatCurrency } from '../../../utils/formatCurrency';
 import { Link } from 'react-router-dom';
+import { gsap } from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
+
+gsap.registerPlugin(ScrollTrigger);
 
 const COMPARISON_DATA = [
   {
     id: 'iphone-17-pro-max',
     name: 'iPhone 17 Pro Max',
     slug: 'iphone-17-pro-max',
-    image: '/products/iphone-16-pro-max_1.webp', // Sử dụng ảnh tốt nhất có sẵn
+    image: '/products/iphone-16-pro-max_1.webp',
     price: 34990000,
     specs: {
       chip: 'A19 Pro Bionic',
@@ -46,10 +50,45 @@ const COMPARISON_DATA = [
 ];
 
 const ComparisonMatrix = () => {
+  const containerRef = useRef(null);
+
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    // Refresh ScrollTrigger to calculate proper element offsets once products/reviews are loaded
+    const timer = setTimeout(() => {
+      ScrollTrigger.refresh();
+    }, 500);
+
+    const anim = gsap.fromTo(
+      container.querySelectorAll('.animate-on-scroll'),
+      { y: 50, opacity: 0, filter: 'blur(6px)' },
+      {
+        y: 0,
+        opacity: 1,
+        filter: 'blur(0px)',
+        duration: 0.8,
+        stagger: 0.15,
+        ease: 'power3.out',
+        scrollTrigger: {
+          trigger: container,
+          start: 'top 92%',
+        }
+      }
+    );
+
+    return () => {
+      clearTimeout(timer);
+      anim.kill();
+      if (anim.scrollTrigger) anim.scrollTrigger.kill();
+    };
+  }, []);
+
   return (
-    <section className="py-24 bg-white overflow-hidden">
+    <section ref={containerRef} className="py-24 bg-white overflow-hidden">
       <div className="max-w-[1440px] mx-auto px-6 md:px-20">
-        <div className="text-center mb-16">
+        <div className="text-center mb-16 animate-on-scroll">
           <h2 className="text-4xl md:text-5xl font-black uppercase tracking-tighter italic text-slate-900 mb-4">
             So sánh & Lựa chọn
           </h2>
@@ -60,7 +99,7 @@ const ComparisonMatrix = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {COMPARISON_DATA.map((product) => (
-            <div key={product.id} className="flex flex-col bg-[#FBFBFB] rounded-[40px] p-10 border border-slate-100 hover:shadow-2xl hover:shadow-slate-200/50 transition-all duration-500 group">
+            <div key={product.id} className="animate-on-scroll flex flex-col bg-[#FBFBFB] rounded-[40px] p-10 border border-slate-100 hover:shadow-2xl hover:shadow-slate-200/50 transition-all duration-500 group">
               {/* Product Info */}
               <div className="text-center mb-8">
                 <div className="aspect-square w-48 mx-auto mb-6 transition-transform duration-700 group-hover:scale-110">
@@ -113,7 +152,7 @@ const ComparisonMatrix = () => {
         </div>
 
         {/* Free Comparison Link */}
-        <div className="mt-12 text-center">
+        <div className="mt-12 text-center animate-on-scroll">
           <Link 
             to="/compare" 
             className="inline-flex items-center gap-2 text-sm font-bold text-indigo-600 hover:text-slate-900 transition-colors group"

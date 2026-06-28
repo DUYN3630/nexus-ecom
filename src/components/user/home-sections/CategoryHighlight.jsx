@@ -30,10 +30,10 @@ const CategoryHighlight = () => {
     return (
         <div className="py-24 bg-white">
             <div className="max-w-7xl mx-auto px-6 md:px-10">
-                <div className="h-10 w-64 bg-slate-100 animate-pulse rounded-lg mb-16"></div>
+                <div className="h-10 w-64 bg-black/5 animate-pulse rounded-lg mb-16"></div>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {[1, 2, 3].map(i => (
-                        <div key={i} className="h-[400px] bg-slate-50 rounded-3xl animate-pulse"></div>
+                        <div key={i} className="h-[400px] bg-cara-accent/5 rounded-3xl animate-pulse"></div>
                     ))}
                 </div>
             </div>
@@ -44,7 +44,7 @@ const CategoryHighlight = () => {
   if (categories.length === 0) return null;
 
   return (
-    <section className="py-24 bg-white">
+    <section className="py-24 bg-white border-t border-black/5">
       <div className="max-w-7xl mx-auto px-6 md:px-10">
         <div className="flex items-center justify-between mb-16">
           <h2 className="text-4xl font-black uppercase tracking-tighter italic text-slate-900 leading-none">

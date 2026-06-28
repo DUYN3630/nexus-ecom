@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Search, ShoppingBag, Scale, ArrowRight, ChevronRight, Plus, Cpu, MessageSquare, Layers, Zap } from 'lucide-react';
 import axiosClient from '../../api/axiosClient';
 import { formatCurrency } from '../../utils/formatCurrency';
@@ -104,13 +104,15 @@ const StorePage = () => {
   const [selectedPersona, setSelectedPersona] = useState('All');
   const [compareList, setCompareList] = useState([]);
   const [isCompareOpen, setIsCompareOpen] = useState(false);
+  const isMounted = useRef(false);
 
   useEffect(() => {
-    fetchProducts(search, selectedCategory, selectedPersona);
-  }, []);
-
-  useEffect(() => {
-    debouncedFetch(search, selectedCategory, selectedPersona);
+    if (!isMounted.current) {
+      isMounted.current = true;
+      fetchProducts(search, selectedCategory, selectedPersona);
+    } else {
+      debouncedFetch(search, selectedCategory, selectedPersona);
+    }
   }, [search, selectedCategory, selectedPersona]);
 
   const fetchProducts = async (s, cat, persona) => {
@@ -133,7 +135,7 @@ const StorePage = () => {
     } catch (err) {
       console.error(err);
     } finally {
-      setTimeout(() => setLoading(false), 400);
+      setLoading(false);
     }
   };
 
